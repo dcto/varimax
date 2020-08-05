@@ -1,2 +1,2 @@
-# Variamax
+# Varimax
 Varimax PHP Frameworks
