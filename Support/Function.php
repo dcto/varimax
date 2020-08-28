@@ -478,3 +478,15 @@ if(!function_exists('dump')) {
         die;
     }
 }
+if(!function_exists('abort')) {
+    function abort($code, $message = '', array $headers = [])
+    {
+        if ($code instanceof Response) {
+            throw new HttpResponseException($code);
+        } elseif ($code instanceof \Illuminate\Contracts\Support\Responsable) {
+            throw new HttpResponseException($code->toResponse(request()));
+        }
+
+        app()->abort($code, $message, $headers);
+    }
+}
