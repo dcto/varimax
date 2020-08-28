@@ -11,7 +11,7 @@
 
 namespace VM\Exception;
 
-class LogicException extends Exception
+class LogicException extends \LogicException
 {
     protected $status = 500;
 

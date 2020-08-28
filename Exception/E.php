@@ -188,10 +188,10 @@ class E {
                 '[BACKTRACE]'  =>     PHP_EOL.$e->getTraceAsString()
             );
             array_walk($_ERROR, function (&$v, $k) { $v = $k.' '.$v;});
-            if(!is_dir($logs = '../runtime/logs/e/'._APP_)){
-                mkdir($logs, 0777, true);
+            if(!is_dir($logDir = runtime('logs','e',_APP_))){
+                mkdir($logDir, 0755, true);
             }
-            file_put_contents($logs.'/'.date('Ymd').'.log', implode(PHP_EOL, $_ERROR).PHP_EOL.str_repeat('=',100).PHP_EOL.PHP_EOL, FILE_APPEND);
+            file_put_contents($logDir._DS_.date('Ymd').'.log', implode(PHP_EOL, $_ERROR).PHP_EOL.str_repeat('=',100).PHP_EOL.PHP_EOL, FILE_APPEND);
 
     }
 

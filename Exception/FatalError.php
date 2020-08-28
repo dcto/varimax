@@ -11,7 +11,12 @@
 
 namespace VM\Exception;
 
-class FatalError extends Exception
+/**
+ * Class FatalError
+ *
+ * @package VM\Exception
+ */
+class FatalError extends \RuntimeException
 {
     protected $status = 500;
 
