@@ -171,6 +171,35 @@ class Logger extends AbstractLogger{
     }
 
     /**
+     * alias option
+     *
+     * @param $key
+     * @param null $value
+     * @return Logger
+     */
+    public function set($key, $value = null)
+    {
+        return $this->options($key, $value);
+    }
+
+    /**
+     * Set Options
+     *
+     * @param $key
+     * @param null $value
+     */
+    public function options($key, $value = null)
+    {
+        if(is_array($key)){
+            $this->options = array_merge($this->options, $key);
+        }else{
+            $this->options[$key] = $value;
+        }
+
+        return $this;
+    }
+
+    /**
      * Indents the given string with the given indent.
      *
      * @param  string $string The string to indent
