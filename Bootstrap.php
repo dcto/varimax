@@ -15,7 +15,7 @@ defined('_VM_') || define('_VM_', __DIR__);
 defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 
 //define _DOC_ constants to document root
-defined('_DOC_') || define('_DOC_', dirname($_SERVER['DOCUMENT_ROOT']));
+defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? $_ENV['PWD'] : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
 defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? isset( $_GET['app']) ?  $_GET['app']  : 'app' : $app);
@@ -32,13 +32,10 @@ defined('_ROOT_') || define('_ROOT_', _DOC_);
 //define _TIME_ constants to macro time
 defined('_TIME_') || define('_TIME_', microtime(true));
 
-/**
- * @var $loader \Composer\Autoload\ClassLoader
- */
-$loader = require('../vendor/autoload.php');
 
-//Set App Psr4
-$loader->setPsr4("App\\", _DIR_);
+
+//Access Denied!
+PHP_SAPI == 'cli' || is_dir(_DIR_) || die('Access Denied.');
 
 /**
  * load helper from app
@@ -55,8 +52,15 @@ is_file($func = _VM_._DS_.'/Support/Function.php') && require($func);
  */
 is_file(_DOC_.'/.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
 
-//Bootstrap Of Application
 /**
- * @todo resolve the command cli run mode
+ * @var $loader \Composer\Autoload\ClassLoader
  */
-(new \VM\Application())->boot()->run();
+$loader = require(_ROOT_.'/vendor/autoload.php');
+
+//Set App Psr4
+$loader->setPsr4("App\\", _DIR_);
+
+/**
+ * Bootstrap Of Application
+ */
+(new \VM\Application())->boot();

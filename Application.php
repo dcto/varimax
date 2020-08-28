@@ -1,5 +1,7 @@
 <?php
 
+namespace VM;
+
 /**
  * Varimax The Full Stack PHP Frameworks.
  * varimax
@@ -9,8 +11,8 @@
  * SITE: https://www.varimax.cn/
  */
 
-namespace VM;
-
+use VM\Exception\HttpException;
+use VM\Exception\NotFoundException;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
@@ -62,9 +64,10 @@ class Application extends Container
      * @var array
      */
     protected $services = array(
+        'id'=>\VM\Services\HashIdsServiceProvider::class,
         'db' =>[
-            \Illuminate\Database\DatabaseServiceProvider::class,
-            \VM\Service\PaginationServiceProvider::class
+            \VM\Services\DatabaseServiceProvider::class,
+            \VM\Services\PaginationServiceProvider::class
         ]
     );
 
@@ -77,9 +80,7 @@ class Application extends Container
 
 
     /**
-     * Bootstrap the application container.
-     *
-     * @return $this
+     * Bootstrap The Application
      */
     public function boot()
     {
@@ -99,7 +100,7 @@ class Application extends Container
 
         $this->boot = true;
 
-        return $this;
+        PHP_SAPI == 'cli' ? $this->cli() : $this->run();
     }
 
     /**
@@ -145,14 +146,14 @@ class Application extends Container
      */
     public function register($providers, $force = false)
     {
-        foreach ((array) $providers as  $provider){
+        foreach ((array) $providers as $provider){
 
             if (!$provider instanceof ServiceProvider) {
                 $provider = new $provider($this);
             }
 
             if (isset($this->providers[$item = get_class($provider)]) && !$force) {
-                return $this->providers[$item];
+                 $this->providers[$item];
             }
 
             if (method_exists($provider, 'register')) {
@@ -162,8 +163,8 @@ class Application extends Container
             $this->providers[$item] = $provider;
 
             if (!$provider->isDeferred()) {
-                if (method_exists($provider, 'boot')) {
-                    return $this->call([$provider, 'boot']);
+                if (method_exists($provider, 'boot')) {;
+                    $provider->boot();
                 }
             }
         }
@@ -197,7 +198,7 @@ class Application extends Container
                 }
             }
         }else{
-            throw new \ErrorException('Invalid config of providers ');
+            throw new \ErrorException('Invalid config of providers');
         }
     }
 
@@ -265,11 +266,38 @@ class Application extends Container
     }
 
     /**
+     * Dispatch Cli Mode Request
+     */
+    public function cli()
+    {
+
+        return;
+
+    }
+
+    /**
      * GET Varimax The Full Stack PHP Frameworks Version"
      * @return string
      */
     public function version()
     {
         return static::VERSION;
+    }
+
+
+    /**
+     * @param $code
+     * @param string $message
+     * @param array $headers
+     * @throws NotFoundException
+     * @throws HttpException
+     */
+    public function abort($code, $message = '', array $headers = [])
+    {
+        if ($code == 404) {
+            throw new NotFoundException($message);
+        }
+
+        throw new HttpException($code, $message, null, $headers);
     }
 }
