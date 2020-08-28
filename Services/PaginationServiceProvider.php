@@ -1,4 +1,7 @@
 <?php
+
+namespace VM\Services;
+
 /**
  * Varimax The Full Stack PHP Frameworks.
  * varimax.cn
@@ -8,13 +11,9 @@
  * SITE: https://www.varimax.cn/
  */
 
-namespace VM\Service;
-
-
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\ServiceProvider;
 
-class PaginationServiceProvider extends ServiceProvider
+class PaginationServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     /**
      * Register the service provider.
