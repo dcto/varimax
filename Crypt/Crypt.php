@@ -38,7 +38,7 @@ class Crypt
      */
     public function __construct($key = null)
     {
-        $this->key = $key ?: config('app.token');
+        $this->key = $key ?: config('app.key', 'VM:');
     }
 
     /**
