@@ -57,8 +57,8 @@ class View {
      */
     public function __construct()
     {
-        $this->dir = config('dir.view');
-        $this->cache = runtime('view');
+        $this->dir = config('view.dir');
+        $this->cache = config('view.cache');
         $this->append = ltrim(config('view.append', 'twig'),'.');
 
         $loader = new \Twig_Loader_Filesystem($this->dir);
@@ -72,13 +72,13 @@ class View {
         $this->twig = new \Twig_Environment($loader, array(
 
             //用来保存编译后模板的绝对路径，缺省值为false，也就是关闭缓存。
-            'cache' => config('template.cache') ? $this->cache : false,
+            'cache' => config('view.cache', false),
 
             //生成的模板会有一个__toString()方法，可以用来显示生成的Node（缺省为false）
             'debug' => false,
 
             //当用Twig开发时，是有必要在每次模板变更之后都重新编译的。如果不提供一个auto_reload参数，他会从debug选项中取值
-            'auto_reload' => config('app.debug', false),
+            'auto_reload' => getenv('DEBUG'),
 
             //模板的字符集，缺省为utf-8。
             'charset' => config('app.charset', 'utf-8'),
@@ -121,9 +121,9 @@ class View {
          */
         $this->twig->addGlobal('_VM_', _VM_);
         $this->twig->addGlobal('_APP_',_APP_);
-        $this->twig->addGlobal('_I18N_', make('lang')->i18n());
-        $this->twig->addGlobal('route', make('router')->route());
-        $this->twig->addGlobal('request', make('request'));
+        $this->twig->addGlobal('lang', app('lang'));
+        $this->twig->addGlobal('route', app('router')->route());
+        $this->twig->addGlobal('request', app('request'));
 
         //注册模板扩展
         //$this->twig->addExtension(new \nochso\HtmlCompressTwig\Extension());
@@ -374,6 +374,6 @@ class View {
      */
     public function flush()
     {
-        return make('file')->cleanDirectory($this->cache);
+        return make('file')->cleanDirectory(config('view.cache'));
     }
 }
