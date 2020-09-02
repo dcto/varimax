@@ -11,10 +11,8 @@
 
 namespace VM\I18n;
 
-use Illuminate\Contracts\Config\Repository as ConfigContract;
-use Illuminate\Support\Arr;
 
-class Lang implements \ArrayAccess, ConfigContract
+class Lang
 {
     /**
      * @var string
@@ -28,6 +26,17 @@ class Lang implements \ArrayAccess, ConfigContract
      */
     protected $item = array();
 
+    /**
+     * 临时语言选择器
+     * @var array
+     */
+    protected $keys = array();
+
+    /**
+     * 当前临时调用参数
+     * @var array
+     */
+    protected $args = array();
 
     /**
      * Lang constructor.
@@ -35,50 +44,6 @@ class Lang implements \ArrayAccess, ConfigContract
     public function __construct()
     {
         $this->load($this->i18n());
-    }
-
-    /**
-     * load language
-     *
-     * @param null $lang
-     * @return $this
-     * @throws \ErrorException
-     */
-    public function load($lang, $reload = false)
-    {
-        try {
-
-            $cache = runtime('lang', _APP_, $lang . '.php');
-
-            if (!$reload && !getenv('DEBUG') && is_file($cache)) {
-
-                $this->item = require($cache);
-
-            } else {
-
-                if (!is_dir($cache_dir = dirname($cache))) {
-                    if (!mkdir($cache_dir, 0755, true)) {
-                        throw new \ErrorException('Can not create i18n dir ' . $cache_dir);
-                    }
-                }
-
-                if(is_readable($app_lang = root('i18n', $lang.'.ini'))) {
-                    $this->set(parse_ini_file($app_lang, true));
-                }
-
-                if(is_readable($sub_lang = root('i18n', $lang.'.'._APP_.'.ini'))){
-                    $this->set(parse_ini_file($sub_lang, true));
-                }
-
-                file_put_contents($cache, '<?php return ' . str_replace(array("\r\n", "\n", "\r", "\t", " "), '', var_export($this->all(), TRUE)).';');
-
-                return $this;
-            }
-        }catch (\Exception $e){
-            throw new \InvalidArgumentException('Unable Load '.$this->i18n. ' Language Package ');
-        }
-
-        return $this;
     }
 
     /**
@@ -147,7 +112,6 @@ class Lang implements \ArrayAccess, ConfigContract
      */
     public function detect()
     {
-
         $language = make('request')->language();
 
         if(strstr($language, '_')){
@@ -201,13 +165,27 @@ class Lang implements \ArrayAccess, ConfigContract
      */
     public function set($key, $value = null)
     {
-        $keys = is_array($key) ? $key : [$key => $value];
 
-        $keys = \Arr::dot($keys, '', '.');
+        $item = is_array($key) ? $key : [$key => $value];
 
-        $this->item = array_merge($this->item, $keys);
+        $item =\Arr::dot($item, '', '.');
+
+        $this->item = array_merge($this->item, $item);
 
         return $this;
+
+    }
+
+    /**
+     * restore lang to array
+     *
+     * @return array
+     */
+    public function arr($key = null)
+    {
+        $item = \Arr::undot($this->item);
+
+        return $key ? \Arr::get($item, $key) : $item;
     }
 
     /**
@@ -270,6 +248,20 @@ class Lang implements \ArrayAccess, ConfigContract
         return $this->item;
     }
 
+
+    /**
+     * To json
+     * @return string
+     */
+    public function json($key = null)
+    {
+        if($key){
+            return json_encode(\Arr::get($this->item, $key));
+        }
+
+        return json_encode($this->all());
+    }
+
     /**
      * Make the place-holder replacements on a line.
      *
@@ -303,6 +295,7 @@ class Lang implements \ArrayAccess, ConfigContract
      */
     public function offsetGet($key)
     {
+        echo $key;
         return $this->get($key);
     }
 
@@ -327,5 +320,84 @@ class Lang implements \ArrayAccess, ConfigContract
     public function offsetUnset($key)
     {
         $this->set($key, null);
+    }
+
+
+    /**
+     * load language
+     *
+     * @param null $lang
+     * @return $this
+     * @throws \ErrorException
+     */
+    public function load($lang, $reload = false)
+    {
+        try {
+
+            $cache = runtime('lang',_APP_, $lang.'.php');
+
+            if (!$reload && !config('app.debug', getenv('DEBUG')) && is_file($cache)) {
+
+                $this->item = require($cache);
+
+            } else {
+
+                if (!is_dir($cache_dir = dirname($cache))) {
+                    if (!mkdir($cache_dir, 0755, true)) {
+                        throw new \ErrorException('Can not create i18n dir ' . $cache_dir);
+                    }
+                }
+
+                if(is_file($file = root('i18n', $lang.'.ini'))) {
+                    $this->set(parse_ini_file($file, true));
+                }
+
+                if(is_file($file = root(_APP_._DS_.'i18n'._DS_.$lang.'.ini'))){
+                    $this->set(parse_ini_file($file, true));
+                }
+
+
+                file_put_contents($cache, '<?php return ' . str_replace(array("\r\n", "\n", "\r", "\t", " "), '', var_export($this->all(), TRUE)).';');
+
+                return $this;
+            }
+        }catch (\Exception $e){
+            throw new \InvalidArgumentException('Unable Load ['.$lang.'] Language Package ');
+        }
+
+        return $this;
+    }
+
+
+
+    /**
+     * flush cache
+     */
+    public function flush()
+    {
+        return make('file')->cleanDirectory(runtime('lang'));
+    }
+    /**
+     * 动态方法调用语言包 (lang->alert()->id())
+     * @param $name
+     * @param $arguments
+     * @return mixed|string
+     */
+    public function __call($key, $args)
+    {
+        array_push($this->keys, $key);
+        $this->args = $args;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        $lang = $this->take(implode('.', $this->keys), $this->args);
+        $this->keys = $this->args = array();
+        return (string) $lang;
     }
 }
