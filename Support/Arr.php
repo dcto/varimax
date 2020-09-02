@@ -28,17 +28,17 @@ class Arr extends \Illuminate\Support\Arr
      */
     public static function dot($array, $prepend = '', $trim = null)
     {
-        $results = [];
+        $arr = [];
 
         foreach ($array as $key => $value) {
             if (is_array($value) && ! empty($value)) {
-                $results = array_merge($results, static::dot($value, $prepend. ($trim ? trim($key, $trim) : $key).'.'));
+                $arr = array_merge($arr, static::dot($value, $prepend. ($trim ? trim($key, $trim) : $key).'.'));
             } else {
-                $results[$prepend.$key] = $value;
+                $arr[$prepend.$key] = $value;
             }
         }
 
-        return $results;
+        return $arr;
     }
 
 

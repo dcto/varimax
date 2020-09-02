@@ -350,6 +350,26 @@ if(!function_exists('cache')) {
         return make('caches');
     }
 }
+
+/**
+ * www目录访问路径
+ * @param $path
+ * @return string
+ */
+function www($path)
+{
+    $url = '/';
+    if(\Str::startsWith($path, '/')){
+        $url = $url.str_replace('//','/', trim($path, '/'));
+    }else{
+        $url = $url.str_replace('//', '/', trim(strtolower(_APP_).'/'.$path, '/'));
+    }
+
+
+    return $url;
+}
+
+
 /**
  * redis
  * @param string $server
