@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \VM\Routing\Router resource(string $url, string $controller)
  * @method static \VM\Routing\Router restful(string $url, string $controller)
  * @method static \VM\Routing\Router regex(string $key, string $regex)
+ * @method static \VM\Routing\Router alias(string $key, string $route = null)
  * @method static  router(string $id = null)
  * @method static \VM\Routing\Router groups($id = null)
  * @method static \VM\Routing\Router dispatch()

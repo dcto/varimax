@@ -35,82 +35,82 @@ class Route
     /**
      * @var int id
      */
-    private $id;
+    public $id;
 
     /**
      * @var string current request url
      */
-    private $url;
+    public $url;
 
     /**
      * @var string  hash
      */
-    private $hash;
+    public $hash;
 
     /**
      * @var string
      */
-    private $name;
+    public $name;
 
     /**
      * @var $hidden boolean
      */
-    private $menu;
+    public $menu;
 
     /**
      * @var string current route language
      */
-    private $lang;
+    public $lang;
 
     /**
      * @var string route icon for menu
      */
-    private $icon;
+    public $icon;
 
     /**
      * @var string Matching regular expression
      */
-    private $regex;
+    public $regex;
 
     /**
      * @var string group name
      */
-    private $group;
+    public $group;
 
     /**
      * @var string The matched HTTP method
      */
-    private $method;
+    public $method;
 
     /**
      * @var array Supported HTTP methods
      */
-    private $methods;
+    public $methods;
 
     /**
      * @var string current route callable
      */
-    private $callable;
+    public $callable;
 
     /**
      * @var string callable namespace
      */
-    private $namespace;
+    public $namespace;
 
     /**
      * @var string current controller
      */
-    private $controller;
+    public $controller;
 
     /**
      * @var string current action
      */
-    private $action;
+    public $action;
 
     /**
      * @var array http request parameters
      */
-    private $parameters = array();
+    public $parameters = array();
 
     /**
      * Constructor.
@@ -121,7 +121,7 @@ class Route
      */
     public function __construct($method, $path, $args = array())
     {
-        $this->id        =   isset($args['id']) ? $args['id'] : $path;
+        $this->id        =   isset($args['id']) ? $args['id'] : str_replace('/', '.',trim($path, '/'));
         $this->url       =   rtrim(preg_replace('/\(.*?\)/', '', $path),'/');
         $this->name      =   isset($args['name']) ? $args['name'] : (isset($args['id']) ? $args['id'] : $this->name);
         $this->hash      =   hash('crc32b',$this->id);
@@ -137,9 +137,7 @@ class Route
             if($callable = substr(strrchr($this->callable, "\\"), 1)) {
                 $this->namespace = chop($args['call'], $this->callable =  $callable);
             }
-            if(strpos($this->callable, '@')){
-                list($this->controller, $this->action) = explode('@', $this->callable);
-            }
+            $this->calling();
         }
 
         if (in_array('GET', $this->methods) && !in_array('HEAD', $this->methods)) {
@@ -157,8 +155,11 @@ class Route
         if(!$id){
             return $this->id;
         }
+
         $this->id = $id;
+
         !isset($this->name) && $this->name = $id;
+
         return $this;
     }
 
@@ -242,5 +243,14 @@ class Route
             throw new  \InvalidArgumentException('Invalid Property Of [Route::' . '$' .$method .']' );
         }
         return $this;
+    }
+
+    /**
+     * Push to router
+     */
+    public function __destruct()
+    {
+        $this->calling();
+        make('router')->addPushToRoutes($this);
     }
 }

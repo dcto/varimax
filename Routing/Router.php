@@ -22,6 +22,12 @@ use VM\Exception\NotFoundException;
  */
 class Router
 {
+
+    /**
+     * @var array
+     */
+    private $alias = array();
+
     /*
      * @var $group
      */
@@ -32,7 +38,7 @@ class Router
      *
      * @var $router Route
      */
-    private $router;
+    private $router = null;
 
     /**
      * Array of routes
@@ -40,6 +46,7 @@ class Router
      * @var $routes array
      */
     private $routes = array();
+
 
     /**
      * An array of HTTP request Methods.
@@ -173,14 +180,41 @@ class Router
      * @param $key
      * @param $regex
      */
-    public function regex($key = null, $regex = null)
+    public function regex($key, $regex = null)
     {
         if($regex){
             $this->regex[$key] = $regex;
-        }else if($key){
-            return $this->regex[$key];
+        }
+
+        return isset($this->regex[$key]) ? $this->regex[$key] : null;
+    }
+
+    /**
+     * alias id to route
+     *
+     * @param $key
+     * @param null $route
+     * @return bool|mixed|null
+     */
+    public function alias($key, $route = null)
+    {
+        if($route){
+
+            if(isset($this->alias[$key])){
+
+                throw new \InvalidArgumentException('Cannot redeclare route id '. $key);
+            }
+
+            $this->alias[$key] = $route;
+
+            return $this;
         }else{
-            return $this->regex;
+
+            if (!isset($this->alias[$key])) {
+                return $key;
+            }
+
+            return $this->alias($this->alias[$key]);
         }
     }
 
@@ -189,9 +223,9 @@ class Router
      * @param null $id
      * @return array|object|Route
      */
-    public function route($id = null)
+    public function route($route = null)
     {
-        return $this->router($id);
+        return $this->router($route);
     }
 
     /**
@@ -199,26 +233,24 @@ class Router
      * @param null $id
      * @return array|object|Route
      */
-    public function router($id = null)
+    public function router($route = null)
     {
-        if($id){
-             if(isset($this->routes[$id])){
-                 return $this->routes[$id];
-             }else{
-                 foreach($this->routes as $router) {
-                     if($router->id == $id) {
-                         return $router;
-                     }
-                 }
-             }
-            throw new NotFoundException('Unknown the ['.$id. '] route.');
+        if($route) {
+
+            if (isset($this->routes[$route])) {
+                return $this->routes[$route];
+            } else {
+                $route = $this->alias($route);
+
+                if (isset($this->routes[$route])) {
+                    return $this->routes[$route];
+                }
+                throw new NotFoundException('Unknown route [' . $route . ']');
+            }
+
+        }else{
+            return $this->router;
         }
-        /*
-        if(!$this->router){
-            throw new NotFoundException('Current route can not available.');
-        }
-        */
-        return $this->router;
     }
 
     /**
@@ -295,7 +327,7 @@ class Router
             $groups[$id] = $group;
             unset($groups[Arr::get($group, 'pid')]);
             foreach ($this->routes as $route){
-                $route->group == $id && $groups[$id]['routes'][] = $route;
+                $route->group() == $id && $groups[$id]['routes'][] = $route;
             }
             }
         }
@@ -351,7 +383,7 @@ class Router
 
         $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $route);
 
-        return $this->addPushToRoutes(new Route($methods, $route, $properties));
+        return new Route($methods, $route, $properties);
     }
 
     /**
@@ -479,17 +511,37 @@ class Router
 
     /**
      * addPushRoutes
+     *
      * @param $route
      */
-    public function addPushToRoutes(Route $router)
+    public function addPushToRoutes(Route $route)
     {
-        if($id = $router->id()){
-            if(isset($this->routes[$id])){
-                throw new NotFoundException("The route [$id] exist");
+        if($url = $route->url){
+            if(isset($this->routes[$url])){
+                throw new NotFoundException("Cannot redeclare route [$url]");
             }
-           return $this->routes[$id] = $router;
+
+            $this->alias($route->id, $route->url);
+
+            $this->routes[$url] = $route;
+
+        }else{
+            $this->routes[] = $route;
         }
-        return $this->routes[] = $router;
+
+        /*
+        if($id = $route->id()){
+            if(isset($this->routes[$id])){
+                throw new NotFoundException("Cannot redeclare route [$id]");
+            }
+           return $this->routes[$id] = $route;
+        }
+
+        $this->routes[] = $route;
+
+        */
+
+        return $this;
     }
 
 
