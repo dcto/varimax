@@ -12,7 +12,7 @@
 namespace VM\Cache\Driver;
 
 use VM\Exception\SystemException;
-use VM\FileSystem\FileSystem;
+
 
 class FilesDriver extends Driver implements DriverInterface
 {
@@ -36,72 +36,47 @@ class FilesDriver extends Driver implements DriverInterface
      */
     private $prefix;
 
-    /**
-     * @var FileSystem
-     */
-    private $fileSystem;
-
 
 
     public function __construct($prefix = null)
     {
-        $this->dir =  runtime(config('cache.files.dir', config('dir.cache')));
+        $this->dir =  config('cache.driver.files.dir', runtime('cache'));
 
-        $this->prefix($prefix?:config('cache.files.prefix'));
+        $this->prefix(config('cache.driver.files.prefix', $prefix));
 
-        $this->cache = $this->dir.'/'.$this->prefix();
 
-        $this->fileSystem = app('file');
+        make('file')->mkDir($this->dir, 0755, true, true);
+
+
+        $this->file = $this->dir.'/'.$this->prefix();
     }
 
     /**
-     * get key
+     * get file name
+     *
      * @param $key
      */
-    public function file($key = '')
+    public function file($key, $time = null)
     {
-        return $this->file.hash('crc32b',$key);
-    }
+        $file = $this->file.hash('crc32b', $key);
 
-    /**
-     * Retrieve an item and expiry time from the cache by key.
-     *
-     * @param  string  $key
-     * @return array
-     */
-    protected function load($key)
-    {
-        $path = path();
 
-        // If the file doesn't exists, we obviously can't return the cache so we will
-        // just return null. Otherwise, we'll get the contents of the file and get
-        // the expiration UNIX timestamps from the start of the file's contents.
-        try {
-            $expire = substr(
-                $contents = $this->fileSystem->get($path, true), 0, 10
-            );
-        } catch (\Exception $e) {
-            return ['data' => null, 'time' => null];
+        if($time){
+
+            if(is_file($file)){
+                make('file')->delete($file);
+            }
+
+            make('file')->touch($file, time() + $time);
+
+        }else if(is_file($file) && time() > filemtime($file)){
+
+            make('file')->delete($file);
         }
 
-        // If the current time is greater than expiration timestamps we will delete
-        // the file and return null. This helps clean up the old files and keeps
-        // this directory much cleaner for us as old files aren't hanging out.
-        if (time() >= $expire) {
-            $this->del($key);
-
-            return ['data' => null, 'time' => null];
-        }
-
-        $data = unserialize(substr($contents, 10));
-
-        // Next, we'll extract the number of minutes that are remaining for a cache
-        // so that we can properly retain the time for things like the increment
-        // operation that may be performed on the cache. We'll round this out.
-        $time = ceil($expire - time());
-
-        return compact('data', 'time');
+        return $file;
     }
+
 
     /**
      * Get the expiration time based on the given minutes.
@@ -127,7 +102,7 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function has($key)
     {
-       return $this->fileSystem->has($this->cache($key));
+       return $this->file($key) && make('file')->has($this->file($key));
     }
 
     /**
@@ -136,9 +111,12 @@ class FilesDriver extends Driver implements DriverInterface
      * @param  string  $key
      * @return mixed
      */
-    public function get($key)
+    public function get($key, $default = null)
     {
-        return \Arr::get($this->load($key), 'data');
+        if(make('file')->has($this->file($key))){
+            return unserialize(make('file')->get($this->file($key)));
+        }
+        return $default;
     }
 
     /**
@@ -151,11 +129,7 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function set($key, $value, $time = 86400)
     {
-        if (! $this->fileSystem->exists($dir = dirname($this->cache($key)))) {
-            $this->fileSystem->mkDir($dir, 0755, true, true);
-        }
-        $value = $this->expiration($time).serialize($value);
-        return $this->fileSystem->put($this->cache($key), $value, true);
+        return make('file')->put($this->file($key, $time), serialize($value), true);
     }
 
     /**
@@ -209,7 +183,7 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function del($key)
     {
-        return $this->fileSystem->del($this->cache($key));
+        return make('file')->del($this->file($key));
     }
 
     /**
@@ -219,7 +193,7 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function flush()
     {
-        return $this->fileSystem->deleteDirectory($this->dir, true);
+        return make('file')->deleteDirectory($this->dir, true);
     }
 
     /**
@@ -229,7 +203,14 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function prefix($prefix = null)
     {
-        return $prefix ? $this->prefix = $prefix : $this->prefix;
+        if($prefix){
+            $this->prefix = $prefix;
+
+            return $this;
+
+        }else{
+            return $this->prefix;
+        }
     }
 
 }

@@ -34,7 +34,7 @@ class ApcDriver extends Driver
     {
         $this->apcu = function_exists('apcu_fetch');
 
-        $this->prefix = config('cache.apcu.prefix', 'vm:');
+        $this->prefix = config('cache.driver.apcu.prefix', 'vm:');
     }
 
     /**

@@ -14,7 +14,7 @@ namespace VM\Cache\Driver;
 class Driver
 {
 
-    public function cache($key, $value)
+    public function cache($key, $value = null)
     {
 
 

@@ -70,7 +70,7 @@ class Cache
      * @return FilesDriver
      * @author 11.
      */
-    public function files($prefix = null)
+    public function files($prefix = 'vm.')
     {
         return new FilesDriver($prefix);
     }
@@ -111,7 +111,7 @@ class Cache
      */
     public function getDefaultDriver()
     {
-        return config('app.cache');
+        return config('cache.default', 'file');
     }
 
 
@@ -125,7 +125,7 @@ class Cache
        if(!isset($this->driver[$driver])){
             throw new SystemException('Invalid '.$driver.' cache driver.');
         }
-       return config('app.cache', $driver);
+       return config('cache.default', $driver);
     }
 
 

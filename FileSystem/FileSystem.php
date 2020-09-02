@@ -62,7 +62,7 @@ class FileSystem extends \Illuminate\Filesystem\Filesystem
      */
     public function mkDir($path, $mode = 0755, $recursive = true, $force = false)
     {
-        return $this->makeDirectory($path, $mode, $recursive, $force);
+        return $this->isDir($path) ? true : $this->makeDirectory($path, $mode, $recursive, $force);
     }
 
     /**
@@ -106,5 +106,20 @@ class FileSystem extends \Illuminate\Filesystem\Filesystem
         }else{
             return array();
         }
+    }
+
+    /**
+     * touch file
+     * @param $path
+     *
+     * @return $this
+     */
+    public function touch($path, $time = null, $atime = null)
+    {
+        $this->mkDir($this->dirname($path));
+
+        touch($path, $time, $atime);
+
+        return $this;
     }
 }

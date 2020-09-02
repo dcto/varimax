@@ -38,7 +38,7 @@ class RedisDriver extends Driver implements DriverInterface
     public function __construct($server = 'default')
     {
 
-        $this->config = config('cache.redis.'. $server);
+        $this->config = config('cache.driver.redis.'. $server);
         if(!$this->config){
             throw new \ErrorException('Unable load ['.$server.'] redis server configure.');
         }
