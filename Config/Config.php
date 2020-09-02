@@ -32,14 +32,16 @@ class Config implements ArrayAccess, ConfigContract
      */
     public function __construct(array $item = [])
     {
-        if(is_file($config = _ROOT_.'/config/config.php')){
-            $this->item = require($config);
+        if(is_file($config = root('config','config.php'))) {
+            $this->item = (array) require($config);
+        }
 
-            if(is_file($config = _ROOT_.'/config/'._APP_.'.php')){
-                $this->item = array_merge_recursive($this->item, require($config));
-            }
-        }else{
-            throw new \ErrorException('Unable to load config file: '.$config);
+        if(is_file($config = _DIR_._DS_.'config.php')){
+            $this->item = array_merge_recursive($this->item, (array) require($config));
+        }
+
+        if(!$this->item){
+            throw new \ErrorException('Unable load config');
         }
     }
 
