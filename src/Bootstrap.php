@@ -60,6 +60,9 @@ $loader = require(_ROOT_.'/vendor/autoload.php');
 //Set App Psr4
 $loader->setPsr4("App\\", _DIR_);
 
+//add App Model
+$loader->addPsr4("App\\Model\\", _ROOT_.'model/');
+
 /**
  * Bootstrap Of Application
  */
