@@ -4,8 +4,8 @@
   "type": "project",
   "keywords": ["php","php framework", "varimax-framework"],
   "license": "MIT",
+  "prefer-stable" : true,
   "minimum-stability": "dev",
-  "prefer-stable": true,
   "homepage": "http://www.varimax.cn",
   "version": "v1.0",
   "support": {
