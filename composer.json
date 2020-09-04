@@ -1,0 +1,54 @@
+{
+  "name": "dc/varimax",
+  "description": "Varimax The Full Stack PHP Frameworks",
+  "type": "project",
+  "keywords": ["php","php framework", "varimax-framework"],
+  "license": "MIT",
+  "minimum-stability": "stable",
+  "homepage": "http://www.varimax.cn",
+  "version": "1.0",
+  "support": {
+    "issues": "https://github.com/dcto/varimax/issues",
+    "source": "https://github.com/dcto/varimax"
+  },
+  "authors": [
+    {
+      "name": "Sem.dc",
+      "email": "sdoz@live.com"
+    }
+  ],
+
+  "require": {
+    "php": ">=7.2.0",
+    "ext-bcmath": "*",
+    "ext-mbstring": "*",
+    "psr/log": "1.*",
+    "twig/twig": "1.*",
+    "vlucas/phpdotenv":"4.1.*",
+    "symfony/http-foundation": "3.*",
+    "illuminate/contracts": "5.8.*",
+    "illuminate/container": "5.8.*",
+    "illuminate/support": "5.8.*",
+    "illuminate/events": "5.8.*",
+    "illuminate/database": "5.8.*",
+    "illuminate/filesystem": "5.8.*",
+    "illuminate/pagination": "5.8.*",
+    "kylekatarnls/laravel-carbon-2": "^1.0.0",
+    "nesbot/carbon": "2.16.3 as 1.34.0"
+  },
+
+  "autoload": {
+    "files": [
+      "src/Bootstrap.php"
+    ],
+    "psr-4": {
+      "VM\\": "src/"
+    },
+    "classmap":[
+      "src/Support/Arr.php",
+      "src/Support/Str.php",
+      "src/Support/Facades"
+    ]
+  }
+}
+
