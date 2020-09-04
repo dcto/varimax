@@ -12,7 +12,6 @@
 namespace VM\Http\Request;
 
 
-use VM\Http\FileTrait;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
 
 class Upload extends UploadedFile

@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static get(string $key = null, mixed $default = null, boolean $deep = false)
  * @method static set(string $key, mixed $val)
  * @method static all(string|array $key = null)
- * @method static not(string|array $key = null)
+ * @method static not()
  * @method static has(string|array $key)
  * @method static put(string|array $key, $val = null)
  * @method static only(array $keys)

@@ -54,8 +54,20 @@ abstract class Controller
             static::$assign['CONTROLLER'] = static::$controller = static::$router->controller();
 
             static::$assign['ACTION'] = static::$action = static::$router->action();
+
+            $this->on();
         }
     }
+
+    /**
+     * the controller start hook
+     */
+    protected function on(){}
+
+    /**
+     * the controller after hook
+     */
+    protected function off(){}
 
     /**
      * make
@@ -69,6 +81,19 @@ abstract class Controller
     }
 
     /**
+     * [view]
+     *
+     * @param       $template
+     * @param array $params
+     *
+     */
+    protected function view($template, $variable = [])
+    {
+        return make('view')->show($template, $variable);
+    }
+
+
+    /**
      * [assign]
      *
      * @param      $var
@@ -80,15 +105,8 @@ abstract class Controller
         make('view')->assign($var, $val);
     }
 
-    /**
-     * [view]
-     *
-     * @param       $template
-     * @param array $params
-     *
-     */
-    protected function view($template, $variable = [])
+    public function __destruct()
     {
-        return make('view')->show($template, $variable);
+        $this->off();
     }
 }

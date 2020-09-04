@@ -122,24 +122,29 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         $query = $this->all();
 
-        switch (substr($cast, 0, 1)) {
-            case '!':
-                unset($query[ltrim($cast, '!')]);
-                break;
+        if(is_array($cast)){
+            $query = array_merge($query, $cast);
+        }else {
+            switch (substr($cast, 0, 1)) {
+                case '!':
+                    unset($query[ltrim($cast, '!')]);
+                    break;
 
-            case '&':
-                $cast = trim($cast, '?&');
-                parse_str($cast, $queryArray);
-                $query = array_merge($query, $queryArray);
-                break;
+                case '&':
+                    $cast = trim($cast, '?&');
+                    parse_str($cast, $queryArray);
+                    $query = array_merge($query, $queryArray);
+                    break;
 
-            case '@':
-                $cast = ltrim($cast, '@');
-                $query = array_key_exists($cast, $query) ? array($cast => $query[$cast]) : array();
-                break;
+                case '@':
+                    $cast = ltrim($cast, '@');
+                    $query = array_key_exists($cast, $query) ? array($cast => $query[$cast]) : array();
+                    break;
+            }
         }
 
         $uri = $query ? '?' . http_build_query($query) : '';
+
         return $uri = $this->url() . $uri;
     }
 
@@ -240,11 +245,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * 修改参数
      * @param $key
-     * @param $val
+     * @param $this
      */
     public function set($key, $val)
     {
-        return $this->getInputSource()->set($key, $val);
+         $this->getInputSource()->set($key, $val);
+
+         return $this;
     }
 
 
@@ -266,7 +273,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * 设定变量
      * @param $query
-     * @return boolean
+     * @return $this
      */
     public function put($key, $val = null)
     {
@@ -278,18 +285,17 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             $this->attributes->set($key, $val);
         }
 
-        return true;
+        return $this;
     }
 
     /**
      * [not 排除返回]
-     * @param $key
      * @return array
      */
-    public function not($key = null)
+    public function not()
     {
         //return array_diff_key($this->all(), array_fill_keys($key, null));
-        return \Arr::except($this->all(), $key);
+        return \Arr::except($this->all(), func_get_args());
     }
 
     /**
@@ -327,22 +333,26 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * Merge new input into the current request's input array.
      *
      * @param  array  $input
-     * @return void
+     * @return $this
      */
     public function merge(array $input)
     {
         $this->getInputSource()->add($input);
+
+        return $this;
     }
 
     /**
      * Replace the input for the current request.
      *
      * @param  array  $input
-     * @return void
+     * @return $this
      */
     public function replace(array $input)
     {
         $this->getInputSource()->replace($input);
+
+        return $this;
     }
 
     /**

@@ -230,10 +230,10 @@ class Lang
      * @param $args
      * @return mixed|string
      */
-    public function take($key, $args)
+    public function take($key, $args = null)
     {
         if(isset($this->item[$key])){
-            return $args ? $this->replacements($this->item[$key], $args) : $this->item[$key];
+            return $args ? $this->replacements($this->item[$key], $args) : str_replace('%s', '', $this->item[$key]);
         }
         return $key;
     }

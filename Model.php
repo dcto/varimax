@@ -181,7 +181,7 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * 预定义分页数
      * @var int
      */
-    protected $perPage = 10;
+    protected $perPage = 20;
 
 
     /**

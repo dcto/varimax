@@ -31,7 +31,7 @@ if(!function_exists('make')) {
 }
 
 /**
- * get request url
+ * log
  * @return mixed
  */
 if(!function_exists('log')) {
@@ -43,13 +43,24 @@ if(!function_exists('log')) {
 
 
 /**
- * get request url
+ * request url
  * @return mixed
  */
 if(!function_exists('url')) {
     function url()
     {
         return call_user_func_array(array(app('request'), 'url'), func_get_args());
+    }
+}
+
+/**
+ * request uri
+ * @return mixed
+ */
+if(!function_exists('uri')) {
+    function uri()
+    {
+        return call_user_func_array(array(app('request'), 'uri'), func_get_args());
     }
 }
 
