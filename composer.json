@@ -6,7 +6,7 @@
   "license": "MIT",
   "minimum-stability": "stable",
   "homepage": "http://www.varimax.cn",
-  "version": "1.0",
+  "version": "v1.0",
   "support": {
     "issues": "https://github.com/dcto/varimax/issues",
     "source": "https://github.com/dcto/varimax"
