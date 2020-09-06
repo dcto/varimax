@@ -219,14 +219,14 @@ class Application extends Container
         /**
          * setting timezone
          */
-        if ($timezone = is_string($this['config']['app.timezone'])) {
+        if (is_string($timezone = $this['config']['app.timezone'])) {
             date_default_timezone_set($timezone);
         }
 
         /**
          * setting charset
          */
-        if ($charset = is_string($this['config']['app.charset'])) {
+        if (is_string($charset = $this['config']['app.charset'])) {
             mb_internal_encoding($charset);
         }
 

@@ -37,7 +37,7 @@ class Config implements ArrayAccess, ConfigContract
         }
 
         if(is_file($config = _DIR_._DS_.'config.php')){
-            $this->item = array_merge_recursive($this->item, (array) require($config));
+            $this->item = array_merge($this->item, (array) require($config));
         }
 
         if(!$this->item){
