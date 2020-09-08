@@ -183,9 +183,16 @@ class Lang
      */
     public function arr($key = null)
     {
-        $item = \Arr::undot($this->item);
+        $items = array();
 
-        return $key ? \Arr::get($item, $key) : $item;
+        foreach($this->item as $item => $value){
+
+            if(strpos($item, $key.'.') !== false){
+                \Arr::set($items, $item, $value);
+            }
+        }
+
+        return \Arr::get($items, $key);
     }
 
     /**

@@ -34,7 +34,7 @@ class RedisSessionHandler extends \SessionHandler
         }
 
         if(!$savePath){
-            $savePath = config('session.save_path').'&prefix='.config('session.prefix', 'VM_SESSION:');
+            $savePath = config('session.save_path').'&prefix='.config('session.prefix', 'VMS:');
         }
 
         ini_set('session.save_handler', 'redis');

@@ -82,7 +82,7 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function start($handler = null)
+    public function start()
     {
 
         if($this->isStarted()) return $this;
@@ -97,12 +97,11 @@ class Session implements  \IteratorAggregate, \Countable
                 throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
             }
 
-            $this->sessionHandler($handler ?: config('session.driver', 'files'));
+            $this->sessionHandler(config('session.driver'));
 
             session_start();
 
-
-            $this->started = true;
+            $this->started = isset($_SESSION);
 
             return $this;
 

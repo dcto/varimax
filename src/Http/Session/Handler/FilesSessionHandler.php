@@ -30,10 +30,10 @@ class FilesSessionHandler extends \SessionHandler
      */
     public function __construct($path = null)
     {
-         $savePath = config('session.save_path');
+         $savePath = config('session.save_path', runtime('session'));
 
          if(!is_dir($savePath)){
-             $savePath = mkdir(runtime('session'), 0755, true);
+             $savePath = mkdir($savePath, 0755, true);
          }
 
         if (null === $savePath) {
