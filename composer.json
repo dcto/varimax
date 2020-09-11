@@ -7,7 +7,7 @@
   "prefer-stable" : true,
   "minimum-stability": "dev",
   "homepage": "http://www.varimax.cn",
-  "version": "v1.3",
+  "version": "v1.3.1",
   "support": {
     "issues": "https://github.com/dcto/varimax/issues",
     "source": "https://github.com/dcto/varimax"

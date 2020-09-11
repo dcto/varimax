@@ -87,6 +87,25 @@ class Config implements ArrayAccess, ConfigContract
     }
 
     /**
+     * dynamic addition config key from runtime
+     * @param string $key
+     * @param array $value
+     * @return $this
+     */
+    public function add($key,  $value = null)
+    {
+        if(is_null($value) && !isset($this->item[$key]) ){
+            if(is_file($config = runtime('config', $key . '.php'))){
+                return $this->set($key, require($config));
+            }
+        }else{
+            return $this->set($key, $value);
+        }
+
+        return $this;
+    }
+
+    /**
      * Prepend a value onto an array configuration value.
      *
      * @param  string  $key
