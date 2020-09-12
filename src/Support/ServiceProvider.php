@@ -11,4 +11,4 @@ namespace VM\Support;
  * SITE: https://www.varimax.cn/
  */
 
-abstract class ServicesProvider extends \Illuminate\Support\ServiceProvider{}
+abstract class ServiceProvider extends \Illuminate\Support\ServiceProvider{}
