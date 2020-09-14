@@ -510,7 +510,17 @@ if(!function_exists('is_phone')) {
      */
     function is_phone($phone)
     {
-        return (strlen($phone) != 11 || !preg_match("/^1[345678]\d{9}$/",$phone));
+        if(strlen($phone) != 11) return false;
+        $rules = array(
+                "/^1[34578]\d{9}$/",
+                "/^19[89]\d{8}$/",
+                "/^166\d{8}$/"
+        );
+
+        foreach($rules as $rule){
+            if(preg_match($rule, $phone)) return true;
+        }
+        return false;
     }
 }
 
