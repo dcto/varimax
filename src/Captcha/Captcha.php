@@ -21,12 +21,6 @@ class Captcha {
     protected $fonts;
 
     /**
-     * 随机验证码
-     * @var string
-     */
-    protected $token;
-
-    /**
      * 宽度
      * @var int
      */
@@ -51,6 +45,11 @@ class Captcha {
      */
     protected $string = '1234';
 
+    /**
+     * cookie名称
+     * @var string
+     */
+    protected $cookie = 'captcha';
 
     /**
      * 图像
@@ -63,8 +62,6 @@ class Captcha {
     public function __construct($width = 100, $height = 30, $length = 4, $fonts = null)
     {
         if (!extension_loaded("gd"))  throw new \ErrorException ("Captcha Unable Load GD Library");
-
-        $this->token = config('app.token','_').'token';
 
         /**
          * Bold.otf 粗体
@@ -90,9 +87,9 @@ class Captcha {
     public function is($input, $case = false)
     {
         $input = sprintf("%s", trim($input));
-        $codes = make('cookie')->get($this->token);
+        $codes = make('cookie')->get($this->cookie);
         $codes = \Crypt::de($codes);
-        make('cookie')->del($this->token);
+        make('cookie')->del($this->cookie);
         if(!$case && strtolower($input) === strtolower($codes)){
             return true;
         }else if($input === $codes){
@@ -238,7 +235,7 @@ class Captcha {
     public function string($string = null)
     {
         $this->string = $string ?: $this->string;
-        make('cookie')->set($this->token, \Crypt::en($this->string));
+        make('cookie')->set($this->cookie, \Crypt::en($this->string));
 
         for ($i=0; $i< $this->length;$i++){
             $size = 18;
