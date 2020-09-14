@@ -32,15 +32,15 @@ class Config implements ArrayAccess, ConfigContract
      */
     public function __construct(array $item = [])
     {
-        if(is_file($config = root('config','config.php'))) {
+        if (is_file($config = root('config', 'config.php'))) {
             $this->item = (array) require($config);
         }
 
-        if(is_file($config = _DIR_._DS_.'config.php')){
-            $this->item = array_merge($this->item, (array) require($config));
+        if (is_file($config = _DIR_ . _DS_ . 'config.php')) {
+            $this->set((array) require($config));
         }
 
-        if(!$this->item){
+        if (!$this->item) {
             throw new \ErrorException('Unable load config');
         }
     }
@@ -79,6 +79,8 @@ class Config implements ArrayAccess, ConfigContract
     {
         $keys = is_array($key) ? $key : [$key => $value];
 
+        $keys = Arr::dot($keys);
+
         foreach ($keys as $key => $value) {
             Arr::set($this->item, $key, $value);
         }
@@ -94,11 +96,11 @@ class Config implements ArrayAccess, ConfigContract
      */
     public function add($key,  $value = null)
     {
-        if(is_null($value) && !isset($this->item[$key]) ){
-            if(is_file($config = runtime('config', $key . '.php'))){
+        if (is_null($value) && !isset($this->item[$key])) {
+            if (is_file($config = runtime('config', $key . '.php'))) {
                 return $this->set($key, require($config));
             }
-        }else{
+        } else {
             return $this->set($key, $value);
         }
 
