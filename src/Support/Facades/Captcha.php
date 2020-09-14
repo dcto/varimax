@@ -12,8 +12,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static VM\Captcha\Captcha background(int $red = 0, int $green = 0, int $blue = 0) 设置图片背景
  * @method static VM\Captcha\Captcha width(int $width)
  * @method static VM\Captcha\Captcha height(int $height)
- * @method static string base64(string $type = null) Base64输出
  * @method static string view(string $type = null)  视图输出
+ * @method static string image(string $type = null)  视图输出
+ * @method static string base64(string $type = null) Base64输出
  * @method static Resource render($type = null) 渲染输出
  */
 class Captcha extends Facade

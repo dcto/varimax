@@ -310,6 +310,30 @@ class Captcha {
     }
 
     /**
+     * alias render function
+     */
+    public function view($type)
+    {
+        return $this->image($type);
+    }
+
+    /**
+     * alias render function
+     *
+     * @return mixed
+     */
+    public function image($type = null)
+    {
+        $type = $type ?: $this->types[array_rand($this->types)];
+        header('Cache-Control: private, max-age=0, no-store, no-cache, must-revalidate');
+        header('Cache-Control: post-check=0, pre-check=0', false);
+        header('Pragma: no-cache');
+        header("content-type: image/" . $type);
+
+        die($this->render($type));
+    }
+
+    /**
      * return base64 image
      *
      * @return string
@@ -319,23 +343,7 @@ class Captcha {
         $type = $type ?: $this->types[array_rand($this->types)];
         return 'data:image/' . $type . ';base64,' . base64_encode($this->render($type));
     }
-
-    /**
-     * alias render function
-     *
-     * @return mixed
-     */
-    public function view($type = null)
-    {
-        $type = $type ?: $this->types[array_rand($this->types)];
-        header('Cache-Control: private, max-age=0, no-store, no-cache, must-revalidate');
-        header('Cache-Control: post-check=0, pre-check=0', false);
-        header('Pragma: no-cache');
-        header("content-type: image/".$type);
-
-        die($this->render($type));
-    }
-
+    
     /**
      * @param null $type
      * @return string
