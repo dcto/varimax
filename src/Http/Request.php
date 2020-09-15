@@ -187,7 +187,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         $input = $this->getInputSource()->all() + $this->query->all() + $this->attributes->all();
 
-        return \Arr::get($input, $key, $default);
+        return is_array($key) ? \Arr::only($input, $key) : \Arr::get($input, $key, $default);
     }
 
 

@@ -175,12 +175,12 @@ if(!function_exists('runtime')) {
  * @return \VM\Http\Request
  */
 if(!function_exists('request')) {
-    function request($key = null)
+    function request($key = null, $default = '')
     {
         if(is_null($key)) {
             return make('request');
         }
-        return make('request')->get($key);
+        return make('request')->get($key, $default);
     }
 }
 /**
@@ -320,7 +320,7 @@ if(!function_exists('json')) {
 if(!function_exists('input')) {
     function input($key = null, $default = '')
     {
-        return make('request')->get($key, $default);
+        return make('request')->input($key, $default);
     }
 }
 /**
