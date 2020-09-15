@@ -330,12 +330,20 @@ if(!function_exists('input')) {
  * @return \VM\Cache\Driver\Driver
  */
 if(!function_exists('cache')) {
-    function cache($key = false, $default = null)
+    function cache($key = null, $default = null)
     {
-        if ($key) {
-            return make('cache')->get($key, $default);
+        if (is_null($key)) return make('cache');
+
+        $cache = make('cache')->get($key);
+
+        if($cache){
+            return $cache;
+            
+        }else if($default){
+            make('cache')->set($key, $default);
         }
-        return make('cache');
+
+        return $default;
     }
 }
 
