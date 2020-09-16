@@ -79,7 +79,7 @@ class Cookie{
      */
     private function name($name)
     {
-        return 'vm:'.$name;
+        return config('cookie.prefix', '').$name;
     }
 
     /**
