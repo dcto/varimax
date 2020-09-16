@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static VM\Captcha\Captcha make(int $width = 100, int $height = 30, int $obstruct = 5) 创建验证码
  * @method static VM\Captcha\Captcha code($length = 4, $code = null) 获取随机字符串
  * @method static VM\Captcha\Captcha string(string $string = null)
+ * @method static VM\Captcha\Captcha timeout(int $minutes) 验证码超时
  * @method static VM\Captcha\Captcha disturb(int $level = 5) 设置图片干扰
  * @method static VM\Captcha\Captcha background(int $red = 0, int $green = 0, int $blue = 0) 设置图片背景
  * @method static VM\Captcha\Captcha width(int $width)
