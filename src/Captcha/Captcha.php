@@ -32,6 +32,12 @@ class Captcha {
      */
     protected $height = 30;
 
+
+    /**
+     * 过期时间(分钟)
+     */
+    protected $timeout = 2;
+
     /**
      * 字符数
      * @var
@@ -225,6 +231,16 @@ class Captcha {
     }
 
     /**
+     * 验证码过期时间
+     */
+    public function timeout($minutes)
+    {
+        $this->time = $minutes;
+
+        return $this;
+    }
+
+    /**
      * [setImageString 设置验证码]
      *
      * @param $images
@@ -235,7 +251,7 @@ class Captcha {
     public function string($string = null)
     {
         $this->string = $string ?: $this->string;
-        make('cookie')->set($this->cookie, \Crypt::en($this->string));
+        make('cookie')->set($this->cookie, \Crypt::en($this->string), $this->timeout);
 
         for ($i=0; $i< $this->length;$i++){
             $size = 18;
