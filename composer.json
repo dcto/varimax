@@ -21,7 +21,10 @@
 
   "require": {
     "php": ">=7.2.0",
+    "ext-xml":"*",
+    "ext-curl":"*",
     "ext-bcmath": "*",
+    "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
     "twig/twig": "1.*",
