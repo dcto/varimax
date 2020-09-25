@@ -55,17 +55,6 @@ class Router
      */
     private static $methods = ['GET', 'POST', 'PUT', 'HEAD', 'PATCH', 'DELETE', 'OPTIONS'];
 
-
-    /**
-     * @var Request
-     */
-    private $request;
-
-    /**
-     * @var Response
-     */
-    private $response;
-
     /**
      * @var array
      * Retrieve the additional Routing Patterns from configuration.
@@ -392,11 +381,8 @@ class Router
      */
     public function dispatch(Request $request, Response $response)
     {
-        //
-        $this->request = $request;
-
-        //
-        $this->response = $response;
+        //Pass The OPTIONS Request
+        if ($request->method('OPTIONS')) return $response->make();
 
         // Get the Method and Path.
         $path = trim(urldecode($request->path()));
