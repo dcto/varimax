@@ -139,11 +139,7 @@ class Route
             }
             $this->calling();
         }
-
-        if (in_array('GET', $this->methods) && !in_array('HEAD', $this->methods)) {
-            $this->methods[] = 'HEAD';
-            $this->methods[] = 'OPTIONS';
-        }
+        $this->methods[] = 'OPTIONS';
     }
 
     /**

@@ -381,9 +381,6 @@ class Router
      */
     public function dispatch(Request $request, Response $response)
     {
-        //Pass The OPTIONS Request
-        if ($request->method('OPTIONS')) return $response->make();
-
         // Get the Method and Path.
         $path = trim(urldecode($request->path()));
 
