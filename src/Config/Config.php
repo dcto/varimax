@@ -65,6 +65,9 @@ class Config implements ArrayAccess, ConfigContract
      */
     public function get($key, $default = null)
     {
+        if(!isset($this->item[$item =\Str::before($key, '.')])){
+            $this->add($item);
+        }
         return Arr::get($this->item, $key, $default);
     }
 
@@ -100,7 +103,7 @@ class Config implements ArrayAccess, ConfigContract
             if (is_file($config = runtime('config', $key . '.php'))) {
                 return $this->set($key, require($config));
             }
-        } else {
+        } else if($value) {
             return $this->set($key, $value);
         }
 
