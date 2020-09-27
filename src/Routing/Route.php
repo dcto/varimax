@@ -139,7 +139,6 @@ class Route
             }
             $this->calling();
         }
-        $this->methods[] = 'OPTIONS';
     }
 
     /**
