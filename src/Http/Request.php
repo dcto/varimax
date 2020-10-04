@@ -80,16 +80,22 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @example url('@index');
      * @example url('$controller');
      * @example url('/index/abc');
+     * @example url('?', 'a', 'b', 'c');
      * @example url();
      * @return string
      */
     public function url()
     {
-        if (!$args = func_get_args()) return preg_replace('/\?.*/', '', $this->getUri());
-
+        $args = func_get_args();
+        $tags = array_shift($args);
+        if (func_num_args() == 0 || !$tags) return preg_replace('/\?.*/', '', $this->getUri());
+        
         $baseUrl = $this->baseUrl() . '/';
-        $tag = array_shift($args);
-        if ($tag[0] == '@') {
+
+        if ($tags == '/') {
+            return  $baseUrl;
+      
+        }else if ($tags[0] == '@') {
             /*
              * @var $router \VM\Routing\Route
              */
@@ -97,16 +103,22 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             /*
              * @var $route \VM\Routing\Route
              */
-            if (!$route = $router->router(ltrim($tag, '@'))) throw new NotFoundException("The $tag route does not found");
+            if (!$route = $router->router(ltrim($tags, '@'))) throw new NotFoundException("The $tags route does not found");
             if (!strpos($route->url(), ':')) return $baseUrl . trim($route->url(), '/');
             $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
             return $baseUrl . trim(vsprintf($url, $args));
-        } else if ($tag[0] == '$') {
+            
+        } else if ($tags[0] == '$') {
             $router = make('router')->url();
-            $url = str_replace(array('$controller', '$action'), explode('@', $router->callable()), $tag);
+            $url = str_replace(array('$controller', '$action'), explode('@', $router->callable()), $tags);
             return $baseUrl . trim($url, '/');
+
+        } else if ($tags[0] == '?'){
+
+            return $baseUrl . http_build_query($args);
+
         } else {
-            return $baseUrl . trim($tag, '/');
+            return $baseUrl . trim($tags, '/');
         }
     }
 
