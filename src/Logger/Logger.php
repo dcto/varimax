@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Varimax The Full Stack PHP Frameworks.
  * varimax
@@ -20,33 +21,34 @@ use Illuminate\Contracts\Support\Arrayable;
 use Illuminate\Contracts\Support\Jsonable;
 
 
-class Logger extends AbstractLogger{
+class Logger extends AbstractLogger
+{
     /**
      * logs dir
      *
      * @var string
      */
-    protected $LogsDir = '/logs';
+    private $dir = 'logs';
+
+    /**
+     * Path to the log file
+     * @var string
+     */
+    private $log;
 
     /**
      * options
      *
      * @var array
      */
-    protected $options = array (
+    private $options = array(
         'extension'      => 'log',
         'dateFormat'     => 'Y-m-d H:i:s.u',
-        'filename'       => false,
         'flushFrequency' => false,
-        'prefix'         => 'log-',
+        'prefix'         => '',
         'logFormat'      => false,
         'appendContext'  => true,
     );
-    /**
-     * Path to the log file
-     * @var string
-     */
-    private $logFilePath;
 
     /**
      * Current minimum logging threshold
@@ -97,19 +99,19 @@ class Logger extends AbstractLogger{
     /**
      * Class constructor
      *
-     * @param string $logDirectory      File path to the logging directory
+     * @param string $dir      File path to the logging directory
      * @param string $logLevelThreshold The LogLevel Threshold
      * @param array  $options
      *
      * @internal param string $logFilePrefix The prefix for the log file name
      * @internal param string $logFileExt The extension for the log file
      */
-    public function __construct($logDirectory = null, $logLevelThreshold = LogLevel::DEBUG, array $options = array())
+    public function __construct($dir = null, $logLevelThreshold = LogLevel::DEBUG, array $options = array())
     {
-        $logDirectory && $this->LogsDir = $logDirectory;
-        $this->logLevelThreshold = $logLevelThreshold;
         $this->options = array_merge($this->options, $options);
-        $this->LogsDir = runtime($this->LogsDir);
+        $this->logLevelThreshold = $logLevelThreshold;
+        $this->dir = $dir ?: runtime($this->dir);
+        $this->log = $this->options['prefix'] . date('Ymd') . '.' . $this->options['extension'];
     }
 
     /**
@@ -119,55 +121,42 @@ class Logger extends AbstractLogger{
      * @param string $level
      * @return $this
      */
-    public function dir($dir, $file = false)
+    public function dir()
     {
-        $dirName = pathinfo($dir, PATHINFO_DIRNAME);
-        $fileName = pathinfo($dir, PATHINFO_FILENAME);
+        $dir = join(_DS_, func_get_args());
+        $this->dir = rtrim($this->dir, _DS_) . _DS_ . $dir;
 
-        if(substr($dir, -1, 1) == '/'){
-            $dirName = $dir;
-            $fileName = date('Ymd');
-        }else if($file === false){
-            $fileName = $fileName . '-' . date('Ymd');
-        }else if(is_string($file)){
-            $dirName = $dir;
-            $fileName = $file;
+        if (pathinfo($this->dir, PATHINFO_EXTENSION)) {
+            $this->file(pathinfo($this->dir, PATHINFO_BASENAME));
+            $this->dir = pathinfo($this->dir, PATHINFO_DIRNAME);
         }
-
-        $this->options['filename'] = $fileName;
-        if(!is_dir($dirName = $this->LogsDir.DIRECTORY_SEPARATOR.$dirName)){
-            mkdir($dirName, $this->permissions, true);
-        }
-
-        if(strpos($dirName, 'php://') === 0) {
-            $this->setLogToStdOut($dirName);
-            $this->setFileHandle('w+');
-        } else {
-            $this->setLogFilePath($dirName);
-            if(file_exists($this->logFilePath) && !is_writable($this->logFilePath)) {
-                throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
-            }
-            $this->setFileHandle('a');
-        }
-
-        if (!$this->fileHandle) {
-            throw new RuntimeException('The file could not be opened. Check permissions.');
-        }
-
-        $this->setLogFilePath($dirName);
-
         return $this;
     }
 
     /**
      * log name
-     * @param $fileName
+     * @param $file
      */
-    public function file($fileName)
+    public function file($file = null)
     {
-        $this->options['filename'] = $fileName;
+        if ($file) {
+            if (!in_array(pathinfo($file, PATHINFO_EXTENSION), ['log', 'txt'])) {
+                $file .= '.' . $this->options['extension'];
+            }
+            $this->log = $file;
+            return $this;
+        } else {
+            return $this->log;
+        }
+    }
 
-        return $this;
+
+    /**
+     * set and log path
+     */
+    public function logFile()
+    {
+        return rtrim($this->dir, '/') . _DS_ . $this->log;
     }
 
     /**
@@ -190,12 +179,13 @@ class Logger extends AbstractLogger{
      */
     public function options($key, $value = null)
     {
-        if(is_array($key)){
+        if (is_array($key)) {
             $this->options = array_merge($this->options, $key);
-        }else{
+        } else if ($value) {
             $this->options[$key] = $value;
+        } else {
+            return $this->options[$key];
         }
-
         return $this;
     }
 
@@ -206,9 +196,9 @@ class Logger extends AbstractLogger{
      * @param  string $indent What to use as the indent.
      * @return string
      */
-    protected function indent($string, $indent = '    ')
+    public function indent($string, $indent = '    ')
     {
-        return $indent.str_replace("\n", "\n".$indent, $string);
+        return $indent . str_replace("\n", "\n" . $indent, $string);
     }
 
 
@@ -216,26 +206,32 @@ class Logger extends AbstractLogger{
      * @param $stdOutPath
      * @return $this
      */
-    public function setLogToStdOut($stdOutPath) {
-        $this->logFilePath = $stdOutPath;
-
+    protected function setLogToStdOut($stdOutPath)
+    {
+        $this->LogFile = $stdOutPath;
         return $this;
     }
 
     /**
-     * @param $logDirectory
+     * @param $dir
      * @return $this
      */
-    public function setLogFilePath($logDirectory) {
-        if ($this->options['filename']) {
-            if (strpos($this->options['filename'], '.log') !== false || strpos($this->options['filename'], '.txt') !== false) {
-                $this->logFilePath = $logDirectory.DIRECTORY_SEPARATOR.$this->options['filename'];
-            }
-            else {
-                $this->logFilePath = $logDirectory.DIRECTORY_SEPARATOR.$this->options['filename'].'.'.$this->options['extension'];
-            }
+    protected function setLogHandle()
+    {
+        if (strpos($this->dir, 'php://') === 0) {
+            $this->setLogToStdOut($this->dir);
+            $this->setFileHandle('w+');
         } else {
-            $this->logFilePath = $logDirectory.DIRECTORY_SEPARATOR.$this->options['prefix'].date('Y-m-d').'.'.$this->options['extension'];
+            if (!is_dir($this->dir)) {
+                mkdir($this->dir, $this->permissions, true);
+            } else if (file_exists($this->logFile()) && !is_writable($this->logFile())) {
+                throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
+            }
+            $this->setFileHandle('a');
+        }
+
+        if (!$this->fileHandle) {
+            throw new RuntimeException('The file could not be opened. Check permissions.');
         }
 
         return $this;
@@ -246,8 +242,9 @@ class Logger extends AbstractLogger{
      *
      * @internal param resource $fileHandle
      */
-    public function setFileHandle($writeMode) {
-        $this->fileHandle = fopen($this->logFilePath, $writeMode);
+    protected function setFileHandle($writeMode)
+    {
+        $this->fileHandle = fopen($this->logFile(), $writeMode);
         return $this;
     }
 
@@ -256,7 +253,7 @@ class Logger extends AbstractLogger{
      *
      * @param string $dateFormat Valid format string for date()
      */
-    public function setDateFormat($dateFormat)
+    protected function setDateFormat($dateFormat)
     {
         $this->options['dateFormat'] = $dateFormat;
 
@@ -268,7 +265,7 @@ class Logger extends AbstractLogger{
      *
      * @param string $logLevelThreshold The log level threshold
      */
-    public function setLogLevelThreshold($logLevelThreshold)
+    protected function setLogLevelThreshold($logLevelThreshold)
     {
         $this->logLevelThreshold = $logLevelThreshold;
 
@@ -301,18 +298,20 @@ class Logger extends AbstractLogger{
      * @param string $message Line to write to the log
      * @return void
      */
-    public function write($message)
+    protected function write($message)
     {
-        if (null !== $this->fileHandle) {
-            if (fwrite($this->fileHandle, $message) === false) {
-                throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
-            } else {
-                $this->lastLine = trim($message);
-                $this->logLineCount++;
+        if (null == $this->fileHandle) {
+            $this->setLogHandle();
+        }
 
-                if ($this->options['flushFrequency'] && $this->logLineCount % $this->options['flushFrequency'] === 0) {
-                    fflush($this->fileHandle);
-                }
+        if (fwrite($this->fileHandle, $message) === false) {
+            throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
+        } else {
+            $this->lastLine = trim($message);
+            $this->logLineCount++;
+
+            if ($this->options['flushFrequency'] && $this->logLineCount % $this->options['flushFrequency'] === 0) {
+                fflush($this->fileHandle);
             }
         }
     }
@@ -322,9 +321,9 @@ class Logger extends AbstractLogger{
      *
      * @return string
      */
-    public function getLogFilePath()
+    public function getLogFile()
     {
-        return $this->logFilePath;
+        return $this->logFile();
     }
 
     /**
@@ -353,6 +352,8 @@ class Logger extends AbstractLogger{
             $message = $message->toJson();
         } elseif ($message instanceof Arrayable) {
             $message = var_export($message->toArray(), true);
+        } else {
+            $message = (string) $message;
         }
 
         if ($this->options['logFormat']) {
@@ -366,18 +367,17 @@ class Logger extends AbstractLogger{
             );
             $message = $this->options['logFormat'];
             foreach ($parts as $part => $value) {
-                $message = str_replace('{'.$part.'}', $value, $message);
+                $message = str_replace('{' . $part . '}', $value, $message);
             }
-
         } else {
             $message = "[{$this->getTimestamp()}] [{$level}] {$message}";
         }
 
-        if ($this->options['appendContext'] && ! empty($context)) {
-            $message .= PHP_EOL.$this->indent($this->contextToString($context));
+        if ($this->options['appendContext'] && !empty($context)) {
+            $message .= PHP_EOL . $this->indent($this->contextToString($context));
         }
 
-        return $message.PHP_EOL;
+        return $message . PHP_EOL;
     }
 
     /**
@@ -392,7 +392,7 @@ class Logger extends AbstractLogger{
     {
         $originalTime = microtime(true);
         $micro = sprintf("%06d", ($originalTime - floor($originalTime)) * 1000000);
-        $date = new DateTime(date('Y-m-d H:i:s.'.$micro, $originalTime));
+        $date = new DateTime(date('Y-m-d H:i:s.' . $micro, $originalTime));
 
         return $date->format($this->options['dateFormat']);
     }
@@ -408,7 +408,7 @@ class Logger extends AbstractLogger{
         $context = is_object($context) ? json_decode(json_encode($context), true) : $context;
 
         $export = '';
-        if(is_array($context)){
+        if (is_array($context)) {
             foreach ($context as $key => $value) {
                 $export .= "{$key}: ";
                 $export .= preg_replace(array(
@@ -422,7 +422,7 @@ class Logger extends AbstractLogger{
                 ), str_replace('array (', 'array(', var_export($value, true)));
                 $export .= PHP_EOL;
             }
-        }else{
+        } else {
             $export = $context;
         }
         return str_replace(array('\\\\', '\\\''), array('\\', '\''), rtrim($export));
