@@ -107,11 +107,11 @@ class RedisDriver extends Driver implements DriverInterface
     {
 
         return $this->redis->get($key);
-        /*
+    
         if (! is_null($value = $this->server()->get($key))) {
             return is_numeric($value) ? $value : unserialize($value);
         }
-        */
+       
     }
 
     /**
@@ -124,8 +124,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function set($key, $value, $time = 86400)
     {
-
-        //$value = is_numeric($value) ? $value : serialize($value);
+        $value = is_numeric($value) ? $value : serialize($value);
         return $time ? $this->redis->set($key, $value, $time) : $this->redis->set($key, $value);
     }
 
