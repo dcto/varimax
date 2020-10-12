@@ -105,13 +105,12 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function get($key)
     {
-
         return $this->redis->get($key);
-    
+        /*
         if (! is_null($value = $this->server()->get($key))) {
             return is_numeric($value) ? $value : unserialize($value);
         }
-       
+        */
     }
 
     /**
@@ -122,9 +121,9 @@ class RedisDriver extends Driver implements DriverInterface
      * @param  int     $time 缓存时间
      * @return bool
      */
-    public function set($key, $value, $time = 86400)
+    public function set($key, $value, $time = 0)
     {
-        $value = is_numeric($value) ? $value : serialize($value);
+        //$value = is_numeric($value) ? $value : serialize($value);
         return $time ? $this->redis->set($key, $value, $time) : $this->redis->set($key, $value);
     }
 
@@ -154,7 +153,7 @@ class RedisDriver extends Driver implements DriverInterface
      * @param  array  $values
      * @param  int  $minutes
      */
-    public function sets(array $values, $time = 86400)
+    public function sets(array $values, $time = 0)
     {
         $this->server()->multi();
 
