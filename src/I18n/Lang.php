@@ -359,7 +359,7 @@ class Lang
                     $this->set(parse_ini_file($file, true));
                 }
 
-                if(is_file($file = root(_APP_._DS_.'i18n'._DS_.$lang.'.ini'))){
+                if(is_file($file = root(_APP_._DS_.'I18n'._DS_.$lang.'.ini'))){
                     $this->set(parse_ini_file($file, true));
                 }
 
