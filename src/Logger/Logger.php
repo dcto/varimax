@@ -115,7 +115,7 @@ class Logger extends AbstractLogger
     {
         $this->options = array_merge($this->options, $options);
         $this->logLevelThreshold = $logLevelThreshold;
-        $this->root = rtrim($root ?: runtime($this->root), _DS_);
+        $this->root = rtrim($root ?: runtime($this->root), _DS_)._DS_;
         $this->log = $this->options['prefix'] . date('Ymd') . '.' . $this->options['extension'];
     }
 
@@ -133,6 +133,7 @@ class Logger extends AbstractLogger
             $this->file(pathinfo($this->dir, PATHINFO_BASENAME));
             $this->dir = pathinfo($this->dir, PATHINFO_DIRNAME);
         }
+        $this->dir = trim($this->dir, _DS_);
         return $this;
     }
 
@@ -143,6 +144,10 @@ class Logger extends AbstractLogger
     public function file($file = null)
     {
         if ($file) {
+            if($file[0] == _DS_) {
+                 $this->dir = '';
+                 $file = trim($file, _DS_);
+            }
             if (!in_array(pathinfo($file, PATHINFO_EXTENSION), ['log', 'txt'])) {
                 $file .= '.' . $this->options['extension'];
             }
@@ -151,7 +156,6 @@ class Logger extends AbstractLogger
         } else {
             return $this->log;
         }
-
     }
 
     /**
@@ -159,7 +163,7 @@ class Logger extends AbstractLogger
      */
     public function logFile()
     {
-        return $this->root._DS_.rtrim($this->dir, _DS_) . _DS_ . $this->log;
+        return $this->root . $this->dir . $this->log;
     }
 
     /**
