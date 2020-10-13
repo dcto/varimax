@@ -28,13 +28,18 @@ class Logger extends AbstractLogger
      *
      * @var string
      */
-    private $dir = 'logs';
+    private $dir;
 
     /**
      * Path to the log file
      * @var string
      */
     private $log;
+
+    /**
+     * 
+     */
+    private $root = 'logs';
 
     /**
      * options
@@ -99,18 +104,18 @@ class Logger extends AbstractLogger
     /**
      * Class constructor
      *
-     * @param string $dir      File path to the logging directory
+     * @param string $root      File path to the logging root
      * @param string $logLevelThreshold The LogLevel Threshold
      * @param array  $options
      *
      * @internal param string $logFilePrefix The prefix for the log file name
      * @internal param string $logFileExt The extension for the log file
      */
-    public function __construct($dir = null, $logLevelThreshold = LogLevel::DEBUG, array $options = array())
+    public function __construct($root = null, $logLevelThreshold = LogLevel::DEBUG, array $options = array())
     {
         $this->options = array_merge($this->options, $options);
         $this->logLevelThreshold = $logLevelThreshold;
-        $this->dir = $dir ?: runtime($this->dir);
+        $this->root = rtrim($root ?: runtime($this->root), _DS_);
         $this->log = $this->options['prefix'] . date('Ymd') . '.' . $this->options['extension'];
     }
 
@@ -123,9 +128,7 @@ class Logger extends AbstractLogger
      */
     public function dir()
     {
-        $dir = join(_DS_, func_get_args());
-        $this->dir = rtrim($this->dir, _DS_) . _DS_ . $dir;
-
+        $this->dir = join(_DS_, func_get_args());
         if (pathinfo($this->dir, PATHINFO_EXTENSION)) {
             $this->file(pathinfo($this->dir, PATHINFO_BASENAME));
             $this->dir = pathinfo($this->dir, PATHINFO_DIRNAME);
@@ -148,15 +151,15 @@ class Logger extends AbstractLogger
         } else {
             return $this->log;
         }
-    }
 
+    }
 
     /**
      * set and log path
      */
     public function logFile()
     {
-        return rtrim($this->dir, '/') . _DS_ . $this->log;
+        return $this->root._DS_.rtrim($this->dir, _DS_) . _DS_ . $this->log;
     }
 
     /**
