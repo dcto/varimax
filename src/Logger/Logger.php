@@ -23,23 +23,25 @@ use Illuminate\Contracts\Support\Jsonable;
 
 class Logger extends AbstractLogger
 {
+
     /**
-     * logs dir
+     * logs root dir
+     */
+    private $root = 'logs';
+
+    /**
+     * log  subdir
      *
      * @var string
      */
-    private $dir;
+    private $logDir;
 
     /**
      * Path to the log file
      * @var string
      */
-    private $log;
+    private $logFile;
 
-    /**
-     * 
-     */
-    private $root = 'logs';
 
     /**
      * options
@@ -115,8 +117,7 @@ class Logger extends AbstractLogger
     {
         $this->options = array_merge($this->options, $options);
         $this->logLevelThreshold = $logLevelThreshold;
-        $this->root = rtrim($root ?: runtime($this->root), _DS_)._DS_;
-        $this->log = $this->options['prefix'] . date('Ymd') . '.' . $this->options['extension'];
+        $this->root = rtrim($root ?: runtime($this->root), _DS_);
     }
 
     /**
@@ -128,13 +129,14 @@ class Logger extends AbstractLogger
      */
     public function dir()
     {
-        $this->dir = join(_DS_, func_get_args());
-        if (pathinfo($this->dir, PATHINFO_EXTENSION)) {
-            $this->file(pathinfo($this->dir, PATHINFO_BASENAME));
-            $this->dir = pathinfo($this->dir, PATHINFO_DIRNAME);
+        $this->logDir = join(_DS_, func_get_args());
+        if (pathinfo($this->logDir, PATHINFO_EXTENSION)) {
+            $this->file(pathinfo($this->logDir, PATHINFO_BASENAME));
+            $this->logDir = pathinfo($this->logDir, PATHINFO_DIRNAME);
         }
-        $this->dir = trim($this->dir, _DS_);
-        return $this;
+        $this->logDir = trim($this->logDir, _DS_);
+
+        return $this->setLogHandle();
     }
 
     /**
@@ -144,26 +146,30 @@ class Logger extends AbstractLogger
     public function file($file = null)
     {
         if ($file) {
-            if($file[0] == _DS_) {
-                 $this->dir = '';
-                 $file = trim($file, _DS_);
-            }
             if (!in_array(pathinfo($file, PATHINFO_EXTENSION), ['log', 'txt'])) {
                 $file .= '.' . $this->options['extension'];
             }
-            $this->log = $file;
-            return $this;
+            $this->logFile = $file;
+
+            return $this->setLogHandle();
         } else {
-            return $this->log;
+            return $this->logFile;
         }
     }
+
 
     /**
      * set and log path
      */
     public function logFile()
     {
-        return $this->root . $this->dir . $this->log;
+        $logDir = rtrim($this->root . _DS_ . $this->logDir, _DS_) . _DS_;
+        if ($this->logFile) {
+            ltrim($this->logFile, _DS_);
+        } else {
+            $this->logFile = $this->options['prefix'] . date('Ymd') . '.' . $this->options['extension'];
+        }
+        return $logDir . $this->logFile;
     }
 
     /**
@@ -225,13 +231,16 @@ class Logger extends AbstractLogger
      */
     protected function setLogHandle()
     {
-        if (strpos($this->dir, 'php://') === 0) {
-            $this->setLogToStdOut($this->dir);
+        echo $logDir = dirname($this->logFile());
+        echo "\r\n";
+        if (strpos($logDir, 'php://') === 0) {
+            $this->setLogToStdOut($logDir);
             $this->setFileHandle('w+');
         } else {
-            if (!is_dir($this->dir)) {
-                mkdir($this->dir, $this->permissions, true);
-            } else if (file_exists($this->logFile()) && !is_writable($this->logFile())) {
+            if (!is_dir($logDir)) {
+                mkdir($logDir, $this->permissions, true);
+            }
+            if (file_exists($this->logFile()) && !is_writable($this->logFile())) {
                 throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
             }
             $this->setFileHandle('a');
@@ -295,6 +304,8 @@ class Logger extends AbstractLogger
         $message = $this->formatMessage($level, $message, $context);
 
         $this->write($message);
+
+        $this->logDir = $this->logFile = null;
 
         return $this;
     }
@@ -440,6 +451,7 @@ class Logger extends AbstractLogger
      */
     public function __destruct()
     {
+        $this->logDir = $this->logFile = null;
         if ($this->fileHandle) {
             fclose($this->fileHandle);
         }
