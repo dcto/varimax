@@ -31,7 +31,7 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
 
         $this->registerQueryEvents();
 
-        config('app.log') && $this->registerQueryLogs() ;
+        config('app.log')>1 && $this->registerQueryLogs() ;
     }
 
     /**
