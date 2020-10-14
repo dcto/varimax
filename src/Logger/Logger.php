@@ -136,7 +136,7 @@ class Logger extends AbstractLogger
         }
         $this->logDir = trim($this->logDir, _DS_);
 
-        return $this->setLogHandle();
+        return $this;
     }
 
     /**
@@ -151,7 +151,7 @@ class Logger extends AbstractLogger
             }
             $this->logFile = $file;
 
-            return $this->setLogHandle();
+            return $this;
         } else {
             return $this->logFile;
         }
@@ -231,8 +231,7 @@ class Logger extends AbstractLogger
      */
     protected function setLogHandle()
     {
-        echo $logDir = dirname($this->logFile());
-        echo "\r\n";
+        $logDir = dirname($this->logFile());
         if (strpos($logDir, 'php://') === 0) {
             $this->setLogToStdOut($logDir);
             $this->setFileHandle('w+');
@@ -305,7 +304,7 @@ class Logger extends AbstractLogger
 
         $this->write($message);
 
-        $this->logDir = $this->logFile = null;
+        $this->close();
 
         return $this;
     }
@@ -318,10 +317,7 @@ class Logger extends AbstractLogger
      */
     protected function write($message)
     {
-        if (null == $this->fileHandle) {
-            $this->setLogHandle();
-        }
-
+        $this->setLogHandle();
         if (fwrite($this->fileHandle, $message) === false) {
             throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
         } else {
@@ -447,9 +443,9 @@ class Logger extends AbstractLogger
     }
 
     /**
-     * Class destructor
+     * close log file
      */
-    public function __destruct()
+    public function close()
     {
         $this->logDir = $this->logFile = null;
         if ($this->fileHandle) {
