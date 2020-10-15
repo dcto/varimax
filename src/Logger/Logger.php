@@ -239,14 +239,14 @@ class Logger extends AbstractLogger
             if (!is_dir($logDir)) {
                 mkdir($logDir, $this->permissions, true);
             }
+            $this->setFileHandle('a');
             if (file_exists($this->logFile()) && !is_writable($this->logFile())) {
                 throw new RuntimeException('The file could not be written to.['.$this->logFile().']');
             }
-            $this->setFileHandle('a');
         }
 
         if (!$this->fileHandle) {
-            throw new RuntimeException('The file could not be opened. Check permissions.');
+            throw new RuntimeException('Check permissions of file. ['.$this->logFile().']');
         }
 
         return $this;
