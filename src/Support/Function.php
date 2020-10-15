@@ -453,10 +453,11 @@ if(!function_exists('strcut')) {
  * @return string
  */
 if(!function_exists('decimal')){
-    function decimal($value, $decimals = 10)
+    function decimal($value, $decimals = 2)
     {
-        $value = number_format($value, $decimals, '.', '');
-        return strpos($value, '.') ? rtrim(rtrim($value, '0'), '.') : $value;
+        //$value = number_format($value, $decimals, '.', '');
+        //return strpos($value, '.') ? rtrim(rtrim($value, '0'), '.') : $value;
+        return number_format($value, $decimals, '.', '');
     }
 }
 
