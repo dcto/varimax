@@ -436,7 +436,7 @@ if(!function_exists('readable_number')) {
  * @return array|string
  */
 if(!function_exists('strcut')) {
-    function strcut($string, $length = 255, $symbol = '...')
+    function strcut($string, $length = 255, $symbol = '')
     {
         $str_array = preg_split('//u', $string, -1, PREG_SPLIT_NO_EMPTY);
         //$str1 = implode('',array_reverse($string));
@@ -444,6 +444,19 @@ if(!function_exists('strcut')) {
             return implode('', array_splice($str_array, 0, $length)) . $symbol;
         }
         return $string;
+    }
+}
+
+/**
+ * @param $value 值
+ * @param int $decimals 保留位数
+ * @return string
+ */
+if(!function_exists('decimal')){
+    function decimal($value, $decimals = 10)
+    {
+        $value = number_format($value, $decimals, '.', '');
+        return strpos($value, '.') ? rtrim(rtrim($value, '0'), '.') : $value;
     }
 }
 
