@@ -104,7 +104,7 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
             \Log::dir('db', _APP_)->debug('['.$query->time.' ms] '.$sql);
 
             if( $query->time > 100 ){
-                \Log::dir('db/slow', _APP_)->warning('['.$query->time.' ms] '.$sql);
+                \Log::dir('db', _APP_)->file('slow')->warning('['.$query->time.' ms] '.$sql);
             }
         });
     }
