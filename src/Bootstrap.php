@@ -15,7 +15,7 @@ defined('_VM_') || define('_VM_', __DIR__);
 defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 
 //define _DOC_ constants to document root
-defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? getenv('PWD') : dirname($_SERVER['DOCUMENT_ROOT']));
+defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? $_SERVER['PWD'] : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
 defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? isset( $_GET['app']) ?  $_GET['app']  : 'app' : $app);
