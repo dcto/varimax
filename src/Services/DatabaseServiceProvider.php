@@ -101,10 +101,10 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
 
             $sql = vsprintf(str_replace('?', '%s', $query->sql), $query->bindings);
 
-            \Log::dir('db', _APP_)->debug('['.$query->time.' ms] '.$sql);
+            \Log::dir('db-'. $query->connectionName, _APP_)->debug('['.$query->time.' ms] '.$sql);
 
             if( $query->time > 100 ){
-                \Log::dir('db', _APP_)->file('slow')->warning('['.$query->time.' ms] '.$sql);
+                \Log::dir('db-'. $query->connectionName, _APP_)->file('slow')->warning('['.$query->time.' ms] '.$sql);
             }
         });
     }
