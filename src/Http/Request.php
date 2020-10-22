@@ -100,11 +100,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 break;
 
             case '?':
-                $url = '';
+                $url = $tags == '?' ? $tags : rtrim($tags, '&') . '&';
                 foreach ($args as $arg) {
-                    $url .= '&'.(is_array($arg) ?  http_build_query($arg) : $arg);
+                    $url .= (is_array($arg) ?  http_build_query($arg) : $arg) . '&';
                 }
-                return $baseUrl . rtrim($tags, '&'). $url;
+                return $baseUrl . rtrim($url, '&');
                 break;
 
             case '@':
