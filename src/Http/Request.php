@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Varimax The Full Stack PHP Frameworks.
  * varimax
@@ -76,49 +77,56 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * [获取当前 URL]
-     * @param null $cast [构建 URL 参数 @=获得路由, $=根据当前url,获取控制器url,]
-     * @example url('@index');
-     * @example url('$controller');
-     * @example url('/index/abc');
-     * @example url('?', 'a', 'b', 'c');
-     * @example url();
+     * @param null [构建 URL 参数 非=当前URL, 空=根URL, /=根URL+'/',  ?=构建URL,  @=获得路由URL,]
+     * @example url() uri()
+     * @example url('') baseUrl
+     * @example url('/') baseUrl + '/'
+     * @example url('/abc', 'a','b');
+     * @example url('?', array('a'=>'b','c'=>'d'), 'c=d');
+     * @example url('@index') / url('@', 'index');
      * @return string
      */
     public function url()
     {
         $args = func_get_args();
         $tags = array_shift($args);
-        if (func_num_args() == 0 || !$tags) return preg_replace('/\?.*/', '', $this->getUri());
-        
-        $baseUrl = $this->baseUrl() . '/';
+        if (func_num_args() == 0) return preg_replace('/\?.*/', '', $this->getUri());
+        $baseUrl = $this->baseUrl();
+        if (!$tags) return $baseUrl;
 
-        if ($tags == '/') {
-            return  $baseUrl;
-      
-        }else if ($tags[0] == '@') {
-            /*
-             * @var $router \VM\Routing\Route
-             */
-            $router = make('router');
-            /*
-             * @var $route \VM\Routing\Route
-             */
-            if (!$route = $router->router(ltrim($tags, '@'))) throw new NotFoundException("The $tags route does not found");
-            if (!strpos($route->url(), ':')) return $baseUrl . trim($route->url(), '/');
-            $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
-            return $baseUrl . trim(vsprintf($url, $args));
-            
-        } else if ($tags[0] == '$') {
-            $router = make('router')->url();
-            $url = str_replace(array('$controller', '$action'), explode('@', $router->callable()), $tags);
-            return $baseUrl . trim($url, '/');
+        switch ($tags[0]) {
+            case '/':
+                return $tags == '/' ? $baseUrl . '/' : $baseUrl . $tags . ($args ? '/' . join('/', $args) : '');
+                break;
 
-        } else if ($tags[0] == '?'){
+            case '?':
+                foreach ($args as $arg) {
+                    $tags = rtrim($tags, '&') . '&' . (is_array($arg) ?  http_build_query($arg) : $arg);
+                }
+                return $baseUrl . $tags;
+                break;
 
-            return $baseUrl . http_build_query($args);
+            case '@':
+                /*
+                    * @var $router \VM\Routing\Route
+                    */
+                $router = make('router');
+                /*
+                    * @var $route \VM\Routing\Route
+                    */
+                $route = $tags == '@' ? array_shift($args) : ltrim($tags, '@');
+                if (!$route = $router->router($route)) throw new NotFoundException("The $tags route does not found");
+                if (!strpos($route->url(), ':')) return $baseUrl . '/' . trim($route->url(), '/');
+                echo $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
+                return $baseUrl . '/' . trim(vsprintf($url, $args));
 
-        } else {
-            return $baseUrl . trim($tags, '/');
+                break;
+
+            default:
+                foreach ($args as $arg) {
+                    $tags .= '&' . (is_array($arg) ?  http_build_query($arg) : $arg);
+                }
+                return $baseUrl . $tags;
         }
     }
 
@@ -134,9 +142,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         $query = $this->all();
 
-        if(is_array($cast)){
+        if (is_array($cast)) {
             $query = array_merge($query, $cast);
-        }else {
+        } else {
             switch (substr($cast, 0, 1)) {
                 case '!':
                     unset($query[ltrim($cast, '!')]);
@@ -247,7 +255,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function got($key = null, $default = null)
     {
         $input = $this->all();
-        if(!isset($input[$key]) || trim($input[$key]) == ''){
+        if (!isset($input[$key]) || trim($input[$key]) == '') {
             return null;
         }
 
@@ -261,9 +269,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function set($key, $val)
     {
-         $this->getInputSource()->set($key, $val);
+        $this->getInputSource()->set($key, $val);
 
-         return $this;
+        return $this;
     }
 
 
@@ -275,8 +283,8 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function all($key = null, $filter = false)
     {
-        if($key && $key[0]=='!') {
-            return $this->not(ltrim($key,'!'));
+        if ($key && $key[0] == '!') {
+            return $this->not(ltrim($key, '!'));
         }
         return $this->input($key);
         //return array_replace_recursive($this->input(), $this->files->all());
@@ -289,11 +297,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function put($key, $val = null)
     {
-        if(is_array($key)) {
-            foreach($key as $k=>$v){
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
                 $this->attributes->set($key, $val);
             }
-        }else{
+        } else {
             $this->attributes->set($key, $val);
         }
 
@@ -375,12 +383,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function take()
     {
         $key = null;
-        if(($num = func_num_args()) > 0){
+        if (($num = func_num_args()) > 0) {
             $key = $num == 1 ? func_get_arg(0) : func_get_args();
         }
-        if(is_array($key)){
+        if (is_array($key)) {
             return array_intersect_key($this->all(), array_fill_keys($key, null));
-        }else{
+        } else {
             return $this->get($key);
         }
     }
@@ -394,7 +402,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function filter()
     {
-       return array_filter(call_user_func_array(array($this, 'take'), func_get_args()), function($v){
+        return array_filter(call_user_func_array(array($this, 'take'), func_get_args()), function ($v) {
             return $v !== false && !is_null($v) && ($v != '' || $v == '0');
         });
     }
@@ -434,7 +442,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function getOS()
     {
-        $oses = array (
+        $oses = array(
             'iOS(iPhone)'       => '(iPhone)',
             'iOS(iPad)'         => '(iPad)',
             'Android'           => '(Android)',
@@ -466,9 +474,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
         //die;
         // Loop through $oses array
-        foreach($oses as $os => $pattern) {
+        foreach ($oses as $os => $pattern) {
             // Use regular expressions to check operating system type
-            if ( preg_match('@' . $pattern . '@i', $userAgent) ) {
+            if (preg_match('@' . $pattern . '@i', $userAgent)) {
                 // Operating system was matched so return $oses key
                 return $os;
             }
@@ -481,7 +489,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function device()
     {
         $devices = array(
-            'Mobile'=>array('iPhone','')
+            'Mobile' => array('iPhone', '')
         );
     }
 
@@ -527,7 +535,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @return mixed
      * @author 11.
      */
-    public function server($key = null, $default =null)
+    public function server($key = null, $default = null)
     {
         return $this->retrieve('server', $key, $default);
     }
@@ -573,12 +581,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function browser($type = null)
     {
         $agent = $this->header('User-Agent');
-        if($type) return stripos($agent, $type);
-        if(stripos($agent, 'MSIE')) return 'MSIE';
-        if(stripos($agent, 'Chrome')) return 'Chrome';
-        if(stripos($agent, 'Firefox')) return 'Firefox';
-        if(stripos($agent, 'Safari')) return 'Safari';
-        if(stripos($agent, 'Netscape')) return 'Netscape';
+        if ($type) return stripos($agent, $type);
+        if (stripos($agent, 'MSIE')) return 'MSIE';
+        if (stripos($agent, 'Chrome')) return 'Chrome';
+        if (stripos($agent, 'Firefox')) return 'Firefox';
+        if (stripos($agent, 'Safari')) return 'Safari';
+        if (stripos($agent, 'Netscape')) return 'Netscape';
         return null;
     }
 
@@ -593,7 +601,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function file($key = null, $default = null)
     {
-        if($key){
+        if ($key) {
             return \Arr::get($this->files(), $key, $default);
         }
         return \Arr::first($this->files());
@@ -676,34 +684,34 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         static $ip = null;
         //if (!is_null($ip)) return $ip;
-        if($adv){
+        if ($adv) {
             //特别注意,使用本项,必须保证客户端不是直接访问源服务器,前面一定的有CDN接入层
             //实际上在CDN确定的情况下,写死
             //如果客户端是直接访问源服务器,除REMOTE_ADDR外都可能被伪造
             if (isset($_SERVER['HTTP_X_REAL_IP'])) {
                 //大多数CDN,本项取
                 $ip = $_SERVER['HTTP_X_REAL_IP'];
-            }elseif (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            } elseif (isset($_SERVER['HTTP_CF_CONNECTING_IP'])) {
                 //百度云加速、Cloudflare,本项取
                 $ip = $_SERVER['HTTP_CF_CONNECTING_IP'];
-            }elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
+            } elseif (isset($_SERVER['HTTP_X_FORWARDED_FOR'])) {
                 //某些CDN会把客户端真实IP写入本项,","号分割的第一个
                 $arr    =   explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-                $pos    =   array_search('unknown',$arr);
-                if(false !== $pos) unset($arr[$pos]);
+                $pos    =   array_search('unknown', $arr);
+                if (false !== $pos) unset($arr[$pos]);
                 $ip     =   trim($arr[0]);
-            }elseif (isset($_SERVER['HTTP_CLIENT_IP'])) {
+            } elseif (isset($_SERVER['HTTP_CLIENT_IP'])) {
                 $ip     =   $_SERVER['HTTP_CLIENT_IP'];
-            }elseif (isset($_SERVER['REMOTE_ADDR'])) {
+            } elseif (isset($_SERVER['REMOTE_ADDR'])) {
                 //客户端直接访问源服务器,客户端真实IP取本项
                 $ip     =   $_SERVER['REMOTE_ADDR'];
             }
-        }elseif (isset($_SERVER['REMOTE_ADDR'])) {
+        } elseif (isset($_SERVER['REMOTE_ADDR'])) {
             $ip     =   $_SERVER['REMOTE_ADDR'];
         }
         // IP地址合法验证
 
-        $ips = sprintf("%u",ip2long($ip));
+        $ips = sprintf("%u", ip2long($ip));
 
         return  $ips ? ($long ? $ips : $ip) : ($long ? 0 : '0.0.0.0');
     }
@@ -760,7 +768,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function baseUrl()
     {
-        return $this->httpHost(). $this->getBaseUrl();
+        return $this->httpHost() . $this->getBaseUrl();
     }
 
     /**
@@ -788,7 +796,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function domain($subDomain = true)
     {
-        if(filter_var($host = $this->getHost(), FILTER_VALIDATE_IP) || $subDomain) return $host;
+        if (filter_var($host = $this->getHost(), FILTER_VALIDATE_IP) || $subDomain) return $host;
 
         preg_match("/[^\.\/]+\.[^\.\/]+$/", $host, $matches);
 
@@ -817,7 +825,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function segments()
     {
         $segments = explode('/', $this->path());
-        return array_values(array_filter($segments, function ($v) { return $v != ''; }));
+        return array_values(array_filter($segments, function ($v) {
+            return $v != '';
+        }));
     }
 
     /**
@@ -939,9 +949,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
         $request = (new static)->duplicate(
 
-            $request->query->all(), $request->request->all(), $request->attributes->all(),
+            $request->query->all(),
+            $request->request->all(),
+            $request->attributes->all(),
 
-            $request->cookies->all(), $request->files->all(), $request->server->all()
+            $request->cookies->all(),
+            $request->files->all(),
+            $request->server->all()
         );
 
         $request->content = $content;
@@ -973,8 +987,4 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         }
         return $this->method() == 'GET' ? $this->query : $this->request;
     }
-
-
 }
-
-
