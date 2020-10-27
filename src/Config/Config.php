@@ -35,11 +35,13 @@ class Config implements ArrayAccess, ConfigContract
         if (is_file($config = root('config', 'config.php'))) {
             $this->item = (array) require($config);
         }
-
+        if(getenv('ENV')){
+            if(is_file($config_env = root('config', getenv('ENV').'.php'))){
+            $this->set((array) require($config_env));
+        }
         if (is_file($config = _DIR_ . _DS_ . 'config.php')) {
             $this->set((array) require($config));
         }
-
         if (!$this->item) {
             throw new \ErrorException('Unable load config');
         }
