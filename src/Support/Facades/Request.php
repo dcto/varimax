@@ -22,6 +22,8 @@ use Illuminate\Support\Facades\Facade;
  * @method static \VM\Http\Request tidy(mixed $key = null)
  * @method static \VM\Http\Request json(string $key = null, mixed $default = null)
  * @method static \VM\Http\Request input(string $key = null, mixed $default = null)
+ * @method static \VM\Http\Request mobile()
+ * @method static \VM\Http\Request weixin()
  * @method static \VM\Http\Request query()
  * @method static \VM\Http\Request refer()
  * @method static \VM\Http\Request referer()
