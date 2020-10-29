@@ -33,15 +33,15 @@ class E {
     static public function register()
     {
         define('E_FATAL',  E_ERROR | E_USER_ERROR |  E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR| E_PARSE );
-
-        //错误级别
-        error_reporting(E_ALL);
-
-        //开启错误
-        ini_set('display_errors', 'On');
-
-        //错误调试
-        self::$debug = getenv('DEBUG')?:1;
+        
+        if($debug = getenv('DEBUG')){
+            //错误级别
+            error_reporting(E_ALL);
+            //开启错误
+            ini_set('display_errors', 'On');
+            //错误调试
+            self::$debug = $debug;
+        }
 
         //预留内存
         self::$memory && str_repeat('*', self::$memory);
