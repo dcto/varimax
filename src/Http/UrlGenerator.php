@@ -2,8 +2,8 @@
 
 namespace VM\Http;
 
+use Str;
 use Closure;
-use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Illuminate\Support\Traits\Macroable;
 use Illuminate\Contracts\Routing\UrlRoutable;
