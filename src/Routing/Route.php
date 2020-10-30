@@ -170,9 +170,9 @@ class Route
                     $this->url = preg_replace_array('/\(.*?\)/', $args, $this->url);
                 }else{
                     $this->url = array_shift($args);
-                    $this->args($args);
+                    
                 }
-
+                $this->args($args);
                 return $this;
         }else{
                 return $this->url;

@@ -116,9 +116,10 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                     * @var $route \VM\Routing\Route
                     */
                 $route = $tags == '@' ? array_shift($args) : ltrim($tags, '@');
-                if (!$route = $router->router($route)) throw new NotFoundException("The $tags route does not found");
+                if (!$route = $router->router($route)) throw new NotFoundException("Unable route: $tags");
                 
-                return $route->url($args);
+                return $baseUrl . '/' . trim($route->url($args), '/');
+
                 /*
                 if (!strpos($route->url(), ':')) return $baseUrl . '/' . trim($route->url(), '/');
                 $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
