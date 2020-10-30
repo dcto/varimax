@@ -8,7 +8,6 @@
  * SITE: https://www.varimax.cn/
  */
 
-
 namespace VM\Routing;
 
 /**
@@ -119,19 +118,22 @@ class Route
      * @param string $url URL pattern
      * @param string|array $args Callback function or options
      */
-    public function __construct($method, $path, $args = array())
+    public function __construct($method, $path, array $args = array())
     {
-        $this->id        =   isset($args['id']) ? $args['id'] : str_replace('/', '.',trim($path, '/'));
-        $this->url       =   rtrim(preg_replace('/\(.*?\)/', '', $path),'/');
-        $this->name      =   isset($args['name']) ? $args['name'] : (isset($args['id']) ? $args['id'] : $this->name);
-        $this->hash      =   hash('crc32b',$this->id);
-        $this->lang      =   isset($args['lang']) ? $args['lang'] : isset($args['group']['lang']) ? $args['group']['lang'] : '';
-        $this->menu      =   isset($args['menu']) ? $args['menu'] : isset($args['group']['menu']) ? $args['group']['menu'] : '';
-        $this->regex     =   isset($args['regex']) ? $args['regex'] : $path;
-        $this->group     =   isset($args['group']['id']) ? $args['group']['id'] : $this->group;
+        //$path = preg_replace('/\(.*?\)/', '', $path);
+        $this->id        =   isset($args['id']) ? $args['id'] : $path == '/' ? '.' : trim(str_replace('/', '.', $path), '.');
+        $this->url       =   $path;
+        $this->hash      =   hash('crc32b', $this->id);
         $this->methods   =   array_map('strtoupper', is_array($method) ? $method : array($method));
-        $this->callable  =   isset($args['call']) ? $args['call']: $this->callable;
-        $this->namespace = isset($args['namespace']) ? $args['namespace'] : (isset($args['group']['namespace']) ? $args['group']['namespace'] : $this->namespace);
+
+        if($args){
+            $this->lang      =   isset($args['lang']) ? $args['lang'] : isset($args['group']['lang']) ? $args['group']['lang'] : '';
+            $this->menu      =   isset($args['menu']) ? $args['menu'] : isset($args['group']['menu']) ? $args['group']['menu'] : '';
+            $this->regex     =   isset($args['regex']) ? $args['regex'] : null;
+            $this->group     =   isset($args['group']['id']) ? $args['group']['id'] : $this->group;
+            $this->callable  =   isset($args['call']) ? $args['call']: $this->callable;
+            $this->namespace =   isset($args['namespace']) ? $args['namespace'] : (isset($args['group']['namespace']) ? $args['group']['namespace'] : $this->namespace);
+        }
 
         if(is_string($this->callable)){
             if($callable = substr(strrchr($this->callable, "\\"), 1)) {
@@ -150,12 +152,36 @@ class Route
         if(!$id){
             return $this->id;
         }
-
         $this->id = $id;
 
-        !isset($this->name) && $this->name = $id;
+        !$this->name && $this->name = $id;
 
         return $this;
+    }
+
+    /**
+     * 替换URL
+     */
+    public function url(...$args)
+    {
+        isset($args[0]) && is_array($args[0]) && $args = $args[0];
+        if($args){
+                if($this->regex){
+                    $this->url = preg_replace_array('/\(.*?\)/', $args, $this->url);
+                }else{
+                    $this->url = array_shift($args);
+                    $this->args($args);
+                }
+
+                return $this;
+        }else{
+                return $this->url;
+        }
+    }
+
+    public function test()
+    {
+        # code...
     }
 
     /**
@@ -167,10 +193,17 @@ class Route
     {
         if(!($args = func_get_args())){
             return $this->parameters;
-        }else{
-            $this->parameters = array_merge($this->parameters, $args);
-            return $this;
+
+        }else {
+            foreach($args as $arg){
+                if(is_array($arg)){
+                    $this->parameters = array_merge($this->parameters, $arg);
+                }else{
+                    array_push($this->parameters, $arg);
+                }
+            }
         }
+        return $this;
     }
 
     /**
@@ -208,7 +241,6 @@ class Route
         return $this->callable;
     }
 
-
     /**
      * @param $item
      * @return mixed
@@ -241,10 +273,20 @@ class Route
     }
 
     /**
+     * toString url
+     */
+    public function __toString()
+    {
+        return $this->url();
+    }
+    
+    /**
      * Push to router
      */
     public function __destruct()
     {
+       
+        $this->name = $this->name ?: $this->id;
         $this->calling();
         make('router')->addPushToRoutes($this);
     }

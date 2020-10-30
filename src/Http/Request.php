@@ -83,7 +83,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @example url('/') baseUrl + '/'
      * @example url('/abc', 'a','b');
      * @example url('?', array('a'=>'b','c'=>'d'), 'c=d');
-     * @example url('@index') / url('@', 'index');
+     * @example url('@index'),  url('@', 'index'), url('@', 'index', ...$pattern) ;
      * @return string
      */
     public function url()
@@ -117,10 +117,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                     */
                 $route = $tags == '@' ? array_shift($args) : ltrim($tags, '@');
                 if (!$route = $router->router($route)) throw new NotFoundException("The $tags route does not found");
+                
+                return $route->url($args);
+                /*
                 if (!strpos($route->url(), ':')) return $baseUrl . '/' . trim($route->url(), '/');
-                echo $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
+                $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
                 return $baseUrl . '/' . trim(vsprintf($url, $args));
-
+                */
                 break;
 
             default:

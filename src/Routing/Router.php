@@ -62,6 +62,7 @@ class Router
     private $regex = array(
         ':*'    =>  '.*',
         ':id'   =>  '\d+',
+        ':all'  =>  '\w+',
         ':any'  =>  '[^/]+',
         ':num'  =>  '[0-9]+',
         ':str'  =>  '[a-zA-Z]+',
@@ -342,14 +343,26 @@ class Router
     }
 
     /**
+     * Test the route match
+     * @todo 未完善
+     */
+    public function test(Route $route)
+    {
+        //验证匹配
+        if(!preg_match('#^'.$this->regex.'$#', $this->url)){
+            throw new \InvalidArgumentException('Invalid url: '. $route->url());
+        }
+    }
+
+    /**
      * Maps a Method and URL pattern to a Callback.
      *
      * @param string $method HTTP method(s) to match
-     * @param string $route URL pattern to match
+     * @param string $path URL pattern to match
      * @param callback $callback Callback object
      * @return Route
      */
-    protected function register($method, $route, $properties)
+    protected function register($method, $path, $properties)
     {
         //Merge the property
         //Prepare the route Methods.
@@ -368,11 +381,11 @@ class Router
             $properties['group'] = end($this->groupStack);
         }
 
-        $route = $this->parseRoute($route, $properties);
+        $path = $this->parseRoute($path, $properties);
 
-        $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $route);
+        $properties['regex'] = strpos($path, '/(') === false ? null : str_replace(array_keys($this->regex), array_values($this->regex), $path);
 
-        return new Route($methods, $route, $properties);
+        return new Route($methods, $path, $properties);
     }
 
     /**
@@ -383,12 +396,18 @@ class Router
     {
         //dispatch the OPTIONS Request
         if($request->method('OPTIONS')) return $response->make();
-        // Get the Method and Path.
+        // Get Http Request Path.
         $path = trim(urldecode($request->path()));
+        // Get Http Request Method
+        $method = $request->method();
 
-        // Execute the Routes matching loop.
-        $route = $this->router = $this->callRouter($path, $method = $request->method());
+        // Get Route in the Routes stack
+        $route = $this->router = $this->callRouter($path, $method);
+
         // Found a valid Route; process it.
+        if(!$route) throw new NotFoundException('Invalid Request: '. $path);
+
+        // Set Route method;
         $route->method($method);
 
         //if(!in_array($method, $route->methods())) throw new \InvalidArgumentException('The route '.$path. ' not allow '.$method. ' method');
@@ -419,6 +438,7 @@ class Router
              * construct instance and include hook
              */
             $instance = $this->Fire($route->calling(), $route->args());
+
             if(is_string($instance)){
                 return $response->make($instance);
             }else{
@@ -431,23 +451,19 @@ class Router
      *
      * @param $path
      * @param $method
-     * @return mixed
+     * @return Route
      * @throws NotFoundException
      */
     protected function callRouter($path, $method)
     {
         if(isset($this->routes[$path])) {
-            $router = $this->routes[$path];
-            if ($this->Matching($path, $router, $method)) {
-                return $router;
+            return $this->routes[$path];
+        }else{
+            foreach ($this->routes as $key => $route) {
+                if(strpos($key, ':') === false) continue;
+                if($this->Matching($path, $route, $method)) return $route;
             }
         }
-        foreach ($this->routes as $router) {
-            if ($this->Matching($path, $router, $method)) {
-                return $router;
-            }
-        }
-        throw new NotFoundException("Invalid Request: $path");
     }
 
     /**
@@ -456,16 +472,18 @@ class Router
      * @param $method
      * @return bool
      */
-    private function Matching($url, $route, $method)
+    
+    public function Matching($path, $route, $method)
     {
         if(!in_array($method, $route->methods())) return false;
-        if (preg_match('#^'.$route->regex().'$#', $url, $matches)) {
+        if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
             $route->url(array_shift($matches));
-            $route->parameters(array_merge($route->parameters(), $this->parameters($matches)));
+            $route->args($matches);
             return true;
         }
         return false;
     }
+    
 
     /**
      * ThroughRoute
@@ -489,9 +507,9 @@ class Router
 
         }else if(is_string($callable)){
             echo $callable;
+        }else{
+            throw new NotFoundException("Invalid router callable $callable of the {$this->router->url()}");
         }
-
-        throw new NotFoundException("Invalid router callable $callable of the {$this->router->url()}");
     }
 
     /**
@@ -503,12 +521,11 @@ class Router
     {
         if($url = $route->url){
             if(isset($this->routes[$url])){
-                throw new NotFoundException("Cannot redeclare route [$url]");
+                $this->routes[$url]->methods = array_unique(array_merge( $this->routes[$url]->methods , $route->methods));
+            }else{
+                $this->alias($route->id, $route->url);
+                $this->routes[$url] = $route;
             }
-
-            $this->alias($route->id, $route->url);
-
-            $this->routes[$url] = $route;
 
         }else{
             $this->routes[] = $route;
