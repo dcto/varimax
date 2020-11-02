@@ -16,6 +16,8 @@ use VM\Http\Request\Upload;
 use VM\Exception\NotFoundException;
 use Symfony\Component\HttpFoundation;
 use Illuminate\Contracts\Support\Arrayable;
+use LogicException;
+use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 
 class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 {
@@ -174,65 +176,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * 获取主机
-     * @return string
-     */
-    public function host()
-    {
-        return $this->getHost();
-    }
-
-    /**
-     * 获取主机加端口
-     * @return string
-     */
-    public function hostPort()
-    {
-        return $this->getHttpHost();
-    }
-
-    /**
-     * 获取完整主机请求地址
-     * @return string
-     */
-    public function httpHost()
-    {
-        return $this->getScheme() . '://' . $this->hostPort();
-    }
-
-    /**
-     * [input方法别名]
-     *
-     * @param $key
-     * @param null $default
-     * @return mixed
-     * @author 11.
-     */
-    public function input($key = null, $default = null)
-    {
-        $input = $this->getInputSource()->all() + $this->query->all() + $this->attributes->all();
-
-        return is_array($key) ? \Arr::only($input, $key) : \Arr::get($input, $key, $default);
-    }
-
-
-    /**
-     * [has 是否存在]
+     * [has 是否存在全部]
      *
      * @param $key
      * @return bool
-     * @author 11.
      */
-    public function has($key)
+    public function has(...$key)
     {
-        $keys = is_array($key) ? $key : func_get_args();
-
-        $input = $this->all();
-
-        foreach ($keys as $key) {
-            if (!isset($input[$key]) || !strlen($input[$key])) {
-                return false;
-            }
+        $key = \Arr::flatten($key);
+        foreach($key as $k){
+            if(!$this->get($k)) return false;
         }
         return true;
     }
@@ -240,14 +193,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * [get input方法别名]
      *
-     * @param            $key
+     * @param $key
      * @param null $default
      * @return mixed
-     * @author 11.
      */
-    public function get($key = null, $default = null)
+    public function get($key, $default = null)
     {
-        return $this->input($key, $default);
+        return parent::get($key, $default);
     }
 
     /**
@@ -286,13 +238,15 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @return array
      * @author 11.
      */
-    public function all($key = null, $filter = false)
+    public function all()
     {
-        if ($key && $key[0] == '!') {
-            return $this->not(ltrim($key, '!'));
-        }
-        return $this->input($key);
-        //return array_replace_recursive($this->input(), $this->files->all());
+        return array_replace_recursive(
+            array_merge(
+                $this->getInputSource()->all(), 
+                $this->query->all(), 
+                $this->attributes->all()
+                ),
+            $this->files->all());
     }
 
     /**
@@ -300,14 +254,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param $query
      * @return $this
      */
-    public function put($key, $val = null)
+    public function put($key, $value = null)
     {
         if (is_array($key)) {
             foreach ($key as $k => $v) {
-                $this->attributes->set($key, $val);
+                $this->attributes->set($k, $v);
             }
         } else {
-            $this->attributes->set($key, $val);
+            $this->attributes->set($key, $value);
         }
 
         return $this;
@@ -317,12 +271,70 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * [not 排除返回]
      * @return array
      */
-    public function not()
+    public function not(...$key)
     {
-        //return array_diff_key($this->all(), array_fill_keys($key, null));
-        return \Arr::except($this->all(), func_get_args());
+        return \Arr::except($this->all(), \Arr::flatten($key));
     }
 
+    /**
+     * [take get方法加强版,支持单参数、数组、多参数数组]
+     * @param $key
+     * @return array|mixed
+     */
+    public function take(...$key)
+    {
+        return $key ? \Arr::only($this->all(), \Arr::flatten($key)) : $this->all();
+    }
+
+    /**
+     * Fill the input keys
+     * 
+     * @param mixed $key 
+     * @param mixed|null $value 
+     * @return array 
+     * @throws LogicException 
+     * @throws SuspiciousOperationException 
+     */
+    public function fill($key, $value = null)
+    {
+        return array_intersect_key($this->all(), array_fill_keys($key, $value));
+    }
+
+    /**
+     * [filter 方法别名]
+     * @return array
+     */
+    public function tidy()
+    {
+        return $this->filter();
+    }
+
+    /**
+     * 指定提取
+     * @param null $keys
+     */
+    public function only(...$key)
+    {
+        return \Arr::only($this->all(), \Arr::flatten($key));
+    }
+
+    /**
+     * [input方法别名]
+     *
+     * @param $key
+     * @param null $default
+     * @return mixed
+     * @author 11.
+     */
+    public function input($key = null, $default = null)
+    {
+        if($key){
+            return is_array($key) ? \Arr::only($this->all(), $key) : $this->get($key, $default);
+        }else{
+            return $this->all();
+        } 
+    }
+    
     /**
      * TRIM别名
      * @param $key
@@ -368,6 +380,17 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * [filter take方法加强版，整理返回过滤数组空值,多参数获取]
+     * @return array
+     */
+    public function filter()
+    {
+        return array_filter(call_user_func_array(array($this, 'all'), func_get_args()), function ($v) {
+            return $v !== false && !is_null($v) && ($v != '' || $v == '0');
+        });
+    }
+
+    /**
      * Replace the input for the current request.
      *
      * @param  array  $input
@@ -381,55 +404,31 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [take get方法加强版,支持单参数、数组、多参数数组]
-     * @param $key
-     * @return array|mixed
+     * 获取主机
+     * @return string
      */
-    public function take()
+    public function host()
     {
-        $key = null;
-        if (($num = func_num_args()) > 0) {
-            $key = $num == 1 ? func_get_arg(0) : func_get_args();
-        }
-        if (is_array($key)) {
-            return array_intersect_key($this->all(), array_fill_keys($key, null));
-        } else {
-            return $this->get($key);
-        }
-    }
-
-
-    /**
-     * [filter take方法加强版，整理返回过滤数组空值,多参数获取]
-     * @return array
-     * @author dc.T
-     * @version v1.0
-     */
-    public function filter()
-    {
-        return array_filter(call_user_func_array(array($this, 'take'), func_get_args()), function ($v) {
-            return $v !== false && !is_null($v) && ($v != '' || $v == '0');
-        });
+        return $this->getHost();
     }
 
     /**
-     * [filter 方法别名]
-     * @return array
+     * 获取主机加端口
+     * @return string
      */
-    public function tidy()
+    public function hostPort()
     {
-        return $this->filter();
+        return $this->getHttpHost();
     }
 
     /**
-     * 指定提取
-     * @param null $keys
+     * 获取完整主机请求地址
+     * @return string
      */
-    public function only($keys = [])
+    public function httpHost()
     {
-        return \Arr::only($this->all(), $keys);
+        return $this->getScheme() . '://' . $this->hostPort();
     }
-
     /**
      * alias getOS()
      * @return mixed|string
@@ -438,7 +437,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         return $this->getOS();
     }
-
 
     /**
      * [os 获取操作系统类型]
@@ -475,10 +473,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
         $userAgent = $this->header('User-Agent');
 
-        //var_dump(preg_match('@MeeGo@i', 'Mozilla/5.0 (MeeGo; NokiaN9) AppleWebKit/534.13 (KHTML, like Gecko) NokiaBrowser/8.5.0 Mobile Safari/534.13'));
-
-        //die;
-        // Loop through $oses array
         foreach ($oses as $os => $pattern) {
             // Use regular expressions to check operating system type
             if (preg_match('@' . $pattern . '@i', $userAgent)) {
@@ -493,9 +487,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     public function device()
     {
-        $devices = array(
-            'Mobile' => array('iPhone', '')
-        );
+
     }
 
     /*
@@ -547,12 +539,19 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         return urldecode($this->server('QUERY_STRING'));
     }
 
-
+    /**
+     * Get http referer
+     * @return mixed 
+     */
     public function referer()
     {
         return $this->header('referer');
     }
 
+    /**
+     * Referer alias name
+     * @return mixed 
+     */
     public function refer()
     {
         return $this->referer();
@@ -590,15 +589,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param $key
      * @param $default
      * @return mixed
-     * @author 11.
      */
-    public function cookie($key = null)
+    public function cookie($key = null, $default = null)
     {
-        if ($key) {
-            return $this->cookies->get($key);
-        } else {
+        if($key){
+            return is_array($key) ? \Arr::get($this->cookies->all(), $key) : $this->cookies->get($key, $default);
+        }else{
             return $this->cookies->all();
-        }
+        } 
     }
 
     /**
@@ -607,11 +605,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param null $key
      * @return mixed
      */
-    public function session($key = null)
+    public function session($key = null, $default = null)
     {
-        if ($key) {
-            return make('session')->get($key);
-        } else {
+        if($key){
+            return is_array($key) ? \Arr::get(make('session')->all(), $key) : make('session')->get($key, $default);
+        }else{
             return make('session')->all();
         }
     }
@@ -705,16 +703,15 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [method 获取当前请求方式]
-     *
-     * @param null $type
-     * @return bool|string
+     * Get Http Request Method
+     * 
+     * @param mixed|null $type 
+     * @return bool|string 
+     * @throws SuspiciousOperationException 
      */
     public function method($type = null)
     {
-        $method = $this->getMethod();
-
-        return $type ? strtoupper($type) == $method : $method;
+        return $type ? strtoupper($type) == strtoupper($this->getMethod()) : strtoupper($this->getMethod());   
     }
 
 
@@ -913,7 +910,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @return mixed
      * @author 11.
      */
-    protected function retrieve($source, $key, $default)
+    protected function retrieve($source, $key, $default = null)
     {
         if (is_null($key)) {
             return $this->$source->all();
@@ -1007,14 +1004,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $request->request = $request->getInputSource();
 
         return $request;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function duplicate(array $query = null, array $request = null, array $attributes = null, array $cookies = null, array $files = null, array $server = null)
-    {
-        return parent::duplicate($query, $request, $attributes, $cookies, array_filter((array) $files), $server);
     }
 
 

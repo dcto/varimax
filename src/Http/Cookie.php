@@ -70,7 +70,6 @@ class Cookie{
         return new HttpFoundation\Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
     }
 
-
     /**
      * cookie name
      *
@@ -106,8 +105,6 @@ class Cookie{
 
     /**
      * [has 判断cookie是否存在]
-     *
-     * @author 11.
      */
     public function has($name)
     {
@@ -134,9 +131,10 @@ class Cookie{
      * @return mixed
      * @author 11.
      */
-    public function all()
+    public function all(...$key)
     {
-        return make('request')->cookies->all();
+        $key = count($key) == 1 ? array_shift($key) : $key;
+        return is_array($key) ? \Arr::only($this->cookies->all(), $key) : $this->cookies->all();
     }
 
     /**
