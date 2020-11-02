@@ -493,7 +493,7 @@ class Router
         }
 
         if($route->group){
-           // $this->group[$route->group]['routes'][$route->id] = $route;
+            $this->group[$route->group]['routes'][$route->id] = $route;
         }
 
         return $this;
