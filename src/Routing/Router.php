@@ -12,6 +12,7 @@
 namespace VM\Routing;
 
 use Arr;
+use InvalidArgumentException;
 use VM\Http\Request;
 use VM\Http\Redirect;
 use VM\Http\Response;
@@ -46,7 +47,6 @@ class Router
      * @var $routes array
      */
     private $routes = array();
-
 
     /**
      * An array of HTTP request Methods.
@@ -96,7 +96,7 @@ class Router
             $property = array_shift($params);
 
             //Register Route.
-           return $this->register($method, $route, $property);
+            return $this->register($method, $route, $property);
         }else{
             throw new \InvalidArgumentException('Invalid router of the method Router::'.$method);
         }
@@ -226,7 +226,6 @@ class Router
     public function router($route = null)
     {
         if($route) {
-
             if (isset($this->routes[$route])) {
                 return $this->routes[$route];
             } else {
@@ -258,67 +257,33 @@ class Router
         return $routes;
     }
 
-    /**
-     * Create a route group with shared attributes.
-     *
-     * @param  array  $attributes
-     * @param  \Closure  $callback
-     * @return void
-     */
-    public function group(array $attributes, \Closure $callback)
-    {
-        //array_push($this->groupStack, $attributes);
-        $this->updateGroupStack($attributes);
-        //$this->groupStack[] = $attributes;//array_merge_recursive($this->groupStack, $attributes);
-        // Once we have updated the group stack, we will execute the user Closure and
-        // merge in the groups attributes when the route is created. After we have
-        // run the callback, we will pop the attributes off of this group stack.
-        call_user_func($callback, $this);
-
-        array_pop($this->groupStack);
-    }
 
     /**
      * format the route item list
-     * @param null $key
+     * @param null $node
      * @return array
      */
-    public function groups()
+    public function groups($node = null, $recursion = true)
     {
-        $tags = func_get_args();
-        $groups = array();
-        foreach ($this->group as $id => $group) {
-            if($tags && !in_array($id, $tags)) continue;
-            $groups[$id] = $group;
-            unset($groups[Arr::get($group, 'pid')]);
-            foreach ($this->routes as $route){
-                $route->group == $id && $groups[$id]['routes'][] = $route;
-            }
-        }
-        if(func_num_args() == 1){
-
-            if(isset($groups[$tags[0]])){
-                return $groups[$tags[0]];
-            }
-        }
-        return $groups;
+        $groups = $recursion ? $this->tree() : $this->group;
+        
+        return $node ? Arr::get($groups, $node, array()) : $groups;
     }
 
     /**
-     * get child router group
-     * @param $pid
-     * @return array
+     * Get the groups by pid
+     * 
+     * @param bool 
+     * @return array 
      */
-    public function child($pid)
+    public function tree()
     {
         $groups = array();
-        foreach ($this->group as $id => $group) {
-            if(isset($group['pid']) && $group['pid'] == $pid) {
-            $groups[$id] = $group;
-            unset($groups[Arr::get($group, 'pid')]);
-            foreach ($this->routes as $route){
-                $route->group() == $id && $groups[$id]['routes'][] = $route;
-            }
+        foreach($this->group as $key => $group){
+            if(isset($this->group[$group['pid']])){
+                $this->group[$group['pid']]['group'][$group['id']] = &$this->group[$key];
+            }else{
+                $groups[$key] = &$this->group[$key];
             }
         }
         return $groups;
@@ -332,12 +297,9 @@ class Router
     public function load($routes)
     {
         if(is_readable($routes)){
-
             require($routes);
-
             return $this;
         }else{
-
             throw new NotFoundException('Unable routing from '. basename($routes));
         }
     }
@@ -484,7 +446,6 @@ class Router
         return false;
     }
     
-
     /**
      * ThroughRoute
      * @param $callback
@@ -528,20 +489,12 @@ class Router
             }
 
         }else{
-            $this->routes[] = $route;
+            $this->routes[$route->id] = $route;
         }
 
-        /*
-        if($id = $route->id()){
-            if(isset($this->routes[$id])){
-                throw new NotFoundException("Cannot redeclare route [$id]");
-            }
-           return $this->routes[$id] = $route;
+        if($route->group){
+           // $this->group[$route->group]['routes'][$route->id] = $route;
         }
-
-        $this->routes[] = $route;
-
-        */
 
         return $this;
     }
@@ -590,28 +543,51 @@ class Router
             return is_callable($value);
         });
     }
+
+    /**
+     * Create a route group with shared attributes.
+     *
+     * @param  array  $attributes
+     * @param  \Closure  $callback
+     * @return void
+     */
+    public function group(array $attributes, \Closure $callback)
+    {
+        $this->updateGroupStack($attributes);
+        /*
+         * Once we have updated the group stack, we will execute the user Closure and
+         *  merge in the groups attributes when the route is created. After we have
+         * run the callback, we will pop the attributes off of this group stack.
+         */ 
+        call_user_func($callback, $this);
+        array_pop($this->groupStack);
+    }
     /**
      * Update the group stack with the given attributes.
      *
      * @param  array  $attributes
      * @return void
      */
+
+    /**
+     * Update the group stacks
+     * @param array $attributes 
+     * @return void 
+     * @throws InvalidArgumentException 
+     */
     protected function updateGroupStack(array $attributes)
     {
-        if (! empty($this->groupStack)) {
-            $attributes = $this->mergeGroup($attributes, end($this->groupStack));
-            $attributes['pid'] = Arr::get(end($this->groupStack),'id');
+        $attributes['id'] =  Arr::get($attributes, 'id', crc32(serialize($attributes)));
+        $attributes['name'] = Arr::get($attributes, 'name', $attributes['id']);
+        $attributes = $this->mergeGroup($attributes, last($this->groupStack));
+        
+        if($this->group && isset($this->group[$attributes['id']])){
+            throw new \InvalidArgumentException('The Route Group exist');
         }
-        $id = $attributes['id'] = Arr::get($attributes,'id', crc32(serialize($attributes)));
 
-        /*
-        if(isset($this->group[$id])){
-            throw new SystemException('The Route Group exist');
-        }
-        */
-        $attributes['name'] = Arr::get(end($attributes), 'name', $id);
-        $this->group[$id] = $this->groupStack[] = $attributes;
+        $this->group[$attributes['id']] =  $this->groupStack[] = $attributes;
     }
+
 
     /**
      * Merge the given group attributes.
@@ -622,11 +598,13 @@ class Router
      */
     private function mergeGroup($new, $old)
     {
-        $new['namespace'] = static::formatUsesPrefix($new, $old);
+        $new['pid'] = $old['id'];
 
-        $new['prefix'] = static::formatGroupPrefix($new, $old);
+        $new['namespace'] = $this->formatNameSpace($new, $old);
 
-        return array_replace_recursive(Arr::except($old, ['namespace', 'prefix']), $new);
+        $new['prefix'] = $this->formatGroupPrefix($new);
+
+        return $old ? array_replace_recursive(Arr::except($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
     }
 
     /**
@@ -636,14 +614,19 @@ class Router
      * @param  array  $old
      * @return string|null
      */
-    protected static function formatUsesPrefix($new, $old)
+    private function formatNameSpace($new, $old)
     {
         if (isset($new['namespace'])) {
-            return isset($old['namespace'])
-                ? trim($old['namespace'], '\\').'\\'.trim($new['namespace'], '\\')
-                : trim($new['namespace'], '\\');
+            if(isset($old['namespace'])){
+                if($new['namespace'][0] == '\\'){
+                    return trim($new['namespace'], '\\');
+                }else{
+                    return trim($old['namespace'], '\\').'\\'.trim($new['namespace'], '\\');
+                }
+            }else{
+                return $new['namespace'];
+            }
         }
-
         return isset($old['namespace']) ? $old['namespace'] : null;
     }
 
@@ -654,15 +637,16 @@ class Router
      * @param  array  $old
      * @return string|null
      */
-    protected static function formatGroupPrefix($new, $old)
+    private function formatGroupPrefix(array $group)
     {
-        $oldPrefix = isset($old['prefix']) ? $old['prefix'] : null;
-
-        if (isset($new['prefix'])) {
-            return trim($oldPrefix, '/').'/'.trim($new['prefix'], '/');
+        if(isset($group['prefix'])){
+            if($group['prefix'][0] == '/'){
+                return $group['prefix'];
+            }else{
+                return rtrim($this->getLastGroupPrefix(),'/').'/'.trim($group['prefix'], '/') ;
+            }
         }
-
-        return $oldPrefix;
+        return $this->getLastGroupPrefix().'/';
     }
 
     /**
@@ -673,52 +657,9 @@ class Router
     private function getLastGroupPrefix()
     {
         if (! empty($this->groupStack)) {
-            $last = end($this->groupStack);
-
+            $last = last($this->groupStack);
             return isset($last['prefix']) ? $last['prefix'] : '';
         }
-
         return '';
-    }
-
-
-    /**
-     * Format Parameters
-     * @param $parameters
-     * @return array
-     */
-    private function parameters($parameters)
-    {
-        if ($parameters) {
-            return array_map(function ($value) {
-                return trim(is_string($value) ? rawurldecode($value) : $value, '/');
-            }, $parameters);
-        }
-        return array();
-    }
-
-
-
-    /*
-    private function compilerRoute($route)
-    {
-        $path = explode('/', $route->getPattern());
-
-        $params = array();
-
-        $path = array_map(function($p) use ($route){
-                if(strpos($p, ':')){
-                    //parse_str(strtr($p, ':|', '=&'), $params);
-                    //$route->setParameters($params);
-                    list($key, $val) = explode(':', $p);
-
-                    if(isset($this->regex[$key])){
-                        return  $this->regex[$key];
-                    }
-                }
-
-            return $p;
-        },$path);
-    }
-    */
+    } 
 }
