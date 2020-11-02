@@ -118,9 +118,9 @@ class Cookie{
      * @return mixed
      * @author 11.
      */
-    public function get($name)
+    public function get($name, $default = null)
     {
-        $value = make('request')->cookies->get($this->name($name));
+        $value = make('request')->cookies->get($this->name($name), $default);
         if(config('cookie.encrypt')) return \Crypt::de($value);
         return $value;
     }
@@ -133,8 +133,8 @@ class Cookie{
      */
     public function all(...$key)
     {
-        $key = count($key) == 1 ? array_shift($key) : $key;
-        return is_array($key) ? \Arr::only($this->cookies->all(), $key) : $this->cookies->all();
+        
+        return  \Arr::only($this->cookies->all(), \Arr::flatten($key));
     }
 
     /**

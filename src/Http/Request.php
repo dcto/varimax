@@ -184,8 +184,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function has(...$key)
     {
         $key = \Arr::flatten($key);
+        $all = $this->all();
         foreach($key as $k){
-            if(!$this->get($k)) return false;
+            if(!isset($all[$k])) return false;
         }
         return true;
     }
