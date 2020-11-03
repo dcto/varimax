@@ -57,12 +57,11 @@ class View {
      */
     public function __construct()
     {
-        $this->dir = config('view.dir');
+        $this->dir = config('view.dir', _DIR_._DS_.'View');
         $this->cache = config('view.cache');
         $this->append = ltrim(config('view.append', 'twig'),'.');
 
         $loader = new \Twig_Loader_Filesystem($this->dir);
-
 
         /**
          * 添加模板路径
@@ -72,13 +71,13 @@ class View {
         $this->twig = new \Twig_Environment($loader, array(
 
             //用来保存编译后模板的绝对路径，缺省值为false，也就是关闭缓存。
-            'cache' => config('view.cache', false),
+            'cache' => config('view.cache', 'false'),
 
             //生成的模板会有一个__toString()方法，可以用来显示生成的Node（缺省为false）
             'debug' => false,
 
             //当用Twig开发时，是有必要在每次模板变更之后都重新编译的。如果不提供一个auto_reload参数，他会从debug选项中取值
-            'auto_reload' => getenv('DEBUG'),
+            'auto_reload' => getenv('DEBUG')? true : false,
 
             //模板的字符集，缺省为utf-8。
             'charset' => config('app.charset', 'utf-8'),
@@ -122,7 +121,7 @@ class View {
         $this->twig->addGlobal('_VM_', _VM_);
         $this->twig->addGlobal('_APP_',_APP_);
         $this->twig->addGlobal('lang', app('lang'));
-        $this->twig->addGlobal('route', app('router')->route());
+        $this->twig->addGlobal('router', app('router')->route());
         $this->twig->addGlobal('request', app('request'));
 
         //注册模板扩展
@@ -161,60 +160,6 @@ class View {
         );
 
         /**
-         * 注册全局make方法
-         * @example   [make('class').function]
-         * @var [type]
-         */
-        $make = new \Twig_SimpleFunction('make', function($alias, $parameters = []){
-            return make($alias, $parameters);
-        });
-        $this->twig->addFunction($make);
-
-        /**
-         * 注册config方法
-         * @var [type]
-         */
-        $config = new \Twig_SimpleFunction('config', array(make('config'), 'get'));
-        $this->twig->addFunction($config);
-
-        /**
-         * 注册路由调用方法
-         * @example [route(alias, ['a','b'])]
-         * @var [type]
-         */
-        $router = new \Twig_SimpleFunction('router', array(make('router'), 'router'));
-        $this->twig->addFunction($router);
-
-        /**
-         * [获取当前 URL]
-         * @param null $do [构建 URL 参数 @=获了路由, $=根据当前控制器,控制器方法获取 url,]
-         * @example url('@index')
-         * @example url('$controller');
-         * @example url('/index/abc');
-         * @example url();
-         * @return string
-         */
-        $url = new \Twig_SimpleFunction('url',  array(make('request'), 'url'));
-        $this->twig->addFunction($url);
-
-        /**
-         * [uri 获取当前url包含所有参数]
-         * @param null $cast [排除或抽取批定URL参数]
-         */
-        $uri = new \Twig_SimpleFunction('uri', function($cast = null){
-            return make('request')->uri($cast);
-
-        });
-        $this->twig->addFunction($uri);
-
-        /**
-         * 注册语言包调用方法
-         * @var [type]
-         */
-        $this->twig->addFunction(new \Twig_SimpleFunction('lang', array(make('lang'), 'get')));
-
-
-        /**
          * [$dump 注册调试函数]
          * @var [type]
          */
@@ -232,22 +177,6 @@ class View {
         };
 
         $this->twig->addFunction(new \Twig_SimpleFunction('debug', $debug, array('pre_escape' => 'html', 'is_safe' => array('html'))));
-
-        $this->twig->addFunction(new \Twig_SimpleFunction('microtime', function($parameters){
-            return microtime($parameters);}
-        ));
-
-        $this->twig->addFunction(new \Twig_SimpleFunction('memory_get_usage', function($parameters){
-            return memory_get_usage($parameters);
-        }));
-
-        /**
-         * 单位转换
-         */
-        $this->twig->addFunction(new \Twig_SimpleFunction('size', function($size){
-            $units = array('b','kb','mb','gb','tb','pb');
-            return round($size/pow(1024,($i=floor(log($size,1024)))),2).$units[$i];
-        }));
 
         /**
          * 注册过滤器
@@ -268,7 +197,6 @@ class View {
 
         return $this->twig;
     }
-
 
     /**
      * paths for twig
@@ -297,7 +225,6 @@ class View {
         return $this;
     }
 
-
     /**
      * set view cache dir
      * @param $dir
@@ -320,13 +247,11 @@ class View {
         return $this->twig;
     }
 
-
     /**
      * [assign 模板变量赋值方法]
      *
      * @param      $var [变量名]
      * @param null $val [变量值]
-     * @author 11.
      */
     public function assign($var, $val = null)
     {
@@ -347,7 +272,6 @@ class View {
      * @param $template
      * @param $variable
      * @return string
-     * @author 11.
      */
     public function render($template, $variables)
     {
@@ -361,7 +285,6 @@ class View {
      *
      * @param $template
      * @param $variable
-     * @author 11.
      */
     public function show($template, $variables)
     {
