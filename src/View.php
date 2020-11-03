@@ -126,7 +126,7 @@ class View {
         $this->twig->addGlobal('request', app('request'));
 
         //注册模板扩展
-        $this->twig->addExtension(new \nochso\HtmlCompressTwig\Extension());
+        $this->twig->addExtension(new \nochso\HtmlCompressTwig\Extension(getenv('DEBUG')? true : false));
 
         /**
          * 注册全局可用函数
