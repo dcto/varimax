@@ -64,7 +64,6 @@ class View {
         $loader = new \Twig_Loader_Filesystem($this->dir);
 
         /**
-         * 添加模板路径
          * $loader->addPath($templateDir3);
          * $loader->prependPath($templateDir4);
          */
@@ -74,7 +73,7 @@ class View {
             'cache' => config('view.cache', 'false'),
 
             //生成的模板会有一个__toString()方法，可以用来显示生成的Node（缺省为false）
-            'debug' => false,
+            'debug' => getenv('DEBUG')? true : false,
 
             //当用Twig开发时，是有必要在每次模板变更之后都重新编译的。如果不提供一个auto_reload参数，他会从debug选项中取值
             'auto_reload' => getenv('DEBUG')? true : false,
@@ -108,6 +107,7 @@ class View {
         ));
         $this->twig->setLexer($lexer);
         */
+
         /**
          * 注册扩展方法
          * @var \Twig_Environment
@@ -121,39 +121,20 @@ class View {
         $this->twig->addGlobal('_VM_', _VM_);
         $this->twig->addGlobal('_APP_',_APP_);
         $this->twig->addGlobal('lang', app('lang'));
-        $this->twig->addGlobal('router', app('router')->route());
+        $this->twig->addGlobal('route', app('router')->route());
+        $this->twig->addGlobal('router', app('router'));
         $this->twig->addGlobal('request', app('request'));
 
         //注册模板扩展
-        //$this->twig->addExtension(new \nochso\HtmlCompressTwig\Extension());
+        $this->twig->addExtension(new \nochso\HtmlCompressTwig\Extension());
 
         /**
-         * 注册全局可用php函数
-         * @example {{php_function()}}
-         */
-        $this->twig->addFunction(new \Twig_SimpleFunction('php_*',
-            function() {
-                $args = func_get_args();
-
-                $function = array_shift($args);
-
-                return call_user_func_array($function, $args);
-            },
-            array('pre_escape' => 'html', 'is_safe' => array('html'))
-            )
-        );
-
-        /**
-         * 注册全局可用数
-         * @example {{php_function()}}
+         * 注册全局可用函数
+         * @example {{ function() }}
          */
         $this->twig->addFunction(new \Twig_SimpleFunction('*',
-                function() {
-                    $args = func_get_args();
-
-                    $function = array_shift($args);
-
-                    return call_user_func_array($function, $args);
+                function(...$args){
+                    return call_user_func_array(array_shift($args), $args);
                 },
                 array('pre_escape' => 'html', 'is_safe' => array('html'))
             )
@@ -193,7 +174,6 @@ class View {
             ? ($suffix ? mb_substr($string, 0, $length).$suffix : mb_substr($string, 0, $length))
             : $string;
         }));
-
 
         return $this->twig;
     }
