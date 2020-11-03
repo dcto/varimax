@@ -176,19 +176,26 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [has 是否存在全部]
+     * [has 是否存在]
      *
      * @param $key
      * @return bool
      */
-    public function has(...$key)
+    public function has($key, $number = 1)
     {
-        $key = \Arr::flatten($key);
-        $all = $this->all();
-        foreach($key as $k){
-            if(!isset($all[$k])) return false;
+        $input = $this->all();
+        if(is_array($key)){
+            $count = 0;
+            foreach($key as $k){
+                if(isset($input[$k])){
+                    $count++;
+                    if($count >= $number) return true;
+                } 
+            }
+            return false;
+        }else{
+            return isset($input[$key]);
         }
-        return true;
     }
 
     /**
