@@ -323,14 +323,21 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * [input方法别名]
      *
      * @param $key
-     * @param null $default
+     * @param null|\Closure $default
      * @return mixed
-     * @author 11.
      */
     public function input($key = null, $default = null)
     {
         if($key){
-            return is_array($key) ? \Arr::only($this->all(), $key) : $this->get($key, $default);
+            if(is_array($key)) {
+                if($input = \Arr::only($this->all(), $key)){
+                    return $default instanceof \Closure ? $default($input) : $input;
+                }else{
+                    return $default instanceof \Closure ? $default($input) : $default;
+                }
+            }else{ 
+               return $this->get($key, $default);
+            }
         }else{
             return $this->all();
         } 

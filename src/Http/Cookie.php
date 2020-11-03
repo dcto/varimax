@@ -12,6 +12,7 @@
 
 namespace VM\Http;
 
+use Illuminate\Contracts\Container\BindingResolutionException;
 use Symfony\Component\HttpFoundation;
 
 class Cookie{
@@ -131,22 +132,63 @@ class Cookie{
      * @return mixed
      * @author 11.
      */
-    public function all(...$key)
+    public function all(...$name)
     {
-        
-        return  \Arr::only($this->cookies->all(), \Arr::flatten($key));
+        $cookies = make('request')->cookies->all();
+        return $name ? \Arr::only($cookies, \Arr::flatten($name)) : $cookies;
     }
 
+
     /**
-     * [del 删除cookie]
-     *
-     * @param $name
-     * @author 11.
+     * remove cookie for alias delete method
+     * 
+     * @param mixed $name 
+     * @return true 
+     * @throws BindingResolutionException 
      */
     public function del($name)
     {
+      return $this->clear($name);
+    }
+
+    /**
+     * delete cookie
+     * 
+     * @param mixed $name 
+     * @return mixed 
+     * @throws BindingResolutionException 
+     */
+    public function delete($name)
+    {
+        return response()->make()->headers->clearCookie($this->name($name));
+    }
+
+    /**
+     * remove cookie alais name clear
+     * 
+     * @param mixed $name 
+     * @return true 
+     * @throws BindingResolutionException 
+     */
+    public function remove(...$name)
+    {
+        return $this->clear($name);
+    }
+
+    /**
+     * [clear 删除cookie]
+     *
+     * @param $name
+     */
+    public function clear(...$name)
+    {
         $response = make('response')->make();
-        $response->headers->clearCookie($this->name($name));
+        $names = \Arr::flatten($name);
+
+        foreach($names as $name){
+            $response->headers->clearCookie($this->name($name));
+        }
+
         $response->sendHeaders();
         return true;
     }
