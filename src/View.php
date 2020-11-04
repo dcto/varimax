@@ -69,14 +69,14 @@ class View {
          */
         $this->twig = new \Twig_Environment($loader, array(
 
-            //用来保存编译后模板的绝对路径，缺省值为false，也就是关闭缓存。
-            'cache' => config('view.cache', 'false'),
-
             //生成的模板会有一个__toString()方法，可以用来显示生成的Node（缺省为false）
-            'debug' => getenv('DEBUG')? true : false,
+            'debug' => config('view.debug', false),
+
+            //用来保存编译后模板的绝对路径，缺省值为false，也就是关闭缓存。
+            'cache' => config('view.cache', false),
 
             //当用Twig开发时，是有必要在每次模板变更之后都重新编译的。如果不提供一个auto_reload参数，他会从debug选项中取值
-            'auto_reload' => getenv('DEBUG')? true : false,
+            'auto_reload' => config('view.reload', false),
 
             //模板的字符集，缺省为utf-8。
             'charset' => config('app.charset', 'utf-8'),
@@ -90,7 +90,7 @@ class View {
              * 在Twig 1.9中的转移策略，可以设置为css，url，html_attr，甚至还可以设置为回调函数。
              * 该函数需要接受一个模板文件名为参数，且必须返回要使用的转义策略，回调命名应该避免同内置的转义策略冲突。
              */
-            'autoescape' => true,
+            'autoescape' => config('view.autoescape', true),
 
             /**
              * 用于指出选择使用什么优化方式（缺省为-1，代表使用所有优化；设置为0则禁止）。
