@@ -84,7 +84,6 @@ class Router
      * @param string $method
      * @param array @params
      */
-
     public function __call($method, $params)
     {
         if (($method == 'any') || in_array(strtoupper($method), static::$methods)) {
@@ -256,7 +255,6 @@ class Router
         }
         return $routes;
     }
-
 
     /**
      * format the route item list
@@ -435,12 +433,14 @@ class Router
      * @return bool
      */
     
-    public function Matching($path, $route, $method)
+    public function Matching($path, &$route, $method)
     {
         if(!in_array($method, $route->methods())) return false;
         if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
-            $route->url(array_shift($matches));
-            $route->args($matches);
+            $route->url = array_shift($matches);
+            $route->parameters = array_map(function($match){
+                return trim($match, '/');
+            }, $matches);
             return true;
         }
         return false;
