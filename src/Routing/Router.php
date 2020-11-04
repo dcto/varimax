@@ -345,7 +345,7 @@ class Router
 
         $path = $this->parseRoute($path, $properties);
 
-        $properties['regex'] = strpos($path, '/(') === false ? null : str_replace(array_keys($this->regex), array_values($this->regex), $path);
+        $properties['regex'] = strpos($path, '(') === false ? null : str_replace(array_keys($this->regex), array_values($this->regex), $path);
 
         return new Route($methods, $path, $properties);
     }
