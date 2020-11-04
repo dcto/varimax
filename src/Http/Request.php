@@ -142,32 +142,33 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 符号说明: ! 去除指定参数
      * 符号说明: @ 保留URL参数
      * 符号说明: ? 重构URL参数
+     * 符号说明: ~ 清空URL参数值
      * 
      * @example uri('&', 'page')
      * @example uri('!', 'page')
      * @example uri('@', 'page')
      * @example uri('?', 'page=1&pagesize=2', 'a=b&1=2')
+     * @example uri('~', 'page')
      *
      */
     public function uri(...$args)
     {
         $input = $this->all();
-
         if($args){
+
             switch($args[0]){
 
                 case '&':
                     array_shift($args);
-
-                    $input = array_merge($input, array_map(function($arg){
-                        if(!is_array($arg)) {
-                            $var = array();
-                            parse_str($arg, $var);
-                            return $var;
+                    array_map(function($arg) use(&$input){
+                        if(is_array($arg)) {
+                            $input = array_merge($input, $arg);
                         }else{
-                            return $arg;
+                            $param = array();
+                            parse_str($arg, $param);
+                            $input = array_merge($input, $param);
                         }
-                    }, $args));
+                    }, $args);
                 break;
 
                 case '!':
@@ -186,7 +187,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                         return trim($arg, '&');
                     }, $args)), $input);
                 break;
-                
+
                 default:
                     $input = array_merge($input, array_shift($args));
             }
