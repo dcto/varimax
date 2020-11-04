@@ -63,19 +63,17 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * [is 判断当前路径是否匹配]
      *
      * @return bool
-     * @author 11.
      */
-    public function is()
+    public function is(...$args)
     {
-        foreach (func_get_args() as $pattern) {
-            if (\Str::is($pattern, urldecode($this->path()))) {
+        foreach ($args as $arg) {
+            if (\Str::is($arg, urldecode($this->path()))) {
                 return true;
             }
         }
 
         return false;
     }
-
 
     /**
      * [获取当前 URL]
@@ -139,40 +137,62 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * [uri 获取当前url包含所有参数]
-     * @param null $cast [URL参数]
+     * 
+     * 符号说明: & 附加URL参数
      * 符号说明: ! 去除指定参数
-     * 符号说明: & 附加URL指定参数
-     * 符号说明: @ 保留URL指定参数
+     * 符号说明: @ 保留URL参数
+     * 符号说明: ? 重构URL参数
+     * 
+     * @example uri('&', 'page')
+     * @example uri('!', 'page')
+     * @example uri('@', 'page')
+     * @example uri('?', 'page=1&pagesize=2', 'a=b&1=2')
      *
      */
-    public function uri($cast = null)
+    public function uri(...$args)
     {
-        $query = $this->all();
+        $input = $this->all();
 
-        if (is_array($cast)) {
-            $query = array_merge($query, $cast);
-        } else {
-            switch (substr($cast, 0, 1)) {
-                case '!':
-                    unset($query[ltrim($cast, '!')]);
-                    break;
+        if($args){
+            switch($args[0]){
 
                 case '&':
-                    $cast = trim($cast, '?&');
-                    parse_str($cast, $queryArray);
-                    $query = array_merge($query, $queryArray);
-                    break;
+                    array_shift($args);
+
+                    $input = array_merge($input, array_map(function($arg){
+                        if(!is_array($arg)) {
+                            $var = array();
+                            parse_str($arg, $var);
+                            return $var;
+                        }else{
+                            return $arg;
+                        }
+                    }, $args));
+                break;
+
+                case '!':
+                    array_shift($args);
+                    $input = \Arr::except($input, \Arr::flatten($args));    
+                break;
 
                 case '@':
-                    $cast = ltrim($cast, '@');
-                    $query = array_key_exists($cast, $query) ? array($cast => $query[$cast]) : array();
-                    break;
+                    array_shift($args);
+                    $input = \Arr::only($input, \Arr::flatten($args));    
+                break; 
+
+                case '?':
+                    array_shift($args);
+                    parse_str(implode('&', array_map(function($arg){
+                        return trim($arg, '&');
+                    }, $args)), $input);
+                break;
+                
+                default:
+                    $input = array_merge($input, array_shift($args));
             }
         }
 
-        $uri = $query ? '?' . http_build_query($query) : '';
-
-        return $uri = $this->url() . $uri;
+        return  $input ? $this->baseUrl().'?' . http_build_query($input) : $this->baseUrl();
     }
 
     /**
@@ -235,10 +255,8 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function set($key, $val)
     {
         $this->getInputSource()->set($key, $val);
-
         return $this;
     }
-
 
     /**
      * [all 返回所有]
@@ -281,7 +299,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function not(...$key)
     {
-        return \Arr::except($this->all(), \Arr::flatten($key));
+        return $this->except($key);
     }
 
     /**
@@ -303,7 +321,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @throws LogicException 
      * @throws SuspiciousOperationException 
      */
-    public function fill($key, $value = null)
+    public function fill(array $key, $value = null)
     {
         return array_intersect_key($this->all(), array_fill_keys($key, $value));
     }
@@ -365,9 +383,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param $key
      * @return bool
      */
-    public function trim($key)
+    public function trim(...$key)
     {
-        return trim($this->get($key)) == '';
+        return $this->filter($key);
     }
 
 
@@ -376,9 +394,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param null $key
      * @return array
      */
-    public function except($key = null)
+    public function except(...$key)
     {
-        return $this->not($key);
+        return $key ? \Arr::except($this->all(), \Arr::flatten($key)) : $this->all();
     }
 
     /**
@@ -387,9 +405,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param  array  $input
      * @return $this
      */
-    public function merge(array $input)
+    public function merge(...$args)
     {
-        $this->getInputSource()->add($input);
+        $this->getInputSource()->add(\Arr::flatten($args));
 
         return $this;
     }
@@ -408,12 +426,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * Replace the input for the current request.
      *
-     * @param  array  $input
+     * @param  array  $args
      * @return $this
      */
-    public function replace(array $input)
+    public function replace(...$args)
     {
-        $this->getInputSource()->replace($input);
+        $this->getInputSource()->replace(\Arr::flatten($args));
 
         return $this;
     }
@@ -499,10 +517,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         return $userAgent;
     }
 
-
+    /**
+     * get device
+     * 
+     * @return string 
+     */
     public function device()
     {
-
+        return $this->os();
     }
 
     /*
