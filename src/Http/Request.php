@@ -165,7 +165,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                             $input = array_merge($input, $arg);
                         }else{
                             $param = array();
-                            parse_str($arg, $param);
+                            parse_str(trim($arg, '&'), $param);
                             $input = array_merge($input, $param);
                         }
                     }, $args);
@@ -183,13 +183,29 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
                 case '?':
                     array_shift($args);
-                    parse_str(implode('&', array_map(function($arg){
-                        return trim($arg, '&');
-                    }, $args)), $input);
+                    $input = array();
+                    array_map(function($arg) use(&$input){
+                        if(is_array($arg)) {
+                            $input = array_merge($input, $arg);
+                        }else{
+                            $param = array();
+                            parse_str(trim($arg, '&'), $param);
+                            $input = array_merge($input, $param);
+                        }
+                    }, $args);
+
                 break;
 
                 default:
-                    $input = array_merge($input, array_shift($args));
+                array_map(function($arg) use(&$input){
+                    if(is_array($arg)) {
+                        $input = array_merge($input, $arg);
+                    }else{
+                        $param = array();
+                        parse_str(trim($arg, '&'), $param);
+                        $input = array_merge($input, $param);
+                    }
+                }, $args);
             }
         }
 
