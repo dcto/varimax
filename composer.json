@@ -20,7 +20,7 @@
   ],
 
   "require": {
-    "php": ">=7.2.5",
+    "php": ">=7.2.0",
     "ext-xml":"*",
     "ext-json":"*",
     "ext-curl":"*",
@@ -37,7 +37,6 @@
     "illuminate/filesystem": "5.8.*",
     "illuminate/pagination": "5.8.*",
     "twig/twig": "1.*",
-    "nochso/html-compress-twig":"2.*",
     "vlucas/phpdotenv":"4.1.*",
     "kylekatarnls/laravel-carbon-2": "^1.0.0",
     "hashids/hashids": "^4.0",
