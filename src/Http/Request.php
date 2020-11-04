@@ -209,7 +209,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             }
         }
 
-        return  $input ? $this->baseUrl().'?' . http_build_query($input) : $this->baseUrl();
+        return  $input ? $this->url().'?' . http_build_query($input) : $this->url();
     }
 
     /**
