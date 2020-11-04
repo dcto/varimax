@@ -36,7 +36,7 @@
     "illuminate/database": "5.8.*",
     "illuminate/filesystem": "5.8.*",
     "illuminate/pagination": "5.8.*",
-    "twig/twig": "3.*",
+    "twig/twig": "1.*",
     "nochso/html-compress-twig":"2.*",
     "vlucas/phpdotenv":"4.1.*",
     "kylekatarnls/laravel-carbon-2": "^1.0.0",
