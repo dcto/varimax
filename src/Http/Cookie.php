@@ -70,11 +70,11 @@ class Cookie{
      * @param bool|true  $httpOnly
      * @return $this
      */
-    public function set($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null)
+    public function set($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null, $raw = false, $sameSite = null)
     {
         if(config('cookie.encrypt')) $value = \Crypt::en($value);
         $response = make('response')->make();
-        $response->headers->setCookie($this->make($this->name($name), $value, $expire, $path, $domain, $secure, $httpOnly));
+        $response->headers->setCookie($this->make($this->name($name), $value, $expire, $path, $domain, $secure, $httpOnly, $raw, $sameSite));
         $response->sendHeaders();
 
         return $this;
