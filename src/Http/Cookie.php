@@ -27,6 +27,8 @@ class Cookie{
      * @param  string  $domain
      * @param  bool    $secure
      * @param  bool    $httpOnly
+     * @param  bool    $raw
+     * @param  null|string   $sameSite
      * @return \Symfony\Component\HttpFoundation\Cookie
      */
     public function make($name, $value, $expire = 0, $path = null, $domain = null, $secure = false, $httpOnly = true, $raw = false, $sameSite = null)
