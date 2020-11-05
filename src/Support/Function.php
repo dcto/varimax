@@ -50,7 +50,7 @@ if(!function_exists('make')) {
  * log
  * @return mixed
  */
-if(!function_exists('log')) {
+if(!function_exists('logs')) {
     function logs()
     {
         return make('log')->dir(func_get_args());
@@ -102,15 +102,15 @@ if(!function_exists('config')) {
     {
         if (is_null($key)) {
             return app('config');
-        }
 
-        if (is_array($key)) {
+        }else if (is_array($key)) {
             return app('config')->set($key);
         }
 
         return app('config')->get($key, $default);
     }
 }
+
 /**
  * get path
  *
@@ -237,21 +237,19 @@ if(!function_exists('session')) {
  * @param  string  $domain
  * @param  bool    $secure
  * @param  bool    $httpOnly
+ * @param  bool    $raw
+ * @param  string  $sameSite
  * @return \VM\Http\Cookie
  */
 if(!function_exists('cookie')) {
-    function cookie($name = null, $value = null, $minutes = 0, $path = null, $domain = null, $secure = false, $httpOnly = true)
+    function cookie($name = null, $value = null, $minutes = 0, $path = null, $domain = null, $secure = false, $httpOnly = true, $raw = false, $sameSite = null)
     {
-        /*
-         * @var $cookie \VM\Http\Cookie
-         */
-
         if (is_null($name)) {
             return app('cookie');
         } else if ($name && is_null($value)) {
             return app('cookie')->get($name);
         } else {
-            return app('cookie')->set($name, $value, $minutes, $path, $domain, $secure, $httpOnly);
+            return app('cookie')->set($name, $value, $minutes, $path, $domain, $secure, $httpOnly, $raw, $sameSite);
         }
     }
 }
@@ -590,6 +588,7 @@ if(!function_exists('is_email')) {
         }
     }
 }
+
 if(!function_exists('is_url')) {   
     /**  
      * 是否为一个合法的url  
@@ -605,6 +604,7 @@ if(!function_exists('is_url')) {
         }
     }
 }
+
 if(!function_exists('is_ip')) {   
     /**  
      * 是否为一个合法的ip地址  
@@ -620,6 +620,7 @@ if(!function_exists('is_ip')) {
         }
     }
 }
+
 if(!function_exists('is_number')) {   
     /**  
      * 是否为整数  
@@ -635,6 +636,7 @@ if(!function_exists('is_number')) {
         }
     }
 }
+
 if(!function_exists('is_positive_number')) {   
     /**  
      * 是否为正整数  
@@ -666,6 +668,7 @@ if(!function_exists('is_decimal')) {
         }
     }
 }
+
 if(!function_exists('is_positive_decimal')) { 
     /**  
      * 是否为正小数  
@@ -726,6 +729,7 @@ if(!function_exists('is_image')) {
         }
     }
 }
+
 if(!function_exists('is_card')) { 
     /**  
      * 是否为合法的身份证(支持15位和18位)  
