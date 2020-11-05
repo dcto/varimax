@@ -66,8 +66,10 @@ class Cookie{
      * @param int        $expire
      * @param string     $path
      * @param null       $domain
-     * @param bool|false $secure
-     * @param bool|true  $httpOnly
+     * @param bool       $secure
+     * @param bool       $httpOnly
+     * @param bool       $raw
+     * @param string     $sameSite
      * @return $this
      */
     public function set($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null, $raw = false, $sameSite = null)
