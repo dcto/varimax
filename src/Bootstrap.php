@@ -38,7 +38,7 @@ PHP_SAPI == 'cli' || is_dir(_DIR_) || die('Access Denied.');
 /**
  * Load DotEnv Environment
  */
-is_file(_DOC_.'/.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
+is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
 
 /**
  * load helper from app
