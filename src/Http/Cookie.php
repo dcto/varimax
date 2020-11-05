@@ -16,33 +16,7 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Symfony\Component\HttpFoundation;
 
 class Cookie{
-
-
-    /**
-     * @var string
-     */
-    protected $path;
-
-    /**
-     * @var string
-     */
-    protected $expire;
-
-    /**
-     * @var string
-     */
-    protected $domain;
-
-    /**
-     * @var boolean
-     */
-    protected $secure = false;
-
-    /**
-     * @var boolean
-     */
-    protected $httpOnly = true;
-
+    
     /**
      * 返回cookie实例
      *
@@ -55,20 +29,20 @@ class Cookie{
      * @param  bool    $httpOnly
      * @return \Symfony\Component\HttpFoundation\Cookie
      */
-    public function make($name, $value, $expire = 0, $path = null, $domain = null, $secure = false, $httpOnly = true)
+    public function make($name, $value, $expire = 0, $path = null, $domain = null, $secure = false, $httpOnly = true, $raw = false, $sameSite = null)
     {
 
-        $this->path   = $path ?: config('cookie.path', '/');
-        $this->expire = $expire ?: config('cookie.expire', 0);
-        $this->domain = $domain ?: config('cookie.domain', null);
-        $this->secure = $secure ?: config('cookie.secure', false);
-        $this->httpOnly = $httpOnly ?: config('cookie.httpOnly', true);
-
-        list($path, $domain, $secure) = $this->getPathAndDomain($path, $domain, $secure);
-
+        $path   = $path ?: config('cookie.path', '/');
+        $expire = $expire ?: config('cookie.expire', 0);
+        $domain = $domain ?: config('cookie.domain', null);
+        $secure = $secure ?: config('cookie.secure', false);
+        $httpOnly = $httpOnly ?: config('cookie.httpOnly', true);
+        $raw = $raw ?: config('cookie.raw', false);
+        $sameSite = $sameSite ?: config('cookie.sameSite', null);
+        
         $expire = ($expire == 0) ? 0 : time() + ($expire * 60);
 
-        return new HttpFoundation\Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly);
+        return new HttpFoundation\Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly, $raw, $sameSite);
     }
 
     /**
@@ -204,6 +178,6 @@ class Cookie{
      */
     protected function getPathAndDomain($path, $domain, $secure = false)
     {
-        return [$path ?: $this->path, $domain ?: $this->domain, $secure ?: $this->secure];
+        return [$path, $domain, $secure];
     }
 }
