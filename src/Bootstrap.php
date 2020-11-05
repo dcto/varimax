@@ -32,10 +32,13 @@ defined('_ROOT_') || define('_ROOT_', _DOC_);
 //define _TIME_ constants to macro time
 defined('_TIME_') || define('_TIME_', microtime(true));
 
-
-
 //Access Denied!
 PHP_SAPI == 'cli' || is_dir(_DIR_) || die('Access Denied.');
+
+/**
+ * Load DotEnv Environment
+ */
+is_file(_DOC_.'/.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
 
 /**
  * load helper from app
@@ -46,11 +49,6 @@ is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
  * load helper from core
  */
 is_file($func = _VM_._DS_.'/Support/Function.php') && require($func);
-
-/**
- * Load DotEnv Environment
- */
-is_file(_DOC_.'/.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
 
 /**
  * @var $loader \Composer\Autoload\ClassLoader
