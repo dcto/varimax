@@ -86,31 +86,22 @@ class Session implements  \IteratorAggregate, \Countable
     {
 
         if($this->isStarted()) return $this;
-
-        try {
-
-            if (\PHP_SESSION_ACTIVE === session_status()) {
-                throw new \RuntimeException('Failed to start the session: already started by PHP.');
-            }
-
-            if (ini_get('session.use_cookies') && headers_sent($file, $line)) {
-                throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
-            }
-
-            $this->sessionHandler(config('session.driver'));
-
-            session_start();
-
-            $this->started = isset($_SESSION);
-
-            return $this;
-
-        }catch (\RuntimeException $e){
-            throw new $e;
-
-        }catch (\Throwable $e){
-            throw new $e;
+        
+        if (\PHP_SESSION_ACTIVE === session_status()) {
+            throw new \RuntimeException('Failed to start the session: already started by PHP.');
         }
+
+        if (ini_get('session.use_cookies') && headers_sent($file, $line)) {
+            throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
+        }
+
+        $this->sessionHandler(config('session.driver'));
+
+        session_start();
+
+        $this->started = isset($_SESSION);
+
+        return $this;
     }
 
     /**
