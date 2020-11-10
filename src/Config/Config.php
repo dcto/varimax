@@ -30,7 +30,7 @@ class Config implements ArrayAccess, ConfigContract
      * @param  array  $item
      * @return void
      */
-    public function __construct(array $item = [])
+    public function __construct()
     {
         if (is_file($config = root('config', 'config.php'))) {
             $this->item = (array) require($config);

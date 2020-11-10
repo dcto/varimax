@@ -5,6 +5,8 @@ use Illuminate\Support\Facades\Facade;
 /**
  * Class Captcha
  * @method static bool is(string $input, $case = false) [判断验证码是否正确]
+ * @method static VM\Captcha\Captcha with(\VM\Http\Cookie|\VM\Http\Session $handle)
+ * @method static VM\Captcha\Captcha driver(\VM\Http\Cookie|\VM\Http\Session $handle = null)
  * @method static VM\Captcha\Captcha make(int $width = 100, int $height = 30, int $obstruct = 5) 创建验证码
  * @method static VM\Captcha\Captcha code($length = 4, $code = null) 获取随机字符串
  * @method static VM\Captcha\Captcha string(string $string = null)

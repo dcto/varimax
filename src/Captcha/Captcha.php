@@ -9,16 +9,26 @@ namespace VM\Captcha;
 class Captcha {
 
     /**
+     * save name
+     * @var string
+     */
+    protected $name = 'captcha';
+
+    /**
      * 图片类型
      * @var array
      */
     protected $types = array('jpeg','png', 'gif');
 
     /**
-     * 设置字体
-     * @var array
+     * Bold.otf 粗体
+     * Camo.otf 超级干扰字体
+     * False.otf 伪装小字体
+     * Noise.otf 黑头干扰字体
+     * Sans.otf 变形字体
+     * Xed.otf X线干扰字体
      */
-    protected $fonts;
+    protected $fonts = array('ZXX/Bold.otf','ZXX/Noise.otf','ZXX/Sans.otf','ZXX/Xed.otf');
 
     /**
      * 宽度
@@ -49,13 +59,21 @@ class Captcha {
      * code string
      * @var string
      */
-    protected $string = '1234';
+    protected $string = 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789';
+
 
     /**
-     * cookie名称
-     * @var string
+     * save driver
+     * @var object
      */
-    protected $cookie = 'captcha';
+    protected $driver = 'session';
+
+
+    /**
+     * 
+     * @var false
+     */
+    protected $encrypt = false;
 
     /**
      * 图像
@@ -65,23 +83,20 @@ class Captcha {
     
     
 
-    public function __construct($width = 100, $height = 30, $length = 4, $fonts = null)
+    public function __construct()
     {
         if (!extension_loaded("gd"))  throw new \ErrorException ("Captcha Unable Load GD Library");
 
-        /**
-         * Bold.otf 粗体
-         * Camo.otf 超级干扰字体
-         * False.otf 伪装小字体
-         * Noise.otf 黑头干扰字体
-         * Sans.otf 变形字体
-         * Xed.otf X线干扰字体
-         */
-        $this->fonts = $fonts ?: array('ZXX/Bold.otf','ZXX/Noise.otf','ZXX/Sans.otf','ZXX/Xed.otf');
-        $this->width = $width;
-        $this->height = $height;
-        $this->length = $length;
-        $this->string = $this->code(4, 'ABCDEFGHIJKLMNPQRSTUVWXYZ123456789');
+        $this->fonts =  config('captcha.fonts', $this->fonts);
+        $this->width =  config('captcha.width', $this->width);
+        $this->height = config('captcha.height', $this->height);;
+        $this->length = config('captcha.length', $this->length);;
+        $this->string = $this->code($this->length, config('captcha.string', $this->string));
+        $this->driver = config('captcha.driver', $this->driver);
+
+        if(!in_array($this->driver, array('session', 'cookie'))) throw new \InvalidArgumentException('Invalid captcha driver:'.$this->driver);
+
+        $this->driver = make(config('captcha.driver', 'session'));
     }
 
     /**
@@ -93,9 +108,9 @@ class Captcha {
     public function is($input, $case = false)
     {
         $input = sprintf("%s", trim($input));
-        $codes = make('cookie')->get($this->cookie);
-        $codes = \Crypt::de($codes);
-        make('cookie')->del($this->cookie);
+        $codes = $this->driver->get($this->name);
+        $codes = $this->encrypt ? \Crypt::de($codes) : $codes;
+        $this->driver->del($this->name);
         if(!$case && strtolower($input) === strtolower($codes)){
             return true;
         }else if($input === $codes){
@@ -105,6 +120,32 @@ class Captcha {
         }
     }
 
+    /**
+     * driver alias name
+     * 
+     * @param \VM\Http\Session|\M\Http\Cookie  $driver 
+     * @return \VM\Http\Session|\VM\Http\Cookie 
+     */
+    public function with($driver)
+    {
+        return $this->driver($driver);
+    }
+
+    /**
+     * save driver 
+     * 
+     * @param \VM\Http\Session|\M\Http\Cookie  $driver 
+     * @return \VM\Http\Session|\VM\Http\Cookie 
+     */
+    public function driver($driver = null)
+    {
+        if(!$driver) {
+            return $this->driver;
+        }else{
+            $this->driver = make($driver);
+            return $this;
+        }
+    }
 
     /**
      * [make]
@@ -156,20 +197,6 @@ class Captcha {
         $this->height = $height;
 
         return $this;
-    }
-
-    /**
-     * get image
-     *
-     * @return mixed
-     * @throws \ErrorException
-     */
-    private function resource()
-    {
-        if(is_resource($this->resource)){
-            return $this->resource;
-        }
-        throw new \ErrorException('The image isn\' t an resource');
     }
 
     /**
@@ -251,7 +278,10 @@ class Captcha {
     public function string($string = null)
     {
         $this->string = $string ?: $this->string;
-        make('cookie')->set($this->cookie, \Crypt::en($this->string), $this->timeout);
+
+        $this->string = $this->encrypt  ? \Crypt::en($this->string) : $this->string;
+
+        $this->driver->set($this->name, $this->string, $this->timeout);
 
         for ($i=0; $i< $this->length;$i++){
             $size = 18;
@@ -308,12 +338,11 @@ class Captcha {
 
 
     /**
-     * [getRandomCode 获取随机字符串]
+     * [string 获取随机字符串]
      *
      * @param int  $length
      * @param null $code
      * @return string
-     * @author 11.
      */
     public function code($length = 4, $code = null)
     {
