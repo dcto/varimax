@@ -16,6 +16,54 @@ use Illuminate\Contracts\Container\BindingResolutionException;
 use Symfony\Component\HttpFoundation;
 
 class Cookie{
+    /**
+     * cookie expire time
+     * 
+     * @var int
+     */
+    protected $expire;
+
+    /**
+     * cookie path
+     * @var string
+     */
+    protected $path;
+
+    /**
+     * cookie domain
+     * 
+     * @var mixed
+     */
+    protected $domain;
+
+    /**
+     * secure https ssl
+     * 
+     * @var false
+     */
+    protected $secure;
+
+    /**
+     * cookie http Only attribute
+     * 
+     * @var true
+     */
+    protected $httpOnly;
+
+    /**
+     * cookie raw encode
+     * 
+     * @var false
+     */
+    protected $raw;
+
+    /**
+     * chrome 70 version after attribute for cros site 
+     * avaliable value null|'none'|'Lax'|'Strict'
+     * 
+     * @var mixed
+     */
+    protected $sameSite;
     
     /**
      * 返回cookie实例
@@ -31,20 +79,19 @@ class Cookie{
      * @param  null|string   $sameSite
      * @return \Symfony\Component\HttpFoundation\Cookie
      */
-    public function make($name, $value, $expire = 0, $path = null, $domain = null, $secure = false, $httpOnly = true, $raw = false, $sameSite = null)
+    public function make($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null, $raw = null, $sameSite = null)
     {
-
-        $path   = $path ?: config('cookie.path', '/');
-        $expire = $expire ?: config('cookie.expire', 0);
-        $domain = $domain ?: config('cookie.domain', null);
-        $secure = $secure ?: config('cookie.secure', false);
-        $httpOnly = $httpOnly ?: config('cookie.httpOnly', true);
-        $raw = $raw ?: config('cookie.raw', false);
-        $sameSite = $sameSite ?: config('cookie.sameSite', null);
+        $path       = isset($path) ? $path : $this->config('path', '/');
+        $expire     = isset($expire) ? $expire : $this->config('expire', 0);
+        $domain     = isset($domain) ? $domain : $this->config('domain', null);
+        $secure     = isset($secure) ? $secure : $this->config('secure', false);
+        $httpOnly   = isset($httpOnly) ? $httpOnly : $this->config('httpOnly', true);
+        $raw        = isset($raw) ? $raw : $this->config('raw', false);
+        $sameSite   = isset($sameSite) ? $sameSite : $this->config('sameSite', null);
         
         $expire = ($expire == 0) ? 0 : time() + ($expire * 60);
 
-        return new HttpFoundation\Cookie($name, $value, $expire, $path, $domain, $secure, $httpOnly, $raw, $sameSite);
+        return new HttpFoundation\Cookie($this->name($name), $value, $expire, $path, $domain, $secure, $httpOnly, $raw, $sameSite);
     }
 
     /**
@@ -55,7 +102,14 @@ class Cookie{
      */
     private function name($name)
     {
-        return config('cookie.prefix', '').$name;
+        if($prefix = config('cookie.prefix')){
+            if(\Str::startsWith($name, $prefix)){
+                return $name;
+            }else{
+                return $prefix.$name;
+            }
+        }
+        return $name;
     }
 
     /**
@@ -72,11 +126,11 @@ class Cookie{
      * @param string     $sameSite
      * @return $this
      */
-    public function set($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null, $raw = false, $sameSite = null)
+    public function set($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null, $raw = null, $sameSite = null)
     {
         if(config('cookie.encrypt')) $value = \Crypt::en($value);
         $response = make('response')->make();
-        $response->headers->setCookie($this->make($this->name($name), $value, $expire, $path, $domain, $secure, $httpOnly, $raw, $sameSite));
+        $response->headers->setCookie($this->make($name, $value, $expire, $path, $domain, $secure, $httpOnly, $raw, $sameSite));
         $response->sendHeaders();
 
         return $this;
@@ -113,7 +167,9 @@ class Cookie{
     public function all(...$name)
     {
         $cookies = make('request')->cookies->all();
-        return $name ? \Arr::only($cookies, \Arr::flatten($name)) : $cookies;
+        return $name ? \Arr::only($cookies, array_map(function($n){
+            return $this->name($n);
+        }, \Arr::flatten($name))) : $cookies;
     }
 
 
@@ -126,8 +182,20 @@ class Cookie{
      */
     public function del($name)
     {
-      return $this->clear($name);
+      return $this->delete($name);
     }
+
+    /**
+     * 
+     * @param mixed $key 
+     * @param mixed|null $value 
+     * @return void 
+     */
+    protected function config($key, $default = null)
+    {
+        return isset($this->$key) ? $this->$key : config('cookie.'. $key, $default);
+    }
+    
 
     /**
      * delete cookie
@@ -138,7 +206,9 @@ class Cookie{
      */
     public function delete($name)
     {
-        return response()->make()->headers->clearCookie($this->name($name));
+        $response = make('response')->make();
+        $response->headers->clearCookie($this->name($name));
+        $response->sendHeaders();
     }
 
     /**
@@ -183,5 +253,87 @@ class Cookie{
     protected function getPathAndDomain($path, $domain, $secure = false)
     {
         return [$path, $domain, $secure];
+    }
+
+    /**
+     * set path
+     * @param int $value 
+     * @return $this 
+     */
+    public function path($value)
+    {
+        $this->path = $value;
+        return $this;
+    }
+
+    /**
+     * set domain
+     * @param int $value 
+     * @return $this 
+     */
+    public function domain($value)
+    {
+        $this->domain = $value;
+        return $this;
+    }
+
+    /**
+     * set expire attribute
+     * @param int $value 
+     * @return $this 
+     */
+    public function expire(int $value)
+    {
+        $this->expire = $value;
+        return $this;
+    }
+
+    /**
+     * set expire attribute
+     * @param int $value 
+     * @return $this 
+     */
+    public function secure(bool $value)
+    {
+        $this->secure = $value;
+        return $this;
+    }
+
+    /**
+     * set httpOnly attribute
+     * @param int $value 
+     * @return $this 
+     */
+    public function httpOnly(bool $value)
+    {
+        $this->httpOnly = $value;
+        return $this;
+    }
+
+
+    /**
+     * set raw attribute
+     * @param int $value 
+     * @return $this 
+     */
+    public function raw(bool $value)
+    {
+        $this->raw = $value;
+        return $this;
+    }
+
+
+    /**
+     * set sameSite attribute
+     * @param int $value 
+     * @return $this 
+     */
+    public function sameSite($value)
+    {
+        if($value){
+            $this->secure = true;
+            $this->sameSite = $value;
+        }
+        return $this;
     }
 }
