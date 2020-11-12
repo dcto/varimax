@@ -36,9 +36,9 @@ class Crypt
      * Crypt constructor.
      * @param null $key
      */
-    public function __construct($key = null)
+    public function __construct()
     {
-        $this->key = $key ?: config('app.key', 'VM:');
+        $this->key = config('app.key');
     }
 
     /**
@@ -49,7 +49,12 @@ class Crypt
      */
     public function key($key = null)
     {
-        return $key ? $this->key = $key : $this->key;
+        if($key){
+            $this->key = $key;
+            return $this;
+        }else{
+            return $this->key;
+        }
     }
 
 

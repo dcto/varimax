@@ -34,6 +34,7 @@ class Rc4 extends CryptDriver
      */
     public function en($string, $key = false, $decrypted = false)
     {
+        $string = (string) $string;
         $keyLength = strlen($key = $key ?: $this->key);
         $s = array();
         for($i = 0; $i < 256; $i++) $s[$i] = $i;
@@ -65,10 +66,11 @@ class Rc4 extends CryptDriver
      */
     public function de($string, $key = false)
     {
+        $string = (string) $string;
         $stringLength = strlen($string);
         if($stringLength % 2){
             return $string;
-        }else if (strspn($string , '0123456789abcdefABCDEF' ) != $stringLength){
+        }else if (strspn($string , '0123456789abcdef' ) != $stringLength){
             return $string;
         }
         $key = $key?:$this->key;
