@@ -22,40 +22,33 @@ use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 {
     /**
-     * 重构Request方法
+     * createGlobalForm
      */
-    public function __construct(array $query = array(), array $request = array(), array $attributes = array(), array $cookies = array(), array $files = array(), array $server = array(), $content = null)
+    public function __construct()
     {
-        /**
-         * 命令行模式获取参数
-         */
-        if ('cli-server' === php_sapi_name()) {
-            if (array_key_exists('HTTP_CONTENT_LENGTH', $_SERVER)) {
+        if ('cli-server' === \PHP_SAPI) {
+            if (\array_key_exists('HTTP_CONTENT_LENGTH', $_SERVER)) {
                 $_SERVER['CONTENT_LENGTH'] = $_SERVER['HTTP_CONTENT_LENGTH'];
             }
-            if (array_key_exists('HTTP_CONTENT_TYPE', $_SERVER)) {
+            if (\array_key_exists('HTTP_CONTENT_TYPE', $_SERVER)) {
                 $_SERVER['CONTENT_TYPE'] = $_SERVER['HTTP_CONTENT_TYPE'];
             }
         }
 
-        /**
-         * 初始化请求对象
-         */
-        parent::__construct(
-            array_merge($_GET, $query),
-            array_merge($_POST, $request),
-            array_merge(array(), $attributes),
-            array_merge($_COOKIE, $cookies),
-            array_merge($_FILES, $files),
-            array_merge($_SERVER, $server)
-        );
+        parent::__construct($_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER);
 
         /**
-         * 后置处理
+         * application/x-www-form-urlencoded
          */
         if (0 === strpos($this->headers->get('CONTENT_TYPE'), 'application/x-www-form-urlencoded') && in_array(strtoupper($this->server->get('REQUEST_METHOD', 'GET')), array('PUT', 'DELETE', 'PATCH'))) {
             parse_str($this->getContent(), $data);
             $this->request = new HttpFoundation\ParameterBag($data);
+        /**
+         * application/json
+         */
+        }else if(0 === strpos($this->headers->get('CONTENT_TYPE'), 'application/json') || 0 === strpos($this->headers->get('CONTENT_TYPE'), 'application/x-json')){
+            
+            $this->request = new HttpFoundation\ParameterBag((array) json_decode($this->getContent(), true));
         }
     }
 
@@ -317,6 +310,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function not(...$key)
     {
         return $this->except($key);
+    }
+
+    /**
+     * [json Get the JSON payload for the request.]
+     *
+     * @param null $key
+     * @param null $default
+     * @return array|object
+     */
+    public function json($options = null, $depth = 512)
+    {
+        return json_encode($this->all(), $options, $depth);
     }
 
     /**
@@ -621,7 +626,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function header($key = null, $default = null)
     {
-        return $this->retrieve('headers', $key, $default);
+        return $this->headers->get($key, $default);
     }
 
     /**
@@ -634,7 +639,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function server($key = null, $default = null)
     {
-        return $this->retrieve('server', $key, $default);
+        return $this->server->get($key, $default);
     }
 
     /**
@@ -722,7 +727,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function isJson()
     {
-        return \Str::contains($this->header('CONTENT_TYPE'), '/json');
+        return $this->getMimeType('json');
     }
 
     /**
@@ -732,28 +737,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function accept($contains)
     {
-        return \Str::contains($this->header('accept'), $contains);
-    }
-
-    /**
-     * [json Get the JSON payload for the request.]
-     *
-     * @param null $key
-     * @param null $default
-     * @return mixed|\Symfony\Component\HttpFoundation\ParameterBag
-     * @author 11.
-     */
-    public function json($key = null, $default = null)
-    {
-        if (!isset($this->json)) {
-            $this->json = new HttpFoundation\ParameterBag((array)json_decode($this->getContent(), true));
-        }
-
-        if (is_null($key)) {
-            return $this->json;
-        }
-
-        return \Arr::get($this->json->all(), $key, $default);
+        return \Str::contains($this->headers->get('accept'), $contains);
     }
 
     /**
@@ -1069,9 +1053,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     protected function getInputSource()
     {
-        if ($this->isJson()) {
-            return $this->json();
-        }
-        return $this->method() == 'GET' ? $this->query : $this->request;
+        return $this->method('GET') ? $this->query : $this->request;
     }
 }

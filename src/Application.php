@@ -97,7 +97,7 @@ class Application extends Container
         $this->registerServiceProviders();
 
         $this->registerFacades();
-
+        
         $this->boot = true;
 
         PHP_SAPI == 'cli' ? $this->cli() : $this->run();
