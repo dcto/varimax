@@ -107,6 +107,7 @@ class Captcha {
      */
     public function is($input, $case = false)
     {
+        if(!$input) return false;
         $input = sprintf("%s", trim($input));
         $codes = $this->driver->get($this->name);
         $codes = $this->encrypt ? \Crypt::de($codes) : $codes;
