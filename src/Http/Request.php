@@ -9,14 +9,12 @@
  * SITE: https://www.varimax.cn/
  */
 
-
 namespace VM\Http;
 
 use VM\Http\Request\Upload;
 use VM\Exception\NotFoundException;
 use Symfony\Component\HttpFoundation;
 use Illuminate\Contracts\Support\Arrayable;
-use LogicException;
 use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
 
 class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
@@ -340,7 +338,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param mixed $key 
      * @param mixed|null $value 
      * @return array 
-     * @throws LogicException 
      * @throws SuspiciousOperationException 
      */
     public function fill(array $key, $value = null)
