@@ -32,19 +32,19 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 $_SERVER['CONTENT_TYPE'] = $_SERVER['HTTP_CONTENT_TYPE'];
             }
         }
-
+        
         parent::__construct($_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER);
 
         /**
          * application/x-www-form-urlencoded
          */
-        if (0 === strpos($this->headers->get('CONTENT_TYPE'), 'application/x-www-form-urlencoded') && in_array(strtoupper($this->server->get('REQUEST_METHOD', 'GET')), array('PUT', 'DELETE', 'PATCH'))) {
+        if ($this->getContentType() == 'form' && in_array(strtoupper($this->server->get('REQUEST_METHOD', 'GET')), array('PUT', 'DELETE', 'PATCH'))) {
             parse_str($this->getContent(), $data);
             $this->request = new HttpFoundation\ParameterBag($data);
         /**
          * application/json
          */
-        }else if(0 === strpos($this->headers->get('CONTENT_TYPE'), 'application/json') || 0 === strpos($this->headers->get('CONTENT_TYPE'), 'application/x-json')){
+        }else if($this->getContentType() == 'json'){
             
             $this->request = new HttpFoundation\ParameterBag((array) json_decode($this->getContent(), true));
         }
@@ -235,35 +235,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function get($key, $default = null)
     {
-        return parent::get($key, $default);
-    }
-
-    /**
-     *
-     * 整理后get函数,过滤决对空值
-     * @param null $key
-     * @param null $default
-     * @return bool|mixed
-     */
-    public function got($key = null, $default = null)
-    {
-        $input = $this->all();
-        if (!isset($input[$key]) || trim($input[$key]) == '') {
-            return null;
-        }
-
-        return $input[$key] ?: $default;
+        return $default instanceof \Closure ? $default(parent::get($key)) : parent::get($key, $default);
     }
 
     /**
      * 修改参数
      * @param $key
+     * @param $value
      * @param $this
      */
-    public function set($key, $val)
+    public function set($key, $value = null)
     {
-        $this->getInputSource()->set($key, $val);
-        return $this;
+        return $this->put($key, $value);
     }
 
     /**
@@ -274,13 +257,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function all()
     {
-        return array_replace_recursive(
-            array_merge(
-                $this->getInputSource()->all(), 
-                $this->query->all(), 
-                $this->attributes->all()
-                ),
-            $this->files->all());
+        return array_replace(
+            $this->getInputSource()->all(),
+            $this->attributes->all(),
+            $this->files->all()
+        );
     }
 
     /**
@@ -309,6 +290,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         return $this->except($key);
     }
+
+    /**
+     * get request keys
+     * 
+     * @return array 
+     * @throws SuspiciousOperationException 
+     */
+    public function keys()
+    {
+        return array_keys($this->all());
+    }
+
 
     /**
      * [json Get the JSON payload for the request.]
@@ -372,19 +365,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function input($key = null, $default = null)
     {
+        $input = $this->all();
+  
         if($key){
             if(is_array($key)) {
-                if($input = \Arr::only($this->all(), $key)){
-                    return $default instanceof \Closure ? $default($input) : $input;
-                }else{
-                    return $default instanceof \Closure ? $default($input) : $default;
-                }
-            }else{ 
-               return $this->get($key, $default);
+                $input = \Arr::only($input, $key);
+            }else if($key){ 
+                $input = isset($input[$key]) ? $input[$key] : null;
             }
-        }else{
-            return $this->all();
-        } 
+        }
+        return $default instanceof \Closure ? $default($input) : ($input?:$default);
     }
     
     /**
@@ -619,11 +609,10 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param null $key
      * @param null $default
      * @return mixed
-     * @author 11.
      */
     public function header($key = null, $default = null)
     {
-        return $this->headers->get($key, $default);
+        return $this->getItemSource('headers', $key, $default);
     }
 
     /**
@@ -636,7 +625,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function server($key = null, $default = null)
     {
-        return $this->server->get($key, $default);
+        return $this->getItemSource('server', $key, $default);
     }
 
     /**
@@ -746,9 +735,8 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function method($type = null)
     {
-        return $type ? strtoupper($type) == strtoupper($this->getMethod()) : strtoupper($this->getMethod());   
+        return $type ? $this->isMethod($type) : $this->getMethod();   
     }
-
 
     /**
      * 获取客户端IP地址
@@ -829,11 +817,20 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * ajax 判断ajax请求
+     * alias isAjax method
+     * 
      * @return bool
-     * @author: 11
      */
     public function ajax()
+    {
+       return $this->isAjax();
+    }
+
+    /**
+     * ajax 判断ajax请求
+     * @return bool 
+     */
+    public function isAjax()
     {
         return $this->isXmlHttpRequest();
     }
@@ -848,6 +845,8 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * get browser language
+     * 
      * @return null|string
      */
     public function language()
@@ -856,7 +855,8 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [scheme 获取请求方式]
+     * get secure http request
+     * 
      * @return [type] [description]
      */
     public function scheme()
@@ -868,6 +868,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 获取当前域名
      *
      * @param bool $subDomain 是否带二级域名
+     * 
      * @return mixed|string
      */
     public function domain($subDomain = true)
@@ -937,21 +938,43 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [retrieve]
+     * 
+     * @param mixed $source 
+     * @param mixed $key 
+     * @param mixed|null $default 
+     * @return mixed 
+     */
+    protected function retrieve($source, $key, $default = null)
+    {
+        return $this->getItemSource($source, $key, $default);
+    }
+
+    /**
+     * [getItemBySource]
      *
      * @param $source
      * @param $key
      * @param $default
      * @return mixed
-     * @author 11.
      */
-    protected function retrieve($source, $key, $default = null)
+    protected function getItemSource($source, $key, $default = null)
     {
         if (is_null($key)) {
             return $this->$source->all();
         }
 
         return $this->$source->get($key, $default, true);
+    }
+
+    /**
+     * [getInputSource ]
+     *
+     * @return mixed|HttpFoundation\ParameterBag
+     * @author 11.
+     */
+    protected function getInputSource()
+    {
+        return $this->method('GET') ? $this->query : $this->request;
     }
 
     /**
@@ -1039,17 +1062,5 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $request->request = $request->getInputSource();
 
         return $request;
-    }
-
-
-    /**
-     * [getInputSource 获取请求方法]
-     *
-     * @return mixed|HttpFoundation\ParameterBag
-     * @author 11.
-     */
-    protected function getInputSource()
-    {
-        return $this->method('GET') ? $this->query : $this->request;
     }
 }
