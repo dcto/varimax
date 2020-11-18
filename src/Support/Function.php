@@ -334,14 +334,7 @@ if(!function_exists('cache')) {
 
         $cache = make('cache')->get($key);
 
-        if($cache){
-            return $cache;
-            
-        }else if($default){
-            make('cache')->set($key, $default);
-        }
-
-        return $default;
+        return $default instanceof \Closure ? $default($cache) : $cache?:$default;
     }
 }
 

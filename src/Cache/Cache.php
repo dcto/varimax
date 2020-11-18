@@ -11,13 +11,12 @@
 
 namespace VM\Cache;
 
-use VM\Cache\Driver\ApcDriver;
 use VM\Cache\Driver\Driver;
-use VM\Cache\Driver\FilesDriver;
+use VM\Cache\Driver\ApcDriver;
 use VM\Cache\Driver\NullDriver;
 use VM\Cache\Driver\RedisDriver;
+use VM\Cache\Driver\FilesDriver;
 use VM\Cache\Driver\RetrievesMultipleKeys;
-use VM\Exception\SystemException;
 
 class Cache
 {
@@ -111,7 +110,7 @@ class Cache
      */
     public function getDefaultDriver()
     {
-        return config('cache.default', 'file');
+        return config('app.cache', 'files');
     }
 
 
@@ -123,8 +122,9 @@ class Cache
     public function setDefaultDriver($driver)
     {
        if(!isset($this->driver[$driver])){
-            throw new SystemException('Invalid '.$driver.' cache driver.');
+            throw new \InvalidArgumentException('Invalid '.$driver.' cache driver.');
         }
+
        return config('cache.default', $driver);
     }
 
