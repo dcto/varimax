@@ -110,7 +110,7 @@ class Cache
      */
     public function getDefaultDriver()
     {
-        return config('app.cache', 'files');
+        return config('cache.default', 'files');
     }
 
 
