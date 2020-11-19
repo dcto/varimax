@@ -32,9 +32,16 @@ class FilesDriver extends Driver implements DriverInterface
     private $file;
 
     /**
+     * cache file prefix
      * @var string
      */
     private $prefix;
+
+    /**
+     * cahce file append
+     * @var mixed
+     */
+    private $append;
 
 
 
@@ -43,12 +50,12 @@ class FilesDriver extends Driver implements DriverInterface
         $this->dir =  config('cache.driver.files.dir', runtime('cache'));
 
         $this->prefix(config('cache.driver.files.prefix', $prefix));
+        
+        $this->file = $this->dir.'/'.$this->prefix();
 
+        $this->append = config('cache.driver.files.append', '.bin');
 
         make('file')->mkDir($this->dir, 0755, true, true);
-
-
-        $this->file = $this->dir.'/'.$this->prefix();
     }
 
     /**
@@ -56,42 +63,9 @@ class FilesDriver extends Driver implements DriverInterface
      *
      * @param $key
      */
-    public function file($key, $time = null)
+    public function file($key)
     {
-        $file = $this->file.hash('crc32b', $key);
-
-
-        if($time){
-
-            if(is_file($file)){
-                make('file')->delete($file);
-            }
-
-            make('file')->touch($file, time() + $time);
-
-        }else if(is_file($file) && time() > filemtime($file)){
-
-            make('file')->delete($file);
-        }
-
-        return $file;
-    }
-
-
-    /**
-     * Get the expiration time based on the given minutes.
-     *
-     * @param  int  $time
-     * @return int
-     */
-    protected function expiration($time = 0)
-    {
-        $time = time() + $time;
-
-        if ($time === 0 || $time > 9999999999) {
-            return 9999999999;
-        }
-        return (int) $time;
+        return $this->file.hash('crc32b', $key).$this->append;
     }
 
     /**
@@ -100,9 +74,15 @@ class FilesDriver extends Driver implements DriverInterface
      * @param  string|array $key
      * @return mixed
      */
-    public function has($key)
+    public function has($key, $time = 0)
     {
-       return $this->file($key) && make('file')->has($this->file($key));
+        $file = $this->file($key);
+        $exist = make('file')->has($file);
+        if($exist && !is_null($time) && time() > make('file')->lastModified($file)){
+            make('file')->delete($file);
+            return false;
+        }
+        return $exist;
     }
 
     /**
@@ -113,8 +93,9 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function get($key, $default = null)
     {
-        if(make('file')->has($this->file($key))){
-            return unserialize(make('file')->get($this->file($key)));
+        if($this->has($key)){
+            $value = make('file')->get($this->file($key));
+            return $value ? @unserialize($value) : $default;
         }
         return $default;
     }
@@ -127,9 +108,11 @@ class FilesDriver extends Driver implements DriverInterface
      * @param  int     $time 缓存时间
      * @return bool
      */
-    public function set($key, $value, $time = 86400)
+    public function set($key, $value, $time = 0)
     {
-        return make('file')->put($this->file($key, $time), serialize($value), true);
+        make('file')->put($this->file($key), serialize($value), true);
+        make('file')->touch($this->file($key), $this->time($time));
+        return $this;
     }
 
     /**
@@ -139,16 +122,13 @@ class FilesDriver extends Driver implements DriverInterface
      * @param  mixed   $value
      * @return int
      */
-    public function increment($key, $value = 1, $time = 9999999999)
+    public function increment($key, $value = 1, $time = null)
     {
-        if(!$val = $this->get($key)) return $this->set($key, $value, $time);
-
-        if(is_numeric($val)){
-            $value = $value + intval($val);
-        }else{
-            throw new SystemException('The cache key '.$key. ' can not increment, it\'s not a integer');
-        }
-        return $this->set($key, $value);
+        $val = $this->get($key);
+        if(!$val) return $this->set($key, $value, $time);
+        $value = $val + intval($value);
+        $this->set($key, $value, $time);
+        return $this;
     }
 
     /**
@@ -158,9 +138,11 @@ class FilesDriver extends Driver implements DriverInterface
      * @param  mixed   $value
      * @return int
      */
-    public function decrement($key, $value = 1)
+    public function decrement($key, $value = 1, $time = null)
     {
-        return $this->increment($key, $value * -1);
+        $this->increment($key, $value * -1, $time);
+
+        return $this;
     }
 
     /**
@@ -213,4 +195,17 @@ class FilesDriver extends Driver implements DriverInterface
         }
     }
 
+    /**
+     * Get the expiration time based on the given minutes.
+     *
+     * @param  int  $time
+     * @return int
+     */
+    protected function time(int $time = 0)
+    {
+        if ($time <1 || $time > 9999999999) {
+            return 9999999999;
+        }
+        return (int) time() + $time;
+    }
 }

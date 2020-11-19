@@ -95,7 +95,7 @@ class FileSystem extends \Illuminate\Filesystem\Filesystem
      */
     public function files($directory, $hidden = false)
     {
-        if(self::isDir($directory)){
+        if($this->isDir($directory)){
             return $this->allFiles($directory, $hidden);
         }else if($glob = glob($directory)){
             $files = array();
