@@ -15,15 +15,18 @@ use VM\Http\Request\Upload;
 use VM\Exception\NotFoundException;
 use Symfony\Component\HttpFoundation;
 use Illuminate\Contracts\Support\Arrayable;
-use Symfony\Component\HttpFoundation\Exception\SuspiciousOperationException;
+use Symfony\Component\HttpFoundation\ParameterBag;
 
 class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 {
     /**
-     * createGlobalForm
+     * Create Global Form
      */
     public function __construct()
     {
+        /**
+         * Dectect The PHP_SAPI Runing Mode
+         */
         if ('cli-server' === \PHP_SAPI) {
             if (\array_key_exists('HTTP_CONTENT_LENGTH', $_SERVER)) {
                 $_SERVER['CONTENT_LENGTH'] = $_SERVER['HTTP_CONTENT_LENGTH'];
@@ -32,22 +35,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 $_SERVER['CONTENT_TYPE'] = $_SERVER['HTTP_CONTENT_TYPE'];
             }
         }
-        
+
+        /**
+         * Initialize The Request Global Form
+         */
         parent::__construct($_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER);
 
         /**
-         * application/x-www-form-urlencoded
+         * Plan To Catch Request Source With From Content Type
          */
-        if ($this->getContentType() == 'form' && in_array(strtoupper($this->server->get('REQUEST_METHOD', 'GET')), array('PUT', 'DELETE', 'PATCH'))) {
-            parse_str($this->getContent(), $data);
-            $this->request = new HttpFoundation\ParameterBag($data);
-        /**
-         * application/json
-         */
-        }else if($this->getContentType() == 'json'){
-            
-            $this->request = new HttpFoundation\ParameterBag((array) json_decode($this->getContent(), true));
-        }
+        $this->getRequestSource();
     }
 
     /**
@@ -204,7 +201,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [has 是否存在]
+     * Detect the item in the request
      *
      * @param $key
      * @return bool
@@ -250,18 +247,26 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [all 返回所有]
-     *
+     * Get all request items 
+     * 
+     * @param $args filter request item  [query, request, attributes, files]
+     * 
      * @return array
-     * @author 11.
      */
-    public function all()
+    public function all(...$args)
     {
-        return array_replace(
-            $this->getInputSource()->all(),
-            $this->attributes->all(),
-            $this->files->all()
-        );
+        if($args){
+            return call_user_func_array('array_replace', array_map(function($item){
+                return $this->$item->all();
+            }, \Arr::flatten($args)));
+        }else{   
+            return array_replace(
+                $this->query->all(),
+                $this->request->all(),
+                $this->attributes->all(),
+                $this->files->all()
+            );
+        }
     }
 
     /**
@@ -278,8 +283,19 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         } else {
             $this->attributes->set($key, $value);
         }
-
         return $this;
+    }
+
+    /**
+     * Delete Item In Input Souce
+     * 
+     * @param mixed $args 
+     * 
+     * @return $this 
+     */
+    public function del(...$args)
+    {
+        return $this->delete($args);
     }
 
     /**
@@ -295,7 +311,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * get request keys
      * 
      * @return array 
-     * @throws SuspiciousOperationException 
      */
     public function keys()
     {
@@ -331,7 +346,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param mixed $key 
      * @param mixed|null $value 
      * @return array 
-     * @throws SuspiciousOperationException 
      */
     public function fill(array $key, $value = null)
     {
@@ -357,7 +371,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [input方法别名]
+     * [Input Method]
      *
      * @param $key
      * @param null|\Closure $default
@@ -397,7 +411,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         return $this->filter($key);
     }
 
-
     /**
      *
      * @param null $key
@@ -430,6 +443,20 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         return array_filter(call_user_func_array(array($this, 'all'), func_get_args()), function ($v) {
             return $v !== false && !is_null($v) && ($v != '' || $v == '0');
         });
+    }
+
+    /**
+     * Remove From Input Source Item
+     * @param mixed $args 
+     * @return $this 
+     */
+    public function delete(...$args)
+    {
+       array_map(function($item){
+           $this->query->remove($item);
+           $this->getInputSource()->remove($item);
+       }, \Arr::flatten($args));
+        return $this;
     }
 
     /**
@@ -731,7 +758,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 
      * @param mixed|null $type 
      * @return bool|string 
-     * @throws SuspiciousOperationException 
      */
     public function method($type = null)
     {
@@ -774,9 +800,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             $ip     =   $_SERVER['REMOTE_ADDR'];
         }
         // IP地址合法验证
-
         $ips = sprintf("%u", ip2long($ip));
-
         return  $ips ? ($long ? $ips : $ip) : ($long ? 0 : '0.0.0.0');
     }
 
@@ -874,7 +898,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function domain($subDomain = true)
     {
         if (filter_var($host = $this->getHost(), FILTER_VALIDATE_IP) || $subDomain) return $host;
-
         preg_match("/[^\.\/]+\.[^\.\/]+$/", $host, $matches);
 
         return current($matches);
@@ -962,7 +985,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         if (is_null($key)) {
             return $this->$source->all();
         }
-
         return $this->$source->get($key, $default, true);
     }
 
@@ -975,6 +997,29 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     protected function getInputSource()
     {
         return $this->method('GET') ? $this->query : $this->request;
+    }
+
+    /**
+     * Get Request Source With From Content Type
+     * 
+     * @return ParameterBag|void 
+     * @throws \LogicException 
+     */
+    protected function getRequestSource()
+    {
+        /**
+         * application/json
+         */
+        if($this->getContentType() == 'json'){  
+            return $this->request = new HttpFoundation\ParameterBag((array) json_decode($this->getContent(), true));
+
+        /**
+         * application/x-www-form-urlencoded
+         */
+        }else if ($this->getContentType() == 'form' && in_array(strtoupper($this->server->get('REQUEST_METHOD', 'GET')), array('PUT', 'DELETE', 'PATCH'))) {
+            parse_str($this->getContent(), $data);
+            return $this->request = new HttpFoundation\ParameterBag($data);
+        }
     }
 
     /**
@@ -1006,7 +1051,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function offsetGet($offset)
     {
-        return data_get($this->all(), $offset);
+        return $this->get($offset);
     }
 
     /**
@@ -1018,7 +1063,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function offsetSet($offset, $value)
     {
-        return $this->getInputSource()->set($offset, $value);
+        return $this->set($offset, $value);
     }
 
     /**
@@ -1029,7 +1074,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function offsetUnset($offset)
     {
-        return $this->getInputSource()->remove($offset);
+        return $this->delete($offset);
     }
 
     /**
