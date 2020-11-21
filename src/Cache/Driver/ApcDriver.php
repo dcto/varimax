@@ -8,19 +8,11 @@
  * SITE: https://www.varimax.cn/
  */
 
-
 namespace VM\Cache\Driver;
 
 class ApcDriver extends Driver
 {
     use RetrievesMultipleKeys;
-
-    /**
-     * Indicates if APCu is supported.
-     *
-     * @var bool
-     */
-    protected $apcu = false;
 
     /**
      * A string that should be prepended to keys.
@@ -32,9 +24,19 @@ class ApcDriver extends Driver
 
     public function __construct()
     {
-        $this->apcu = function_exists('apcu_fetch');
+        if(!function_exists('apcu_fetch')) throw new \ErrorException('Unsupport apc cache extension, resolve in the offical https://pecl.php.net/package/APCu ');
 
-        $this->prefix = config('cache.driver.apcu.prefix', 'vm:');
+        $this->prefix = config('cache.driver.apcu.prefix', '');
+    }
+
+    /**
+     * Get the cache key name with prefix.
+     *
+     * @return string
+     */
+    protected function name($key)
+    {
+        return $this->prefix.$key;
     }
 
     /**
@@ -45,7 +47,7 @@ class ApcDriver extends Driver
      */
     public function has($key)
     {
-        return $this->apcu ? apcu_exists($this->prefix.$key) : apc_exists($this->prefix.$key);
+        return apcu_exists($this->name($key));
     }
 
     /**
@@ -56,7 +58,7 @@ class ApcDriver extends Driver
      */
     public function get($key)
     {
-        return $this->apcu ? apcu_fetch($this->prefix.$key) : apc_fetch($this->prefix.$key);
+        return apcu_fetch($this->name($key));
     }
 
     /**
@@ -69,7 +71,7 @@ class ApcDriver extends Driver
      */
     public function set($key, $value, $time = 86400)
     {
-        return $this->apcu ? apcu_store($this->prefix.$key, $value, $time) : apc_store($this->prefix.$key, $value, $time);
+        return apcu_store($this->name($key), $value, $time);
     }
 
     /**
@@ -77,11 +79,13 @@ class ApcDriver extends Driver
      *
      * @param  string  $key
      * @param  mixed   $value
-     * @return int
+     * @return $this
      */
     public function increment($key, $value = 1)
     {
-        return $this->apcu ? apcu_inc($this->prefix.$key, $value) : apc_inc($this->prefix.$key, $value);
+        apcu_inc($this->name($key), $value);
+
+        return $this;
     }
 
     /**
@@ -89,11 +93,13 @@ class ApcDriver extends Driver
      *
      * @param  string  $key
      * @param  mixed   $value
-     * @return int
+     * @return $this
      */
     public function decrement($key, $value = 1)
     {
-        return $this->apcu ? apcu_dec($this->prefix.$key, $value) : apc_dec($this->prefix.$key, $value);
+        apcu_dec($this->name($key), $value);
+
+        return $this;
     }
 
     /**
@@ -101,11 +107,13 @@ class ApcDriver extends Driver
      *
      * @param  string  $key
      * @param  mixed   $value
-     * @return bool|array
+     * @return $this
      */
     public function save($key, $value)
     {
-        return $this->apcu ? apcu_store($this->prefix.$key, $value, 0) : apc_store($this->prefix.$key, $value, 0);
+        apcu_store($this->name($key), $value, 0);
+
+        return $this;
     }
 
     /**
@@ -116,7 +124,7 @@ class ApcDriver extends Driver
      */
     public function del($key)
     {
-        return $this->apcu ? apcu_delete($this->prefix.$key) : apc_delete($this->prefix.$key);
+        return apcu_delete($this->name($key));
     }
 
     /**
@@ -126,16 +134,7 @@ class ApcDriver extends Driver
      */
     public function flush()
     {
-        $this->apcu ? apcu_clear_cache() : apc_clear_cache('user');
-    }
-
-    /**
-     * Get the cache key prefix.
-     *
-     * @return string
-     */
-    public function prefix($prefix = false)
-    {
-        return $prefix ? $this->prefix = $prefix : $this->prefix;
+        apcu_clear_cache();
+        return $this;
     }
 }
