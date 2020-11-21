@@ -46,20 +46,25 @@ is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
 is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
 
 /**
- * load helper from core
+ * load common from docker
  */
-is_file($func = _VM_._DS_.'/Support/Function.php') && require($func);
+is_file($common = _DOC_._DS_.'docker'._DS_.'common.php') && require($common);
+
+/**
+ * load helper from varimax
+ */
+is_file($function = _VM_._DS_.'Support'._DS_.'Function.php') && require($function);
 
 /**
  * @var $loader \Composer\Autoload\ClassLoader
  */
-$loader = require(_ROOT_.'/vendor/autoload.php');
+$loader = require(_ROOT_._DS_.'vendor'._DS_.'autoload.php');
 
 //Set App Psr4
 $loader->setPsr4("App\\", _DIR_);
 
 //add App Model
-$loader->addPsr4("App\\Model\\", _ROOT_._DS_.'model/');
+$loader->addPsr4("App\\Model\\", _ROOT_._DS_.'model'._DS_);
 
 /**
  * Bootstrap Of Application
