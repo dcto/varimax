@@ -421,7 +421,7 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function option($key, $value)
     {
-        ini_set(\Str::contains($key, 'session.') ? $key : 'session.'.$key, $value);
+        ini_set(\Str::startsWith($key, 'session.') ? $key : 'session.'.$key, $value);
     }
 
     /**
