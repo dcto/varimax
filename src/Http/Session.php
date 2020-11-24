@@ -64,13 +64,13 @@ class Session implements  \IteratorAggregate, \Countable
      * @param  string|null $id
      * @return void
      */
-    public function __construct($options = array())
+    public function __construct()
     {
         $this->started = isset($_SESSION);
 
         $this->encrypt = config('session.encrypt', false);
 
-        $this->setOptions(array_merge(config('session.options', []), $options));
+        $this->setOptions(config('session.options', array()));
 
         if(!$this->isStarted() && config('session.start')){
 
