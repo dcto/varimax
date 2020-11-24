@@ -38,6 +38,9 @@ class RedisSessionHandler extends \SessionHandler
         }
 
         ini_set('session.save_handler', 'redis');
+
         ini_set('session.save_path', $savePath);
+
+        ini_set('session.gc_maxlifetime', config('session.lifetime', 3600));
     }
 }
