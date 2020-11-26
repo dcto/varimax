@@ -66,6 +66,9 @@ $loader->setPsr4("App\\", _DIR_);
 //add App Model
 $loader->addPsr4("App\\Model\\", _ROOT_._DS_.'model'._DS_);
 
+//add App Model
+$loader->addPsr4("App\\Provider\\", _ROOT_._DS_.'provider'._DS_);
+
 /**
  * Bootstrap Of Application
  */
