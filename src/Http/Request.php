@@ -514,22 +514,26 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function getOS()
     {
+        
         $oses = array(
-            'iOS(iPhone)'       => '(iPhone)',
-            'iOS(iPad)'         => '(iPad)',
+            'Windows 10'       => '(Windows NT 10)|(Windows 10)',
+            'Windows 8.1'       => '(Windows NT 6.3)|(Windows 8)',
+            'Windows 8'         => '(Windows NT 6.2)|(Windows 8)',
+            'Windows 7'         => '(Windows NT 6.1)|(Windows 7)',
+            'Windows Vista'     => '(Windows NT 6.0)|(Windows Vista)',
+            'Windows 2003'      => '(Windows NT 5.2)',
+            'Windows XP'        => '(Windows NT 5.1)|(Windows XP)',
+            'Windows NT'        => '(Windows NT 4.0)|(WinNT4.0)|(WinNT)|(Windows NT)',
+            'Windows ME'        => 'Windows ME',
+            'Windows 2000'      => '(Windows NT 5.0)|(Windows 2000)',
+            'Windows 98'        => '(Windows 98)|(Win98)',
+            'Windows 95'        => '(Windows 95)|(Win95)|(Windows_95)',
+            'Windows 3.11'      => 'Win16',
+            'Mac OSX'           => '(Mac_PowerPC)|(Macintosh)|(MAC OS X)',
+            'iPhone'            => '(iPhone)',
+            'iPad'              => '(iPad)',
             'Android'           => '(Android)',
             'Windows Phone'     => '(Windows Phone)|(IEMobile)',
-            'Windows 3.11'      => 'Win16',
-            'Windows 95'        => '(Windows 95)|(Win95)|(Windows_95)',
-            'Windows 98'        => '(Windows 98)|(Win98)',
-            'Windows 2000'      => '(Windows NT 5.0)|(Windows 2000)',
-            'Windows XP'        => '(Windows NT 5.1)|(Windows XP)',
-            'Windows 2003'      => '(Windows NT 5.2)',
-            'Windows Vista'     => '(Windows NT 6.0)|(Windows Vista)',
-            'Windows 7'         => '(Windows NT 6.1)|(Windows 7)',
-            'Windows NT 4.0'    => '(Windows NT 4.0)|(WinNT4.0)|(WinNT)|(Windows NT)',
-            'Windows ME'        => 'Windows ME',
-            'Mac OSX'           => '(Mac_PowerPC)|(Macintosh)',
             'Open BSD'          => 'OpenBSD',
             'Linux'             => '(Linux)|(X11)',
             'Sun OS'            => 'SunOS',
@@ -550,7 +554,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             }
         }
 
-        return $userAgent;
+        return null;
     }
 
     /**
@@ -696,7 +700,8 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         $agent = $this->header('User-Agent');
         if ($type) return stripos($agent, $type);
-        if (stripos($agent, 'MSIE')) return 'MSIE';
+        if (stripos($agent, 'MSIE')) return 'Internet Explorer';
+        if (stripos($agent, '360SE')) return '360SE';
         if (stripos($agent, 'Chrome')) return 'Chrome';
         if (stripos($agent, 'Firefox')) return 'Firefox';
         if (stripos($agent, 'Safari')) return 'Safari';
