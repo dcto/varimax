@@ -203,23 +203,21 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * Detect the item in the request
      *
-     * @param $key
+     * @param array|string $key
      * @return bool
      */
-    public function has($key, $number = 1)
+    public function has($key)
     {
-        $input = $this->all();
         if(is_array($key)){
-            $count = 0;
+            $input = $this->all();
             foreach($key as $k){
-                if(isset($input[$k])){
-                    $count++;
-                    if($count >= $number) return true;
-                } 
+                if(!isset($input[$k]) || !strlen($input[$k])){
+                    return false;
+                }
             }
-            return false;
+            return true;
         }else{
-            return isset($input[$key]);
+            return strlen($this->get($key));
         }
     }
 
