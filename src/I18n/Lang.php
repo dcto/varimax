@@ -135,7 +135,7 @@ class Lang
          */
     public function has($key)
     {
-        return Arr::has($this->item, $key);
+        return \Arr::has($this->item, $key);
     }
 
     /**
