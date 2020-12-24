@@ -260,16 +260,14 @@ if(!function_exists('cookie')) {
  * @return array|string|int|null|false 
  */
 if(!function_exists('domain')){
-function domain($host = null){
+function domain($host = null, $subDomain = true){
     $host = $host ? trim($host, ' /') : $_SERVER['SERVER_NAME'];
-    if(filter_var($host, FILTER_VALIDATE_IP)) return $host;
     $host = filter_var($host, FILTER_VALIDATE_URL) ? parse_url($host, PHP_URL_HOST) : $host;
-    $ltd = strlen(pathinfo($host, PATHINFO_EXTENSION));
-    $len = substr_count($host, '.');
-    
-    if($len < 2){
+
+    if($subDomain || substr_count($host, '.') < 2 || filter_var($host, FILTER_VALIDATE_IP)){
         return $host;
     }else{
+        $ltd = strlen(pathinfo($host, PATHINFO_EXTENSION));
         $host = explode('.', $host);
         $domain = array();
         array_unshift($domain, array_pop($host));
