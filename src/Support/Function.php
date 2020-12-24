@@ -255,6 +255,31 @@ if(!function_exists('cookie')) {
 }
 
 /**
+ * 
+ * @param mixed $host 
+ * @return array|string|int|null|false 
+ */
+if(!function_exists('domain')){
+function domain($host = null){
+    $host = $host ? trim($host, ' /') : $_SERVER['SERVER_NAME'];
+    if(filter_var($host, FILTER_VALIDATE_IP)) return $host;
+    $host = filter_var($host, FILTER_VALIDATE_URL) ? parse_url($host, PHP_URL_HOST) : $host;
+    $ltd = strlen(pathinfo($host, PATHINFO_EXTENSION));
+    $len = substr_count($host, '.');
+    
+    if($len < 2){
+        return $host;
+    }else{
+        $host = explode('.', $host);
+        $domain = array();
+        array_unshift($domain, array_pop($host));
+        $ltd == 2 && array_unshift($domain, array_pop($host));
+        array_unshift($domain, array_pop($host));
+        return implode('.', $domain);
+    }
+}
+}
+/**
  * \DB::table function
  * @param $table
  * @return \Illuminate\Database\Query\Builder

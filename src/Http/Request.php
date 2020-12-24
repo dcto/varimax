@@ -900,10 +900,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function domain($subDomain = true)
     {
-        if (filter_var($host = $this->getHost(), FILTER_VALIDATE_IP) || $subDomain) return $host;
-        preg_match("/[^\.\/]+\.[^\.\/]+$/", $host, $matches);
-
-        return current($matches);
+        $host = $this->getHost();
+        if (substr_count($host, '.') < 2 || $subDomain || filter_var($host, FILTER_VALIDATE_IP)) {
+            return $host;
+        }else{
+            $ltd = strlen(pathinfo($host, PATHINFO_EXTENSION));
+            $host = explode('.', $host);
+            $domain = array();
+            array_unshift($domain, array_pop($host));
+            $ltd == 2 && array_unshift($domain, array_pop($host));
+            array_unshift($domain, array_pop($host));
+            return implode('.', $domain);
+        }
     }
 
     /**
