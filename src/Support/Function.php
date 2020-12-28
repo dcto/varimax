@@ -645,28 +645,11 @@ if(!function_exists('is_ip')) {
 if(!function_exists('is_luhn')){
     function is_luhn($card)
     {
-        // step1 
-        $pattern = '/^\d{16,19}$/';
-        if (!preg_match($pattern,$card)) {
-            return false;
-        }
-
-        // step2 luhn
-        $len = strlen($card);
-        $sum = 0;
-        for ($i = 0; $i < $len ; $i++)
-        {
-            if (($i + $len) & 1)
-            { // 奇数
-                $sum += ord($card[$i]) - ord('0');
-            }
-            else
-            { // 偶数
-                $tmp = (ord($card[$i]) - ord('0')) * 2;
-                $sum += floor($tmp / 10) + $tmp % 10;
-            }
-        }
-        return $sum % 10 === 0;
+		$card_number_checksum = '';
+		foreach (str_split(strrev((string) $card)) as $i => $d) {
+			$card_number_checksum .= $i %2 !== 0 ? $d * 2 : $d;
+		}
+		return array_sum(str_split($card_number_checksum)) % 10 === 0;
     }
 }
 
