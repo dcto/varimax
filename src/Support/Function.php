@@ -636,6 +636,39 @@ if(!function_exists('is_ip')) {
         }
     }
 }
+/**
+ * 是否为一个合法的银行账号
+ * LUHN算法
+ * @param int $card
+ * @return boolean
+ */
+if(!function_exists('is_luhn')){
+    function is_luhn($card)
+    {
+        // step1 
+        $pattern = '/^\d{16,19}$/';
+        if (!preg_match($pattern,$card)) {
+            return false;
+        }
+
+        // step2 luhn
+        $len = strlen($card);
+        $sum = 0;
+        for ($i = 0; $i < $len ; $i++)
+        {
+            if (($i + $len) & 1)
+            { // 奇数
+                $sum += ord($card[$i]) - ord('0');
+            }
+            else
+            { // 偶数
+                $tmp = (ord($card[$i]) - ord('0')) * 2;
+                $sum += floor($tmp / 10) + $tmp % 10;
+            }
+        }
+        return $sum % 10 === 0;
+    }
+}
 
 if(!function_exists('is_number')) {   
     /**  
