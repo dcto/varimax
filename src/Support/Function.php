@@ -366,17 +366,17 @@ if(!function_exists('cache')) {
  * @param $path
  * @return string
  */
-function www($path)
-{
-    $url = '/';
-    if(\Str::startsWith($path, '/')){
-        $url = $url.str_replace('//','/', trim($path, '/'));
-    }else{
-        $url = $url.str_replace('//', '/', trim(strtolower(_APP_).'/'.$path, '/'));
+if(!function_exists('www')) {
+    function www($path)
+    {
+        $url = '/';
+        if(\Str::startsWith($path, '/')){
+            $url = $url.str_replace('//','/', trim($path, '/'));
+        }else{
+            $url = $url.str_replace('//', '/', trim(strtolower(_APP_).'/'.$path, '/'));
+        }
+        return $url;
     }
-
-
-    return $url;
 }
 
 
