@@ -12,7 +12,6 @@
 namespace VM\Routing;
 
 use Arr;
-use InvalidArgumentException;
 use VM\Http\Request;
 use VM\Http\Redirect;
 use VM\Http\Response;
@@ -97,7 +96,7 @@ class Router
             //Register Route.
             return $this->register($method, $route, $property);
         }else{
-            throw new \InvalidArgumentException('Invalid router of the method Router::'.$method);
+            throw new NotFoundException('Invalid router of the method Router::'.$method);
         }
     }
 
@@ -191,7 +190,7 @@ class Router
 
             if(isset($this->alias[$key])){
 
-                throw new \InvalidArgumentException('Cannot redeclare route id '. $key);
+                throw new NotFoundException('Cannot redeclare route id '. $key);
             }
 
             $this->alias[$key] = $route;
@@ -310,7 +309,7 @@ class Router
     {
         //验证匹配
         if(!preg_match('#^'.$this->regex.'$#', $this->url)){
-            throw new \InvalidArgumentException('Invalid url: '. $route->url());
+            throw new NotFoundException('Invalid url: '. $route->url());
         }
     }
 
@@ -370,7 +369,7 @@ class Router
         // Set Route method;
         $route->method($method);
 
-        if(!in_array($method, $route->methods())) throw new \InvalidArgumentException('Invalid Request');
+        if(!in_array($method, $route->methods())) throw new NotFoundException('Invalid Request');
         
             if($route->group()) {
 
