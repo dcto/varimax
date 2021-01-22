@@ -370,7 +370,8 @@ class Router
         // Set Route method;
         $route->method($method);
 
-        //if(!in_array($method, $route->methods())) throw new \InvalidArgumentException('The route '.$path. ' not allow '.$method. ' method');
+        if(!in_array($method, $route->methods())) throw new \InvalidArgumentException('Invalid Request');
+        
             if($route->group()) {
 
                 if (!$group = Arr::get($this->group, $route->group())) {
