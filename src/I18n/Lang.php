@@ -11,7 +11,6 @@
 
 namespace VM\I18n;
 
-
 class Lang
 {
     /**
@@ -65,7 +64,6 @@ class Lang
         return $lang ? $this->setLocale($lang) : $this->getLocale();
     }
 
-
     /**
      * Set locale
      *
@@ -75,9 +73,7 @@ class Lang
     public function setLocale($lang)
     {
         $this->i18n = $lang;
-
         make('cookie')->set('i18n', $lang);
-
         return $this;
     }
 
@@ -89,20 +85,15 @@ class Lang
     public function getLocale()
     {
         if($i18n = make('request')->get('i18n')) {
-
             $this->setLocale($i18n);
-
         }else{
-
             $i18n = make('cookie')->get('i18n');
             $i18n = $i18n ?: PHP_SAPI != 'cli' && make('router')->route()->lang();
             $i18n = $i18n ?: config('i18n.'.$i18n = $this->detect()) ? $i18n : null;
             $i18n = $i18n ?: config('app.language.'.$i18n, 'zh-CN');
         }
-
         return $this->i18n = $i18n;
     }
-
 
     /**
      *
@@ -113,7 +104,6 @@ class Lang
     public function detect()
     {
         $language = make('request')->language();
-
         if(strstr($language, '_')){
             return str_replace('_', '-', $language);
         }else {
@@ -145,15 +135,12 @@ class Lang
      * @param  mixed  $default
      * @return mixed
      */
-    public function get($key, $default = null)
+    public function get(...$args)
     {
-        $args = func_get_args();
-
         $key = array_shift($args);
-
-        return $this->take($key, $args);
-
-        //return Arr::get($this->item, $key, $default);
+        return strstr($key, ',') ? implode('', array_map(function($k)use($args){
+           return $this->take($k, $args);
+       }, explode(',', $key))) : $this->take($key, $args);
     }
 
     /**
@@ -165,15 +152,10 @@ class Lang
      */
     public function set($key, $value = null)
     {
-
         $item = is_array($key) ? $key : [$key => $value];
-
         $item =\Arr::dot($item, '', '.');
-
         $this->item = array_merge($this->item, $item);
-
         return $this;
-
     }
 
     /**
@@ -184,14 +166,11 @@ class Lang
     public function arr($key = null)
     {
         $items = array();
-
         foreach($this->item as $item => $value){
-
             if(strpos($item, $key.'.') !== false){
                 \Arr::set($items, $item, $value);
             }
         }
-
         return \Arr::get($items, $key);
     }
 
@@ -205,11 +184,8 @@ class Lang
     public function prepend($key, $value)
     {
         $array = $this->get($key);
-
         array_unshift($array, $value);
-
         $this->set($key, $array);
-
         return $this;
     }
 
@@ -223,11 +199,8 @@ class Lang
     public function push($key, $value)
     {
         $array = $this->get($key);
-
         $array[] = $value;
-
         $this->set($key, $array);
-
         return $this;
     }
 
@@ -240,7 +213,7 @@ class Lang
     public function take($key, $args = null)
     {
         if(isset($this->item[$key])){
-            return $args ? $this->replacements($this->item[$key], $args) : str_replace('%s', '', $this->item[$key]);
+            return $args ? $this->replacements($this->item[$key], (array) $args) : str_replace('%s', '', $this->item[$key]);
         }
         return $key;
     }
@@ -255,18 +228,13 @@ class Lang
         return $this->item;
     }
 
-
     /**
      * To json
      * @return string
      */
     public function json($key = null)
     {
-        if($key){
-            return json_encode(\Arr::get($this->item, $key));
-        }
-
-        return json_encode($this->all());
+        return $key ? json_encode(\Arr::get($this->item, $key)): json_encode($this->all());
     }
 
     /**
@@ -279,7 +247,6 @@ class Lang
     private function replacements($lang, array $args)
     {
         $args = array_pad($args, substr_count($lang,'%s'), '');
-
         return vsprintf($lang, $args);
     }
 
@@ -302,7 +269,6 @@ class Lang
      */
     public function offsetGet($key)
     {
-        echo $key;
         return $this->get($key);
     }
 
@@ -328,7 +294,6 @@ class Lang
     {
         $this->set($key, null);
     }
-
 
     /**
      * load language
@@ -371,11 +336,8 @@ class Lang
         }catch (\Exception $e){
             throw new \InvalidArgumentException('Unable Load ['.$lang.'] Language Package ');
         }
-
         return $this;
     }
-
-
 
     /**
      * flush cache
