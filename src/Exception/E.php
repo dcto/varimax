@@ -175,17 +175,18 @@ class E {
     final static private function logException($e)
     {
         global $argv;
-
             $_ERROR = array(
                 '[TIME]'       =>     date('Y-m-d H:i:s'),
                 '[CODE]'       =>     Exception::codes($e->getCode()),
                 '[FILE]'       =>     $e->getFile(),
                 '[LINE]'       =>     $e->getLine(),
-                '[MESSAGE]'    =>     Exception::error($e->getCode()).' '.$e->getMessage(),
+                '[INFO]'       =>     Exception::error($e->getCode()).' '.$e->getMessage(),
                 '[METHOD]'     =>     PHP_SAPI=='cli' ? PHP_SAPI : $_SERVER['REQUEST_METHOD'],
                 '[REMOTE]'     =>     PHP_SAPI=='cli' ? PHP_SAPI : $_SERVER["REMOTE_ADDR"],
                 '[REQUEST]'    =>     PHP_SAPI=='cli' ? __FILE__.implode(' ', $argv) : 'http://'.$_SERVER['SERVER_NAME'].':'.$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"],
-                '[BACKTRACE]'  =>     PHP_EOL.$e->getTraceAsString()
+                '[REFERER]'    =>     isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '',
+                '[USER-AGENT]' =>     isset($_SERVER["HTTP_USER_AGENT"]) ? $_SERVER["HTTP_USER_AGENT"] : '',
+                '[BACKTRACES]' =>     PHP_EOL.$e->getTraceAsString()
             );
             array_walk($_ERROR, function (&$v, $k) { $v = $k.' '.$v;});
             if(!is_dir($logDir = runtime('logs','e',_APP_))){
