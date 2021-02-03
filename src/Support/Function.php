@@ -548,8 +548,7 @@ if(!function_exists('is_phone')) {
     {
         if(strlen($phone) != 11) return false;
         $rules = array(
-                "/^1[34578]\d{9}$/",
-                "/^19[89]\d{8}$/",
+                "/^1[345789]\d{9}$/",
                 "/^166\d{8}$/"
         );
 
