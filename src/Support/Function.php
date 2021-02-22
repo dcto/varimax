@@ -47,18 +47,6 @@ if(!function_exists('make')) {
 }
 
 /**
- * log
- * @return mixed
- */
-if(!function_exists('logs')) {
-    function logs()
-    {
-        return make('log')->dir(func_get_args());
-    }
-}
-
-
-/**
  * request url
  * @return mixed
  */
@@ -106,7 +94,6 @@ if(!function_exists('config')) {
         }else if (is_array($key)) {
             return app('config')->set($key);
         }
-
         return app('config')->get($key, $default);
     }
 }
