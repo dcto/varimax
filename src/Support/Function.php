@@ -536,7 +536,43 @@ if(!function_exists('abort')) {
         }
 
         app()->abort($code, $message, $headers);
+}
+
+if(!function_exists('sbc2dbc')){
+    /**
+    * 全角转半角
+    * @param string $str
+    * @return string
+    **/
+    function sbc2dbc($str){
+        return preg_replace(
+        // 全角字符 
+        '/[\x{3000}\x{ff01}-\x{ff5f}]/ue',
+        // 编码转换
+        // 0x3000是空格，特殊处理，其他全角字符编码-0xfee0即可以转为半角
+        '($unicode=char2Unicode(\'\0\')) == 0x3000 ? " " : (($code=$unicode-0xfee0) > 256 ? unicode2Char($code) : chr($code))',
+        $str
+        );
     }
+}
+
+if(!function_exists('dbc2sbc')){
+    /**
+    * 半角转全角
+    * @param string $str
+    * @return string
+    **/
+    function dbc2sbc($str){
+        return preg_replace(
+            // 半角字符 
+            '/[\x{0020}\x{0020}-\x{7e}]/ue',  
+            // 编码转换
+            // 0x0020是空格，特殊处理，其他半角字符编码+0xfee0即可以转为全角
+            '($unicode=char2Unicode(\'\0\')) == 0x0020 ? unicode2Char（0x3000） : (($code=$unicode+0xfee0) > 256 ? unicode2Char($code) : chr($code))',
+            $str
+        );
+    }
+}
 
 if(!function_exists('is_phone')) {
     /**  
