@@ -378,15 +378,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function input($key = null, $default = null)
     {
         $input = $this->all();
-  
         if($key){
             if(is_array($key)) {
                 $input = \Arr::only($input, $key);
-            }else if($key){ 
+            }else{
                 $input = isset($input[$key]) ? $input[$key] : null;
             }
         }
-        return $default instanceof \Closure ? $default($input) : ($input?:$default);
+        return $default instanceof \Closure ? $default($input) : (strlen($input) == 0 ? $default : $input);
     }
     
     /**
