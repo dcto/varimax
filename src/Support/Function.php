@@ -692,13 +692,13 @@ if(!function_exists('is_luhn')){
     }
 }
 
-if(!function_exists('is_number')) {   
-    /**  
-     * 是否为整数  
-     * @param int $number  
-     * @return boolean  
-     */
-    function is_number($number)
+/**  
+ * 是否为整数  
+ * @param int $number  
+ * @return boolean  
+ */
+if(!function_exists('is_intval')) {   
+    function is_intval($number)
     {
         if (preg_match('/^[-\+]?\d+$/', $number)) {
             return true;
