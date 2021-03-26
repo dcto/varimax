@@ -677,17 +677,18 @@ if(!function_exists('is_ip')) {
 /**
  * 是否为一个合法的银行账号
  * LUHN算法
- * @param int $card
+ * @param int $number
  * @return boolean
  */
 if(!function_exists('is_luhn')){
-    function is_luhn($card)
+    function is_luhn($number)
     {
-		$card_number_checksum = '';
-		foreach (str_split(strrev((string) $card)) as $i => $d) {
-			$card_number_checksum .= $i %2 !== 0 ? $d * 2 : $d;
+        if(!is_numeric($number)) return false;
+		$number_checksum = '';
+		foreach (str_split(strrev((string) $number)) as $i => $d) {
+			$number_checksum .= $i %2 !== 0 ? $d * 2 : $d;
 		}
-		return array_sum(str_split($card_number_checksum)) % 10 === 0;
+		return array_sum(str_split($number_checksum)) % 10 === 0;
     }
 }
 
