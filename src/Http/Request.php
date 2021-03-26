@@ -385,7 +385,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 $input = isset($input[$key]) ? $input[$key] : null;
             }
         }
-        return $default instanceof \Closure ? $default($input) : (strlen($input) == 0 ? $default : $input);
+
+        if($default instanceof \Closure){
+            return $default($input);
+        }else{
+            if(is_string($input)){
+                return strlen($input) == 0 ? $default : $input;
+            }else{
+                return $input;
+            }
+        }
     }
     
     /**
