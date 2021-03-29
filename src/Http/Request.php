@@ -392,7 +392,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             if(is_string($input)){
                 return strlen($input) == 0 ? $default : $input;
             }else{
-                return $input;
+                return $input ? $input : $default;
             }
         }
     }
