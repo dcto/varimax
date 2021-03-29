@@ -88,8 +88,8 @@ class Lang
             $this->setLocale($i18n);
         }else{
             $i18n = make('cookie')->get('i18n');
-            $i18n = $i18n ?: PHP_SAPI != 'cli' && make('router')->route()->lang();
             $i18n = $i18n ?: config('i18n.'.$i18n = $this->detect()) ? $i18n : null;
+            $i18n = $i18n ?: (PHP_SAPI != 'cli' && make('router')->route() ? make('router')->route()->lang() : null);
             $i18n = $i18n ?: config('app.language.'.$i18n, 'zh-CN');
         }
         return $this->i18n = $i18n;
