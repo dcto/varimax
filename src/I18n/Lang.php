@@ -89,8 +89,8 @@ class Lang
         }else{
             $i18n = make('cookie')->get('i18n');
             $i18n = $i18n ?: config('i18n.'.$i18n = $this->detect()) ? $i18n : null;
-            $i18n = $i18n ?: (PHP_SAPI != 'cli' && make('router')->route() ? make('router')->route()->lang() : null);
-            $i18n = $i18n ?: config('app.language.'.$i18n, 'zh-CN');
+            //$i18n = $i18n ?: (PHP_SAPI != 'cli' && make('router')->route() ? make('router')->route()->lang() : null);
+            $i18n = $i18n ?: config('app.language', key( (array) config('i18n')));
         }
         return $this->i18n = $i18n;
     }
