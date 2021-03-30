@@ -84,7 +84,7 @@ class Lang
      */
     public function getLocale()
     {
-        if($i18n = make('request')->get('i18n')) {
+        if(isset($_GET['i18n']) && $i18n = $_GET['i18n']) {
             $this->setLocale($i18n);
         }else{
             $i18n = make('cookie')->get('i18n');
