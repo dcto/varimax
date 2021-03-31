@@ -247,16 +247,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * Get all request items 
      * 
-     * @param $args filter request item  [query, request, attributes, files]
+     * @param $key filter request item  [query, request, attributes, files]
      * 
      * @return array
      */
-    public function all(...$args)
+    public function all($key = null)
     {
-        if($args){
+        if($key){
             return call_user_func_array('array_replace', array_map(function($item){
                 return $this->$item->all();
-            }, \Arr::flatten($args)));
+            }, is_array($key) ? $key : func_get_args()));
         }else{   
             return array_replace(
                 $this->query->all(),
@@ -287,22 +287,22 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * Delete Item In Input Souce
      * 
-     * @param mixed $args 
+     * @param mixed $key 
      * 
      * @return $this 
      */
-    public function del(...$args)
+    public function del($key)
     {
-        return $this->delete($args);
+        return $this->delete(is_array($key) ? $key : func_get_args());
     }
 
     /**
      * [not 排除返回]
      * @return array
      */
-    public function not(...$key)
+    public function not($key)
     {
-        return $this->except($key);
+        return $this->except(is_array($key) ? $key : func_get_args());
     }
 
     /**
@@ -333,9 +333,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param $key
      * @return array|mixed
      */
-    public function take(...$key)
+    public function take($key = null)
     {
-        return $key ? \Arr::only($this->all(), \Arr::flatten($key)) : $this->all();
+        return $key ? \Arr::only($this->all(), is_array($key) ? $key : func_get_args()) : $this->all();
     }
 
     /**
@@ -361,11 +361,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * 指定提取
-     * @param null $keys
+     * @param array $key
      */
-    public function only(...$key)
+    public function only($key)
     {
-        return \Arr::only($this->all(), \Arr::flatten($key));
+        return \Arr::only($this->all(), is_array($key) ? $key : func_get_args());
     }
 
     /**
@@ -412,9 +412,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param $key
      * @return bool
      */
-    public function trim(...$key)
+    public function trim($key)
     {
-        return $this->filter($key);
+        return $this->filter(is_array($key) ? $key : func_get_args() );
     }
 
     /**
@@ -422,20 +422,20 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param null $key
      * @return array
      */
-    public function except(...$key)
+    public function except($key)
     {
-        return $key ? \Arr::except($this->all(), \Arr::flatten($key)) : $this->all();
+        return $key ? \Arr::except($this->all(), is_array($key) ? $key : func_get_args() ) : $this->all();
     }
 
     /**
      * Merge new input into the current request's input array.
      *
-     * @param  array  $input
+     * @param  array  $key
      * @return $this
      */
-    public function merge(...$args)
+    public function merge($key)
     {
-        $this->getInputSource()->add(\Arr::flatten($args));
+        $this->getInputSource()->add(is_array($key) ? $key : func_get_args());
 
         return $this;
     }
@@ -456,24 +456,24 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param mixed $args 
      * @return $this 
      */
-    public function delete(...$args)
+    public function delete($key)
     {
        array_map(function($item){
            $this->query->remove($item);
            $this->getInputSource()->remove($item);
-       }, \Arr::flatten($args));
+       }, is_array($key) ? $key : func_get_args() );
         return $this;
     }
 
     /**
      * Replace the input for the current request.
      *
-     * @param  array  $args
+     * @param  array  $key
      * @return $this
      */
-    public function replace(...$args)
+    public function replace($key)
     {
-        $this->getInputSource()->replace(\Arr::flatten($args));
+        $this->getInputSource()->replace(is_array($key) ? $key : func_get_args() );
 
         return $this;
     }
