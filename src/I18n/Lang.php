@@ -104,14 +104,11 @@ class Lang
     public function detect()
     {
         $language = make('request')->language();
-        if(strstr($language, '-')){
-            return str_replace('-', '_', $language);
-        }else {
-            foreach (config('i18n') as $locale => $name) {
-                if (strstr($language, $locale)) {
-                    return $locale;
-                }
-
+        $language = str_replace('-', '_', $language);
+ 
+        foreach (config('i18n') as $locale) {
+            if (strstr($language, $locale)) {
+                return $locale;
             }
         }
         return $language;
