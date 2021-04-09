@@ -33,6 +33,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \VM\Http\Request merge(array $input)
  * @method static \VM\Http\Request replace(array $input)
  * @method static \VM\Http\Request header(string $key = null, mixed $default = null)
+ * @method static \VM\Http\Request bearer()
  * @method static \VM\Http\Request server(string $key = null, mixed $default = null)
  * @method static \VM\Http\Request browser(string $type = null)
  * @method static \VM\Http\Request hasFile(string $key)

@@ -653,6 +653,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * Get Request bearer Token
+     * @param \VM\Http\Type|null $var 
+     * @return void 
+     */
+    public function bearer()
+    {
+        return trim($this->header('Authorization'), 'Bearer ');
+    }
+
+    /**
      * [server 获取server]
      *
      * @param null $key
