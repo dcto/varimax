@@ -663,6 +663,15 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * Get Request bearer Token
+     * @return mixed 
+     */
+    public function token()
+    {
+        return $this->header('Authorization');
+    }
+
+    /**
      * [server 获取server]
      *
      * @param null $key
