@@ -47,6 +47,19 @@ if(!function_exists('make')) {
 }
 
 /**
+ * Lang i18n method
+ * @param null $i18n
+ * @param array $i18n
+ * @return mixed
+ */
+if(!function_exists('i18n')) {
+    function i18n($i18n = null)
+    {
+        return app('lang')->i18n($i18n);
+    }
+}
+
+/**
  * request url
  * @return mixed
  */
