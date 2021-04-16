@@ -5,7 +5,6 @@
   "keywords": ["php","php framework", "varimax-framework"],
   "license": "MIT",
   "prefer-stable" : true,
-  "minimum-stability": "dev",
   "homepage": "http://www.varimax.cn",
   "version": "v2.0",
   "support": {
