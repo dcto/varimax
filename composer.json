@@ -20,7 +20,7 @@
   ],
 
   "require": {
-    "php": ">=7.2.0",
+    "php": ">=8.0",
     "ext-xml":"*",
     "ext-json":"*",
     "ext-curl":"*",
@@ -28,19 +28,18 @@
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
-    "symfony/http-foundation": "3.*",
-    "illuminate/contracts": "5.8.*",
-    "illuminate/container": "5.8.*",
-    "illuminate/support": "5.8.*",
-    "illuminate/events": "5.8.*",
-    "illuminate/database": "5.8.*",
-    "illuminate/filesystem": "5.8.*",
-    "illuminate/pagination": "5.8.*",
-    "twig/twig": "1.*",
-    "vlucas/phpdotenv":"4.1.*",
-    "kylekatarnls/laravel-carbon-2": "^1.0.0",
+    "symfony/http-foundation": "5.*",
+    "illuminate/contracts": "8.*",
+    "illuminate/container": "8.*",
+    "illuminate/support": "8.*",
+    "illuminate/events": "8.*",
+    "illuminate/database": "8.*",
+    "illuminate/filesystem": "8.*",
+    "illuminate/pagination": "8.*",
+    "twig/twig": "3.*",
+    "vlucas/phpdotenv":"5.3.*",
     "hashids/hashids": "^4.0",
-    "nesbot/carbon": "2.16.3 as 1.34.0" 
+    "nesbot/carbon": "2.*" 
   },
 
   "autoload": {
