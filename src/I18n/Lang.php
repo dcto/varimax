@@ -84,6 +84,8 @@ class Lang
      */
     public function getLocale()
     {
+        if($this->i18n) return $this->i18n;
+
         if(isset($_GET['i18n']) && $i18n = $_GET['i18n']) {
             $this->setLocale($i18n);
         }else{
