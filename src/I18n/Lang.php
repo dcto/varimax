@@ -326,7 +326,7 @@ class Lang
                 }
 
 
-                file_put_contents($cache, '<?php return ' . str_replace(array("\r\n", "\n", "\r", "\t", " "), '', var_export($this->all(), TRUE)).';');
+                file_put_contents($cache, '<?php return ' . str_replace(array("\r\n", "\n", "\r", "\t"), '', var_export($this->all(), TRUE)).';');
 
                 return $this;
             }
