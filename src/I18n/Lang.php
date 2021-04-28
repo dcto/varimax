@@ -87,12 +87,14 @@ class Lang
         if(isset($_GET['i18n']) && $i18n = $_GET['i18n']) {
             $this->setLocale($i18n);
         }else{
-            $i18n = make('cookie')->get('i18n');
-            $i18n = $i18n ?: config('i18n.'.$i18n = $this->detect()) ? $i18n : null;
-            //$i18n = $i18n ?: (PHP_SAPI != 'cli' && make('router')->route() ? make('router')->route()->lang() : null);
-            $i18n = $i18n ?: config('app.language', key( (array) config('i18n')));
+            if(PHP_SAPI != 'cli' ){
+                $this->i18n = $this->i18n ?: route()->lang();
+                $this->i18n = $this->i18n ?: make('cookie')->get('i18n');
+                $this->i18n = $this->i18n ?: $this->detect();
+            }
+            $this->i18n = config('i18n.'. $this->i18n) ? $this->i18n : config('app.language', key((array) config('i18n')));
         }
-        return $this->i18n = $i18n;
+        return $this->i18n;
     }
 
     /**
@@ -104,8 +106,6 @@ class Lang
     public function detect()
     {
         $language = make('request')->language();
-        $language = str_replace('-', '_', $language);
- 
         foreach (config('i18n') as $locale) {
             if (strstr($language, $locale)) {
                 return $locale;
