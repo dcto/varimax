@@ -272,6 +272,16 @@ class Route
     }
 
     /**
+     * mixed property
+     * @param mixed $name 
+     * @return mixed 
+     */
+    public function __get($property) 
+    {
+        return null;
+    }
+
+    /**
      * toString url
      */
     public function __toString()

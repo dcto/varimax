@@ -6,6 +6,7 @@
  * @param  array   $parameters
  * @return mixed|\VM\Application
  */
+
 if(!function_exists('app')){
     function app($make = null, $parameters = [])
     {
@@ -90,6 +91,17 @@ if(!function_exists('lang')) {
     function lang()
     {
         return call_user_func_array(array(app('lang'), 'get'), func_get_args());
+    }
+}
+
+/**
+ * get the route
+ * @return mixed
+ */
+if(!function_exists('route')) {
+    function route($arg = null)
+    {
+        return app('router')->route();
     }
 }
 
