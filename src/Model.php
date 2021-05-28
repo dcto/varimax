@@ -6,7 +6,6 @@
  * FILE: 2020
  * USER: 陶之11. <sdoz@live.com>
  * Time: 2020-08-11-21:21
- * SITE: https://www.varimax.cn/
  */
 
 namespace VM;
@@ -144,6 +143,13 @@ namespace VM;
 
 abstract class Model extends \Illuminate\Database\Eloquent\Model
 {
+
+    /**
+     * 父ID
+     * @var string
+     */
+    protected $pid = 'pid';
+
     /**
      * Hash Id
      * @var array
@@ -301,19 +307,26 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
     public function scopeWithIn($query, $relation, array $columns)
     {
         return $query->with([$relation => function ($query) use ($columns){
-            $query->select(array_merge(['id'], $columns));
+            $query->select(array_merge([$this->param], $columns));
         }]);
     }
 
     /**
-     * 直属上级
+     * 上级
      * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
-     * @author dc.T
-     * @version v1.0
      */
     public function upper()
     {
-        return $this->belongsTo(static::class, 'pid');
+        return $this->belongsTo(static::class, $this->pid);
+    }
+
+    /**
+     * 下级
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function lower()
+    {
+        return $this->hasMany(static::class, $this->pid, $this->getKeyName());
     }
 
     /**
@@ -321,14 +334,12 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * @return mixed
      */
     public function uppers() {
-        return  $this->belongsTo(static::class, 'pid')->with(__FUNCTION__);
+        return $this->belongsTo(static::class, $this->pid)->with(__FUNCTION__);
     }
 
     /**
-     * 所有下层(含同级)
+     * 所有下级(含同级)
      * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     * @author dc.T
-     * @version v1.0
      */
     public function lowers()
     {
@@ -336,24 +347,12 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
     }
 
     /**
-     * 直属下层
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
-     */
-    public function lower()
-    {
-        return $this->hasMany(static::class, 'pid', 'id');
-    }
-
-    /**
-     * [boot 启动事件观察器]
-     *
-     * @author 11.
+     * [bootstrap]
      */
     protected static function boot()
     {
         //Database Bootstrap
         make('db');
-
 
         //加载Traits
         static::bootTraits();
@@ -503,16 +502,23 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     protected function incrementOrDecrement($column, $amount, $extra, $method)
     {
-        $query = $this->newQuery();
+        $query = $this->newQueryWithoutRelationships();
 
-        if($this->isCompositeKey()) {
+        if (! $this->exists) {
+            return $query->{$method}($column, $amount, $extra);
+        }
+
+        $this->incrementOrDecrementAttributeValue($column, $amount, $extra, $method);
+
+        if($this->isCompositeKey()){
             foreach ((array) $this->primaryKey as $key) {
                 $query->where($key, $this->getAttribute($key));
             }
             return $query->{$method}($column, $amount, $extra);
         }else{
-            return parent::incrementOrDecrement($column, $amount, $extra, $method);
+            return $query->where(
+                $this->getKeyName(), $this->getKey()
+            )->{$method}($column, $amount, $extra);
         }
     }
-
 }
