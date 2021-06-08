@@ -602,7 +602,7 @@ if(!function_exists('is_phone')) {
      * @param string $value  
      * @return bool  
      */
-    function is_phone($value, $locale = 'cn')
+    function is_phone($value, $locale = null)
     {
         switch($locale){
             case 'cn':
