@@ -599,27 +599,19 @@ if(!function_exists('char2unicode')){
 if(!function_exists('is_phone')) {
     /**  
      * 验证字符串是否为手机号  
-     * @param string $phone  
+     * @param string $value  
      * @return bool  
      */
-    function is_phone($phone)
+    function is_phone($value, $locale = 'cn')
     {
-        if(strlen($phone) != 11) return false;
+        switch($locale){
+            case 'cn':
+                return preg_match("/^1[3456789]\d{9}$/", $value);
+            break;
 
-        if(preg_match("/^1[3456789]\d{9}$/", $phone)) return true;
-
-        /*
-        $rules = array(
-            
-                "/^1[3456789]\d{9}$/",
-                "/^166\d{8}$/"
-        );
-
-        foreach($rules as $rule){
-            if(preg_match($rule, $phone)) return true;
+            default:
+                return $value == filter_var($value, FILTER_SANITIZE_NUMBER_INT);
         }
-        */
-        return false;
     }
 }
 
