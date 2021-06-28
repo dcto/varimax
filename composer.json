@@ -36,7 +36,6 @@
     "illuminate/filesystem": "5.8.*",
     "illuminate/pagination": "5.8.*",
     "twig/twig": "1.*",
-    "vlucas/phpdotenv":"4.1.*",
     "kylekatarnls/laravel-carbon-2": "^1.0.0",
     "hashids/hashids": "^4.0",
     "nesbot/carbon": "2.16.3 as 1.34.0" 
