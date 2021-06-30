@@ -48,7 +48,7 @@ is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
 /**
  * load common from docker
  */
-is_file($common = _DOC_._DS_.'docker'._DS_.'common.php') && require($common);
+is_file($common = _DOC_._DS_.'library'._DS_.'common.php') && require($common);
 
 /**
  * load helper from varimax
