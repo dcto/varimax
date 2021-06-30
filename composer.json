@@ -42,12 +42,12 @@
   },
 
   "autoload": {
-    "files": [
-      "src/Bootstrap.php"
-    ],
     "psr-4": {
       "VM\\": "src/"
     },
+    "files": [
+      "src/Bootstrap.php"
+    ],
     "classmap":[
       "src/Support/Arr.php",
       "src/Support/Str.php",
