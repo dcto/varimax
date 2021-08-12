@@ -539,15 +539,15 @@ if(!function_exists('dump')) {
  * 终断输出
  */
 if(!function_exists('abort')) {
-    function abort($code, $message = '', array $headers = [])
-    {
+    function abort($code, $message = '', array $headers = []){
         if ($code instanceof Response) {
-            throw new HttpResponseException($code);
+            throw new \VM\Exception\NotFoundException($code);
         } elseif ($code instanceof \Illuminate\Contracts\Support\Responsable) {
-            throw new HttpResponseException($code->toResponse(request()));
+            throw new \VM\Exception\NotFoundException($code);
         }
 
         app()->abort($code, $message, $headers);
+    }
 }
 
 if(!function_exists('unicode2char')){
@@ -579,15 +579,15 @@ if(!function_exists('char2unicode')){
     function char2unicode($char){
         switch (strlen($char)){
             case 1 : return ord($char);
-            case 2 : return (ord($char{1}) & 63) |
-                            ((ord($char{0}) & 31) << 6);
-            case 3 : return (ord($char{2}) & 63) |
-                            ((ord($char{1}) & 63) << 6) |
-                            ((ord($char{0}) & 15) << 12);
-            case 4 : return (ord($char{3}) & 63) |
-                            ((ord($char{2}) & 63) << 6) |
-                            ((ord($char{1}) & 63) << 12) |
-                            ((ord($char{0}) & 7)  << 18);
+            case 2 : return (ord($char[1]) & 63) |
+                            ((ord($char[0]) & 31) << 6);
+            case 3 : return (ord($char[2]) & 63) |
+                            ((ord($char[1]) & 63) << 6) |
+                            ((ord($char[0]) & 15) << 12);
+            case 4 : return (ord($char[3]) & 63) |
+                            ((ord($char[2]) & 63) << 6) |
+                            ((ord($char[1]) & 63) << 12) |
+                            ((ord($char[0]) & 7)  << 18);
             default :
                 trigger_error('Character is not UTF-8!', E_USER_WARNING);
                 return false;
@@ -599,19 +599,27 @@ if(!function_exists('char2unicode')){
 if(!function_exists('is_phone')) {
     /**  
      * 验证字符串是否为手机号  
-     * @param string $value  
+     * @param string $phone  
      * @return bool  
      */
-    function is_phone($value, $locale = null)
+    function is_phone($phone)
     {
-        switch($locale){
-            case 'cn':
-                return preg_match("/^1[3456789]\d{9}$/", $value);
-            break;
+        if(strlen($phone) != 11) return false;
 
-            default:
-                return $value == filter_var($value, FILTER_SANITIZE_NUMBER_INT);
+        if(preg_match("/^1[3456789]\d{9}$/", $phone)) return true;
+
+        /*
+        $rules = array(
+            
+                "/^1[3456789]\d{9}$/",
+                "/^166\d{8}$/"
+        );
+
+        foreach($rules as $rule){
+            if(preg_match($rule, $phone)) return true;
         }
+        */
+        return false;
     }
 }
 
@@ -1017,5 +1025,4 @@ if(!function_exists('currency')){
             );
             return isset($symbols[$currency]) ? $symbols[$currency] : $currency;
         }
-}
 }

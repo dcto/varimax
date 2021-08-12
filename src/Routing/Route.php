@@ -121,18 +121,18 @@ class Route
     public function __construct($method, $path, array $args = array())
     {
         //$path = preg_replace('/\(.*?\)/', '', $path);
-        $this->id        =   isset($args['id']) ? $args['id'] : $path == '/' ? '.' : trim(str_replace('/', '.', $path), '.');
+        $this->id        =   isset($args['id']) ? $args['id'] : ( $path == '/' ? '.' : trim(str_replace('/', '.', $path), '.'));
         $this->url       =   $path;
         $this->hash      =   hash('crc32b', $this->id);
         $this->methods   =   array_map('strtoupper', is_array($method) ? $method : array($method));
 
         if($args){
-            $this->lang      =   isset($args['lang']) ? $args['lang'] : isset($args['group']['lang']) ? $args['group']['lang'] : '';
-            $this->menu      =   isset($args['menu']) ? $args['menu'] : isset($args['group']['menu']) ? $args['group']['menu'] : '';
+            $this->lang      =   isset($args['lang']) ? $args['lang'] : ( isset($args['group']['lang']) ? $args['group']['lang'] : '' );
+            $this->menu      =   isset($args['menu']) ? $args['menu'] : ( isset($args['group']['menu']) ? $args['group']['menu'] : '' );
             $this->regex     =   isset($args['regex']) ? $args['regex'] : null;
             $this->group     =   isset($args['group']['id']) ? $args['group']['id'] : $this->group;
             $this->callable  =   isset($args['call']) ? $args['call']: $this->callable;
-            $this->namespace =   isset($args['namespace']) ? $args['namespace'] : (isset($args['group']['namespace']) ? $args['group']['namespace'] : $this->namespace);
+            $this->namespace =   isset($args['namespace']) ? $args['namespace'] : ( isset($args['group']['namespace']) ? $args['group']['namespace'] : $this->namespace );
         }
 
         if(is_string($this->callable)){
