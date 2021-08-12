@@ -598,7 +598,7 @@ class Router
      */
     private function mergeGroup($new, $old)
     {
-        $new['pid'] = $old['id'];
+        $new['pid'] = isset($old['id']) ? $old['id'] : 0;
 
         $new['namespace'] = $this->formatNameSpace($new, $old);
 
