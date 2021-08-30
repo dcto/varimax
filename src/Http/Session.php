@@ -59,7 +59,7 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * Create a new session instance.
      *
-     * @param  string $name
+     * @param  string $key
      * @param  \SessionHandlerInterface $handler
      * @param  string|null $id
      * @return void
@@ -72,11 +72,7 @@ class Session implements  \IteratorAggregate, \Countable
 
         $this->setOptions(config('session.options', array()));
 
-        if(!$this->isStarted() && config('session.start')){
-
-            $this->start();
-
-        }
+        config('session.start', true) && $this->start(); 
     }
 
     /**
@@ -84,7 +80,6 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function start()
     {
-
         if($this->isStarted()) return $this;
         
         if (\PHP_SESSION_ACTIVE === session_status()) {
@@ -150,11 +145,8 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function id($id = null)
     {
-        if($id) {
-            session_id($id);
-            return $this;
-        }
-        return session_id() ?: null;
+        $id == session_id() || session_id($id);
+        return $id ? $this : session_id();
     }
 
 
@@ -163,7 +155,7 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function getId()
     {
-        return $this->id();
+        return session_id();
     }
 
 
@@ -173,15 +165,15 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function setId($id)
     {
-        return $this->id($id);
+        return session_id($id);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function has($name)
+    public function has($key)
     {
-        $keys = is_array($name) ? $name : func_get_args();
+        $keys = is_array($key) ? $key : func_get_args();
 
         return \Arr::exists($_SESSION, $keys);
     }
@@ -189,11 +181,11 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function get($name, $default = null)
+    public function get($key, $default = null)
     {
         if($this->isStarted()) {
 
-            $value = \Arr::get($_SESSION, $name, $default);
+            $value = \Arr::get($_SESSION, $key, $default);
 
             return $value ? ($this->encrypt ? make('crypt')->de($value) : $value) : $default;
         }else{
@@ -204,11 +196,11 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function set($name, $value)
+    public function set($key, $value)
     {
         $value = $this->encrypt ? make('crypt')->en($value) : $value;
 
-        return \Arr::set($_SESSION, $name, $value);
+        return \Arr::set($_SESSION, $key, $value);
     }
 
     /**
@@ -239,12 +231,12 @@ class Session implements  \IteratorAggregate, \Countable
 
     /**
      * remove alias
-     * @param $name
+     * @param $key
      * @return mixed
      */
-    public function del($name)
+    public function del($key)
     {
-       return $this->remove($name);
+       return $this->remove($key);
     }
 
     /**
@@ -299,23 +291,23 @@ class Session implements  \IteratorAggregate, \Countable
     }
     /**
      * delete alias
-     * @param $name
+     * @param $key
      * @return mixed
      */
-    public function delete($name)
+    public function delete($key)
     {
-        return $this->remove($name);
+        return $this->remove($key);
     }
 
     /**
      * remove session
      *
-     * @param string $name
+     * @param string $key
      */
-    public function remove($name)
+    public function remove($key)
     {
-        $name = is_array($name) ? $name : func_get_args();
-        return array_forget($_SESSION, $name);
+        $key = is_array($key) ? $key : func_get_args();
+        return \Arr::forget($_SESSION, $key);
     }
 
     /**
@@ -327,7 +319,6 @@ class Session implements  \IteratorAggregate, \Countable
         foreach($attribute as $k=>$v) {
             $this->set($k, $v);
         }
-
         return true;
     }
 
@@ -373,8 +364,7 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function destroy()
     {
-        $this->started = false;
-        if ($this->id()) {
+        try{
             session_unset();
             session_destroy();
             session_write_close();
@@ -390,7 +380,12 @@ class Session implements  \IteratorAggregate, \Countable
                     $params['httponly']
                 );
             }
-        }
+        $this->started = false;
+        return true;
+      }catch(\Exception $e){
+        throw $e;  
+        return false;
+      }
     }
 
     /**
