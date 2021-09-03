@@ -103,8 +103,8 @@ class Config implements ArrayAccess, ConfigContract
     public function add($key,  $value = null)
     {
         if (is_null($value) && !isset($this->item[$key])) {
-            is_file($config = root('config',$key.'.php')) && $this->set($key, $config);
-            is_file($config = runtime('config',$key.'.php')) && $this->set($key, $config);
+            is_file($config = root('config',$key.'.php')) && $this->set($key, require($config));
+            is_file($config = runtime('config',$key.'.php')) && $this->set($key, require($config));
         } else if(is_string($value) && is_file($value)){
             return $this->set($key, require($value));
         }else{
