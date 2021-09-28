@@ -659,7 +659,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function bearer()
     {
-        return trim($this->header('Authorization'), 'Bearer ');
+        $bearer = $this->header('Authorization');
+        if (\Str::startsWith($bearer, 'Bearer ')) {
+            return \Str::substr($bearer, 7);
+        }
+        return $bearer;
     }
 
     /**
