@@ -143,7 +143,6 @@ namespace VM;
 
 abstract class Model extends \Illuminate\Database\Eloquent\Model
 {
-
     /**
      * 父ID
      * @var string
@@ -241,13 +240,13 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
     /**
      * Set the table associated with the model.
      *
-     * @param  string  $table
+     * @param  string  $name
      *
      * @return \Illuminate\Database\Eloquent\Model
      */
-    public function setTable($table)
+    public function setTable($name)
     {
-        return parent::setTable($this->prefix?$this->prefix.$table:$table);
+        return parent::setTable($this->prefix ? $this->prefix.$name : $name);
     }
 
     /**
@@ -263,8 +262,7 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
             }
             return $this->table;
         }
-
-        return str_replace('\\', '', \Str::snake(\Str::plural(class_basename($this))));
+        return \Str::snake(class_basename($this));        
     }
 
     /**
@@ -272,20 +270,9 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      *
      * @return mixed
      */
-    public static function table($table = null)
+    public static function table()
     {
-        if($table){
-            return (new static)->setTable($table);
-        }
-        return (new static)->getTable();
-    }
-
-    /**
-     * @return Model
-     */
-    public function model()
-    {
-        return self::getModel();
+        return  static::query()->getQuery()->from;
     }
 
     /**
@@ -351,64 +338,86 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     protected static function boot()
     {
-        //Database Bootstrap
+        //Bootstrap
         make('db');
-
+    
         //加载Traits
-        static::bootTraits();
+       static::bootTraits();
+
+        static::retrieved(function($model){
+            method_exists($model, 'model') && $model->model($model);
+        });
+
+        /**
+         * 保存事件
+         */
+        static::saving(function($model){            
+            method_exists($model, 'onSave') && $model->onSave($model);
+        });
+
+        /**
+         * 已保存事件
+         */
+        static::saved(function ($model){
+            method_exists($model, 'offSave') && $model->offSave($model);
+        });
 
         /**
          * 创建事件
          */
-        static::creating(function($model){});
+        static::creating(function($model){
+            method_exists($model, 'onCreate') && $model->onCreate($model);
+        });
 
         /**
          * 已创建事件
          */
-        static::created(function($model){});
+        static::created(function($model){            
+            method_exists($model, 'offCreate') && $model->offCreate($model);
+        });
 
         /**
          * 更新事件
          */
-        static::updating(function($model){
+        static::updating(function($model){            
+            method_exists($model, 'onUpdate') && $model->onUpdate($model);
         });
 
         /**
          * 已更新事件
          */
-        static::updated(function($model){});
-
-        /**
-         * 保存事件
-         */
-        static::saving(function($model){});
-
-        /**
-         * 已保存事件
-         */
-        static::saved(function ($model){});
+        static::updated(function($model){      
+            method_exists($model, 'offUpdate') && $model->offUpdate($model);
+        });
 
         /**
          * 删除事件
          */
-        static::deleting(function($model){});
+        static::deleting(function($model){
+            method_exists($model, 'onDelete') && $model->onDelete($model);
+        });
 
         /**
          * 已删除事件
          */
-        static::deleted(function($model){});
+        static::deleted(function($model){
+            method_exists($model, 'offDelete') && $model->offDelete($model);
+        });
 
 
         /**
          * call model hooks
+         * 事件分发
          */
+        /*
         $class   = get_called_class();
         $hooks    = array('on' => 'ing', 'off' => 'ed');
-        $radicals = array('sav', 'validat', 'creat', 'updat', 'delet');
-        foreach ($radicals as $rad) {
+        $events = array('retriev','sav', 'creat', 'updat', 'delet', 'validat');     
+        foreach ($events as $rad) {
             foreach ($hooks as $hook => $event) {
                 $method = $hook.ucfirst($rad).'e';
                 if (method_exists($class, $method)) {
+                    echo $method;
                     $eventMethod = $rad.$event;
                     self::$eventMethod(function($model) use ($method){
                         return $model->$method($model);
@@ -416,9 +425,9 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
                 }
             }
         }
-
-
-        //动态分表(查询)
+        */
+        
+        // 动态分表(查询)
         if(static::$tables == true){
             static::addGlobalScope(function (\Illuminate\Database\Eloquent\Builder $builder) {
                 array_map(function($where)use($builder){
@@ -437,12 +446,13 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     public function newInstance($attributes = [], $exists = false)
     {
-        $model = parent::newInstance($attributes, $exists);
-
+        static::$booted[static::class] = true;//修复静态方法重复事件                
         if(static::$tables == true){
+            $model = parent::newInstance($attributes, $exists);
             isset($attributes[static::$tables['column']]) && $model->setTable(static::$tables['prefix']. $attributes[static::$tables['column']]);
+            return $model;
         }
-        return $model;
+        return parent::newInstance($attributes, $exists);
     }
 
     /**
