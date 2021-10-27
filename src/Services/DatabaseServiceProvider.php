@@ -22,7 +22,7 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
      * @return void
      */
     public function boot()
-    {
+    {        
         Model::setConnectionResolver($this->app['db']);
 
         Model::setEventDispatcher($this->app['events']);
@@ -31,7 +31,7 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
 
         $this->registerQueryEvents();
 
-        config('app.log')>1 && $this->registerQueryLogs() ;
+        $this->registerQueryLogs() ;
     }
 
     /**
@@ -87,25 +87,17 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
      */
     protected function registerQueryLogs()
     {
-        \DB::listen(function($query) {
-
-            foreach ($query->bindings as $i => $binding) {
-                if ($binding instanceof \DateTime) {
-                    $query->bindings[$i] = $binding->format('\'Y-m-d H:i:s\'');
-                } else {
-                    if (is_string($binding)) {
-                        $query->bindings[$i] = "'$binding'";
-                    }
+        if(getenv('ENV') || config('app.log') > 1){
+            \DB::listen(function($query) {
+                $sql = vsprintf(str_replace('?', '%s', $query->sql), $query->bindings);                
+                if($query->time > config('database.timeout', 500)){
+                    \Log::dir('db-'. $query->connectionName, 'slow')->warning('['.$query->time.' ms] '.$sql);
                 }
-            }
 
-            $sql = vsprintf(str_replace('?', '%s', $query->sql), $query->bindings);
-
-            \Log::dir('db-'. $query->connectionName, _APP_)->debug('['.$query->time.' ms] '.$sql);
-
-            if( $query->time > 100 ){
-                \Log::dir('db-'. $query->connectionName, _APP_)->file('slow')->warning('['.$query->time.' ms] '.$sql);
-            }
-        });
+                if(getenv('ENV') || config('app.log') > 2){
+                    \Log::dir('db-'. $query->connectionName, _APP_)->debug('['.$query->time.' ms] '.$sql);
+                }
+            });
+        }
     }
 }
