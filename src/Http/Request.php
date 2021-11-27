@@ -207,17 +207,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function in($key)
     {
-        if(is_array($key)){
-            $input = $this->all();
-            foreach($key as $k){
-                if(!isset($input[$k]) || !strlen($input[$k])){
-                    return false;
-                }
-            }
-            return true;
-        }else{
-            return strlen($this->get($key));
-        }
+        return array_intersect(array_keys($this->filter()), is_array($key) ? $key : func_get_args());
     }
 
     /**
