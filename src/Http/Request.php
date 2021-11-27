@@ -201,12 +201,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * Detect the item in the request
-     *
-     * @param array|string $key
-     * @return bool
+     * check keys in input
+     * @param string|array $key 
+     * @return bool 
      */
-    public function has($key)
+    public function in($key)
     {
         if(is_array($key)){
             $input = $this->all();
@@ -219,6 +218,17 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         }else{
             return strlen($this->get($key));
         }
+    }
+
+    /**
+     * check input inlude the key
+     * @param array|string $key
+     * @return bool
+     */
+    public function has($key)
+    {
+        $key = is_array($key) ? $key : func_get_args();
+        return array_intersect(array_keys($this->filter()), $key) == $key;
     }
 
     /**
