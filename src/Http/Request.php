@@ -201,24 +201,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * check keys in input
+     * check the input exists by the one of key
      * @param string|array $key 
+     * @param int $number
      * @return bool 
      */
-    public function in($key)
+    public function has($key, $number = 1)
     {
-        return array_intersect(array_keys($this->filter()), is_array($key) ? $key : func_get_args());
-    }
-
-    /**
-     * check input inlude the key
-     * @param array|string $key
-     * @return bool
-     */
-    public function has($key)
-    {
-        $key = is_array($key) ? $key : func_get_args();
-        return array_intersect(array_keys($this->filter()), $key) == $key;
+        return $this->exists($key, $number);
     }
 
     /**
@@ -247,17 +237,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * Get all request items 
      * 
-     * @param $key filter request item  [query, request, attributes, files]
+     * @param string|array filter request item  [query, request, attributes, files]
      * 
      * @return array
      */
-    public function all($key = null)
+    public function all($item = null)
     {
-        if($key){
-            return call_user_func_array('array_replace', array_map(function($item){
-                return $this->$item->all();
-            }, is_array($key) ? $key : func_get_args()));
-        }else{   
+        if($item){
+            return array_map(function($itm){
+                if(!in_array($item, ['query', 'request', 'attributes', 'files'])) throw new \InvalidArgumentException('Error Args of item :', $item);
+                return  this->$item->all();
+            }, is_array($item) ? $item : func_get_args());
+        }else{
             return array_replace(
                 $this->query->all(),
                 $this->request->all(),
@@ -306,6 +297,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * the contain alias name
+     * @param array|string $key
+     * @return bool
+     */
+    public function must($key)
+    {
+        return $this->contain($key);
+    }
+
+    /**
      * get request keys
      * 
      * @return array 
@@ -314,7 +315,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         return array_keys($this->all());
     }
-
 
     /**
      * [json Get the JSON payload for the request.]
@@ -396,16 +396,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             }
         }
     }
-    
-    /**
-     * TRIM别名
-     * @param $key
-     * @return bool
-     */
-    public function null($key)
-    {
-        return $this->trim($key);
-    }
 
     /**
      * [trim 判断真空]
@@ -442,11 +432,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * [filter take方法加强版，整理返回过滤数组空值,多参数获取]
+     * @param array|string $type filter input type [query, request, attribute, files]
      * @return array
      */
-    public function filter()
+    public function filter($type = null)
     {
-        return array_filter(call_user_func_array(array($this, 'all'), func_get_args()), function ($v) {
+        return array_filter(call_user_func_array(array($this, 'all'), is_array($type) ? $type : func_get_args()), function ($v) {
             return $v !== false && !is_null($v) && ($v != '' || $v == '0');
         });
     }
@@ -463,6 +454,45 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
            $this->getInputSource()->remove($item);
        }, is_array($key) ? $key : func_get_args() );
         return $this;
+    }
+
+    /**
+     * check the input exists by the one of key
+     * @param string|array $key 
+     * @param int $number 
+     * @return bool 
+     */
+    public function exists($key, int $number = 1)
+    {
+        $keys = is_array($key) ? $key : func_get_args();
+        $value = $this->all();
+        $count = 0;
+        foreach($keys as $key){
+            if($count == $number) return true;
+            if(isset($values[$key])) $count +=1;
+        }
+        return false;
+    }
+
+    /**
+     * the contain alias method
+     * @param array|string $key
+     * @return bool
+     */
+    public function include($key)
+    {
+        return $this->contain($key);
+    }
+
+    /**
+     * check input must contain by the keys
+     * @param array|string $key
+     * @return bool
+     */
+    public function contain($key)
+    {
+        $key = is_array($key) ? $key : func_get_args();
+        return !array_diff_key(array_flip($key), $this->filter());
     }
 
     /**
@@ -1006,17 +1036,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * [getItemBySource]
      *
-     * @param $source
+     * @param $item
      * @param $key
      * @param $default
      * @return mixed
      */
-    protected function getItemSource($source, $key, $default = null)
+    protected function getItemSource($item, $key = null, $default = null)
     {
-        if (is_null($key)) {
-            return $this->$source->all();
-        }
-        return $this->$source->get($key, $default, true);
+        return $key ? $this->$item->get($key, $default, true) : $this->$item->all();
     }
 
     /**
