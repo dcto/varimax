@@ -244,10 +244,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function all($item = null)
     {
         if($item){
-            return array_map(function($item){
+            array_replace(...array_map(function($item){
                 if(!in_array($item, ['query', 'files', 'request', 'attributes'])) throw new \InvalidArgumentException('Error Args of item :', $item);
-                return $this->$item->all();
-            }, is_array($item) ? $item : func_get_args());
+                    return $this->$item->all();
+                }, is_array($item) ? $item : func_get_args())
+            );
         }else{
             return array_replace(
                 $this->query->all(),
@@ -791,10 +792,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function file($key = null, $default = null)
     {
-        if ($key) {
-            return \Arr::get($this->files(), $key, $default);
-        }
-        return \Arr::first($this->files());
+        return $key ? \Arr::get($this->files(), $key, $default) : \Arr::first($this->files());
     }
 
 
@@ -1155,14 +1153,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public static function createFromBase(HttpFoundation\Request $request)
     {
-        if ($request instanceof static) {
-            return $request;
-        }
-
+        if ($request instanceof static) return $request;
         $content = $request->content;
-
         $request = (new static)->duplicate(
-
             $request->query->all(),
             $request->request->all(),
             $request->attributes->all(),
@@ -1173,9 +1166,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         );
 
         $request->content = $content;
-
         $request->request = $request->getInputSource();
-
         return $request;
     }
 }
