@@ -304,7 +304,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function must($key)
     {
-        return $this->contain($key);
+        return $this->contain(is_array($key) ? $key : func_get_args());
     }
 
     /**
@@ -399,13 +399,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [trim 判断真空]
+     * filter alias name
      * @param $key
      * @return bool
      */
-    public function trim($key)
+    public function trim()
     {
-        return $this->filter(is_array($key) ? $key : func_get_args() );
+        return $this->filter();
     }
 
     /**
