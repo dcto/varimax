@@ -244,9 +244,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function all($item = null)
     {
         if($item){
-            return array_map(function($itm){
+            return array_map(function($item){
                 if(!in_array($item, ['query', 'request', 'attributes', 'files'])) throw new \InvalidArgumentException('Error Args of item :', $item);
-                return  this->$item->all();
+                return $this->$item->all();
             }, is_array($item) ? $item : func_get_args());
         }else{
             return array_replace(
