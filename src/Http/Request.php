@@ -206,9 +206,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param int $number
      * @return bool 
      */
-    public function has($key, $number = 1)
+    public function has($key)
     {
-        return $this->exists($key, $number);
+        return $this->exists($key);
     }
 
     /**
@@ -237,7 +237,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * Get all request items 
      * 
-     * @param string|array filter request item  [query, request, attributes, files]
+     * @param string|array filter request item  [query, files, request, attributes]
      * 
      * @return array
      */
@@ -245,15 +245,15 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         if($item){
             return array_map(function($item){
-                if(!in_array($item, ['query', 'request', 'attributes', 'files'])) throw new \InvalidArgumentException('Error Args of item :', $item);
+                if(!in_array($item, ['query', 'files', 'request', 'attributes'])) throw new \InvalidArgumentException('Error Args of item :', $item);
                 return $this->$item->all();
             }, is_array($item) ? $item : func_get_args());
         }else{
             return array_replace(
                 $this->query->all(),
+                $this->files->all(),
                 $this->request->all(),
-                $this->attributes->all(),
-                $this->files->all()
+                $this->attributes->all()
             );
         }
     }
@@ -464,12 +464,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function exists($key, int $number = 1)
     {
-        $keys = is_array($key) ? $key : func_get_args();
+        $keys = (array) $key;
         $value = $this->all();
         $count = 0;
         foreach($keys as $key){
-            if($count == $number) return true;
-            if(isset($values[$key])) $count +=1;
+            if(isset($value[$key])) $count +=1;
+            if($count >= $number) return true;
         }
         return false;
     }
@@ -757,14 +757,26 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function browser($type = null)
     {
-        $agent = $this->header('User-Agent');
-        if ($type) return stripos($agent, $type);
-        if (stripos($agent, 'MSIE')) return 'Internet Explorer';
-        if (stripos($agent, '360SE')) return '360SE';
-        if (stripos($agent, 'Chrome')) return 'Chrome';
-        if (stripos($agent, 'Firefox')) return 'Firefox';
-        if (stripos($agent, 'Safari')) return 'Safari';
-        if (stripos($agent, 'Netscape')) return 'Netscape';
+        $userAgent = $this->header('User-Agent');
+        if ($type) return stripos($userAgent, $type);
+        $browsers = [
+            'Edge'=>'Microsoft Edge',
+            '360SE'=>'360SE', 
+            'QQ'=>'QQBrowser', 
+            'MetaSr'=>'Sogou Exploere', 
+            'LBBrowser'=>'LBBrowser', 
+            'UBrowser'=>'UBrowser', 
+            'Triden'=>'Internet Explorer', 
+            'Chrome'=>'Chrome', 
+            'Firefox'=>'Firefox', 
+            'Opera'=>'Opera',
+            'Safari'=>'Safari',
+            'Netscape'=>'Netscape'
+        ];
+        $browsers = config('browerser');
+        foreach($browsers as $tag => $browser){
+            if (stripos($userAgent, $tag)) return $browser;
+        }
         return null;
     }
 
@@ -1023,14 +1035,14 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * 
-     * @param mixed $source 
+     * @param mixed $item 
      * @param mixed $key 
      * @param mixed|null $default 
      * @return mixed 
      */
-    protected function retrieve($source, $key, $default = null)
+    protected function retrieve($item, $key, $default = null)
     {
-        return $this->getItemSource($source, $key, $default);
+        return $this->getItemSource($item, $key, $default);
     }
 
     /**
