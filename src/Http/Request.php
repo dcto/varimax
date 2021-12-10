@@ -438,9 +438,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function filter($type = null)
     {
-        return array_filter(call_user_func_array(array($this, 'all'), is_array($type) ? $type : func_get_args()), function ($v) {
-            return $v !== false && !is_null($v) && ($v != '' || $v == '0');
-        });
+        return array_filter($this->all(is_array($type) ? $type : func_get_args()), 'strlen');
     }
 
     /**
@@ -466,7 +464,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function exists($key, int $number = 1)
     {
         $keys = (array) $key;
-        $value = $this->all();
+        $value = $this->filter();
         $count = 0;
         foreach($keys as $key){
             if(isset($value[$key])) $count +=1;
