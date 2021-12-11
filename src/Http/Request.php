@@ -438,7 +438,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function filter($type = null)
     {
-        return array_filter($this->all(is_array($type) ? $type : func_get_args()), 'strlen');
+        return array_filter($this->all(is_array($type) ? $type : func_get_args()), function($value){
+            return is_array($value) ? count($value) : strlen($value) ;
+        });
     }
 
     /**
