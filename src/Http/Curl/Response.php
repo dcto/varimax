@@ -16,7 +16,7 @@ namespace VM\Http\Curl;
  * the response body and an associative array of headers
  **/
 
-class Response
+class Response implements \ArrayAccess
 {
 
     /**
@@ -59,6 +59,11 @@ class Response
      * @var string
      **/
     public $body;
+
+    /**
+     * json data when response of json context
+     */
+    public $data;
 
     /**
      * Accepts the result of a curl request as a string
@@ -121,6 +126,8 @@ class Response
         $this->head = substr($context, 0, $this->info['header_size']);
 
         $this->body = substr($context, $this->info['header_size']);
+
+        $this->data = json_decode($this->body, true, 512);
     }
 
     /**
@@ -163,6 +170,54 @@ class Response
         }
     }
 
+    public function isJson()
+    {
+        return $this->data && is_array($this->data);
+    }
+
+    public function toArray()
+    {
+        return $this->data;
+    }
+
+    public function __get($name)
+    {
+        return isset($this->data[$name]) ? $this->data[$name] : null;
+    }
+    
+    public function __set($name, $value)
+    {
+        return $this->data[$name] = $value;
+    }
+
+    public function __isset ($key) {
+        return isset($this->data[$key]);
+    }
+
+    public function __unset($key) {
+        unset($this->data[$key]);
+    }
+
+    public function offsetSet($offset,$value) {
+        if (is_null($offset)) {
+            $this->data[] = $value;
+        } else {
+            $this->data[$offset] = $value;
+        }
+    }
+
+    public function offsetExists($offset) {
+        return isset($this->data[$offset]);
+    }
+    
+    public function offsetUnset($offset) {
+        if ($this->offsetExists($offset)) {
+            unset($this->data[$offset]);
+        }
+    }
+    public function offsetGet($offset) {
+        return $this->offsetExists($offset) ? $this->data[$offset] : null;
+    }
 
     /**
      * Returns the response body
