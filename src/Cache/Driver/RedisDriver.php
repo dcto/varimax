@@ -48,8 +48,11 @@ class RedisDriver extends Driver implements DriverInterface
     /**
      * @return array
      */
-    public function config()
+    public function config($key = null, $defalut = null)
     {
+        if($key){
+            return isset($this->config[$key]) ? $this->config[$key] : $defalut;
+        }
         return $this->config;
     }
 
@@ -59,29 +62,20 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function server()
     {
-
         if(!$this->redis instanceof \Redis){
-
             $this->redis = new \Redis();
-
-            if($this->config['persistent']){
-                $this->redis->pconnect($this->config['host'], $this->config['port'], $this->config['timeout']);
+            if($this->config('persistent')){
+                $this->redis->pconnect($this->config('host'), $this->config('port'), $this->config('timeout'));
             }else {
-                $this->redis->connect($this->config['host'], $this->config['port'], $this->config['timeout']);
+                $this->redis->connect($this->config('host'), $this->config('port'), $this->config('timeout'));
             }
-
-            if(isset($this->config['password']) && !empty($this->config['password']))
-            {
-                $this->redis->auth(trim($this->config['password']));
-            }
-
-            $this->redis->select($this->config['database']?:0);
+            if($this->config('password'))  $this->redis->auth($this->config('password'));
+            $this->redis->select($this->config('database', 0));
 
             foreach((array) \Arr::get($this->config, 'options') as $key => $val) {
                 $this->redis->setOption($key, $val);
             }
         }
-
         return $this->redis;
     }
 
