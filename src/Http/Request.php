@@ -774,11 +774,10 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             'Safari'=>'Safari',
             'Netscape'=>'Netscape'
         ];
-        $browsers = config('browerser');
+        $browsers =  array_merge($browsers, (array) config('browerser', []));
         foreach($browsers as $tag => $browser){
             if (stripos($userAgent, $tag)) return $browser;
         }
-        return null;
     }
 
 
