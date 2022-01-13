@@ -285,6 +285,16 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
     }
 
     /**
+     * AS JSON DATA
+     * @param mixed $value 
+     * @return string|false 
+     */
+    protected function asJson($value)
+    {
+        return json_encode($value, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES);
+    }
+
+    /**
      * scopeWithOnly
      * @param $query $this
      * @param $relation
