@@ -291,7 +291,7 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     protected function asJson($value)
     {
-        return json_encode($value, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES);
+        return is_string($value ) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES);
     }
 
     /**
