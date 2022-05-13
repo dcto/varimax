@@ -27,7 +27,7 @@ class Application extends Container
     /**
      * @var string
      */
-    const VERSION = 'v6.0';
+    const VERSION = 'v1.9';
 
     /**
      * Application Booted
