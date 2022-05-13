@@ -14,8 +14,7 @@ use Illuminate\Contracts\Support\Arrayable;
  * Class Response
  * @package VM\Http
  */
-class Response implements Response\Response
-{
+class Response {
 
 
     /**
