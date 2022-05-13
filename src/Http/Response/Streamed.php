@@ -14,7 +14,7 @@ namespace VM\Http\Response;
 
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
-class Streamed extends StreamedResponse implements ResponseInterface
+class Streamed extends StreamedResponse implements Response
 {
     use ResponseTrait;
     

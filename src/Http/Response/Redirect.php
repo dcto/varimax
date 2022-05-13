@@ -22,7 +22,7 @@ use Illuminate\Contracts\Support\MessageProvider;
 use Symfony\Component\HttpFoundation\File\UploadedFile as SymfonyUploadedFile;
 use Symfony\Component\HttpFoundation\RedirectResponse as BaseRedirectResponse;
 
-class Redirect extends BaseRedirectResponse
+class Redirect extends BaseRedirectResponse implements Response
 {
     use ResponseTrait, Macroable {
         Macroable::__call as macroCall;

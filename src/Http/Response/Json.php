@@ -17,7 +17,7 @@ use Illuminate\Contracts\Support\Jsonable;
 use Illuminate\Contracts\Support\Arrayable;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
-class Json extends JsonResponse implements ResponseInterface
+class Json extends JsonResponse implements Response
 {
     use ResponseTrait;
 

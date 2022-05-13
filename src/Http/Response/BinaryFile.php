@@ -14,7 +14,7 @@ namespace VM\Http\Response;
 
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
-class BinaryFile extends BinaryFileResponse implements ResponseInterface
+class BinaryFile extends BinaryFileResponse implements Response
 {
     use ResponseTrait;
     

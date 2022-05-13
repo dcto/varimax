@@ -12,9 +12,8 @@
 namespace VM\Http\Response;
 
 
-use Symfony\Component\HttpFoundation\Response;
 
-class Base extends Response implements ResponseInterface
+class Base extends \Symfony\Component\HttpFoundation\Response implements Response
 {
     use ResponseTrait;
     
