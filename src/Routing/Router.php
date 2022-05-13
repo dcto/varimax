@@ -352,7 +352,7 @@ class Router
      * @return mixed
      */
     public function dispatch(Request $request, Response $response)
-    {
+    {        
         //dispatch the OPTIONS Request
         if($request->method('OPTIONS')) return $response->make();
         // Get Http Request Path.
@@ -369,40 +369,41 @@ class Router
         // Set Route method;
         $route->method($method);
 
-        if(!in_array($method, $route->methods())) throw new NotFoundException('Invalid Request');
+        if(!in_array($method, $route->methods())) abort(404);// throw new NotFoundException('Invalid Request');
         
             if($route->group()) {
-
+               
                 if (!$group = Arr::get($this->group, $route->group())) {
                     throw new NotFoundException('Does not define ' . $route->group() . ' of router group');
                 }
-
                 /**
                  * construct callback
                  */
                 if ($callable = Arr::get($group, 'call')) {
-
+             
                     if (is_array($callable)) {
                         $callable = $this->Fire(array_shift($callable), array_shift($callable));
                     } else {
                         $callable = $this->Fire($callable);
                     }
-
-                    if ($callable instanceof Response\ResponseInterface || $callable instanceof  Redirect) {
+                    
+                    if ($callable instanceof Response\Response) {
+                        
                         return $callable;
                     }
                 }
             }
-
+        
             /**
              * construct instance and include hook
              */
             $instance = $this->Fire($route->calling(), $route->args());
 
             if(is_string($instance)){
+            
                 return $response->make($instance);
             }else{
-                return $instance;
+              return $instance;
             }
     }
 
@@ -454,7 +455,7 @@ class Router
      */
     protected function Fire($callable, $parameters = [])
     {
-        if($callable instanceof Response\ResponseInterface ||  $callable instanceof Redirect){
+        if($callable instanceof Response\Response){
             return $callable;
 
         }else if($callable instanceof \Closure) {

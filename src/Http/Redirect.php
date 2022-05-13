@@ -16,7 +16,7 @@ namespace VM\Http;
 use VM\Http\Response\Redirect as RedirectResponse;
 
 
-class Redirect
+class Redirect extends RedirectResponse implements Response\Response
 {
     /**
      * The session store instance.
@@ -105,7 +105,7 @@ class Redirect
      */
     public function intended($default = '/', $status = 302, $headers = [], $secure = null)
     {
-        $path = $this->session->pull('url.intended', $default);
+        $path = $this->session->get('url.intended', $default);
 
         return $this->to($path, $status, $headers, $secure);
     }

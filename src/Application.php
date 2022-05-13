@@ -235,7 +235,7 @@ class Application extends Container
     /**
      * Dispatch HTTP Request
      *
-     * @return \VM\Http\Response\ResponseInterface|string
+     * @return \VM\Http\Response\Response string
      * @throws \ErrorException
      */
     public function run()
@@ -246,12 +246,12 @@ class Application extends Container
         $dispatch = $this->make('router')->load(root(_APP_,'routes.php'))->dispatch($this->make('request') , $this->make('response'));
 
         /**
-         * @var $dispatch \VM\Http\Response\ResponseInterface
+         * @var $dispatch \VM\Http\Response\Response
          */
-        if($dispatch instanceof \VM\Http\Response\ResponseInterface) {
-            return $dispatch->prepare($this->make('request'))->send();
+        if($dispatch instanceof \VM\Http\Response\Response) {
+            return $dispatch->send();
         }
-
+        
         return $this->make('response')->make($dispatch)->send();
     }
 

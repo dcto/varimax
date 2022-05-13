@@ -13,7 +13,7 @@
 namespace VM\Http\Response;
 
 
-interface ResponseInterface
+interface Response
 {
-
+    public function send();
 }
