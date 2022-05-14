@@ -36,10 +36,12 @@
     "illuminate/filesystem": "7.*",
     "illuminate/pagination": "7.*",
     "twig/twig": "3.*",
-    "vlucas/phpdotenv":"3.3",
-    "hashids/hashids": "4.0",
-    "nesbot/carbon": "2.50.0" 
+    "vlucas/phpdotenv":"3.3"
   },
+  "suggest": {
+    "hashids/hashids": "Required HashID In the Eloquent",
+    "nesbot/carbon": "Include Carbon DateTime Formating"
+},
   "autoload": {
     "psr-4": {
       "VM\\": "src/"
