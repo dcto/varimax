@@ -37,10 +37,11 @@ select 2 will be output detail code exception message to the client
 the varimax define some default route rule
 
 ```
-':*'    =>  ':.*',
-':any'  =>  ':[^/]+',
-':num'  =>  ':[0-9]+',
-':str'  =>  ':[a-zA-Z]+',
+':*'    =>  ':.+',
+':str'  =>  ':[\w-]+',
+':int'  =>  ':[1-9]\d+',
+':num'  =>  ':[0-9.-]+',
+':any'  =>  ':[\w!@$^&+-=|]+',
 ':hex'  =>  ':[a-f0-9]+',
 ':hash' =>  ':[a-z0-9]+',
 ':uuid' =>  ':[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
