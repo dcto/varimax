@@ -34,13 +34,13 @@
     "illuminate/events": "7.*",
     "illuminate/database": "7.*",
     "illuminate/filesystem": "7.*",
-    "illuminate/pagination": "7.*",
-    "twig/twig": "3.*",
+    "illuminate/pagination": "7.*",    
     "vlucas/phpdotenv":"3.3"
   },
-  "suggest": {
+  "suggest": {    
     "hashids/hashids": "Required HashID In the Eloquent",
-    "nesbot/carbon": "Include Carbon DateTime Formating"
+    "nesbot/carbon": "Include Carbon DateTime Formating",
+    "twig/twig": "Required Twig 3.x Of View Module"
 },
   "autoload": {
     "psr-4": {
