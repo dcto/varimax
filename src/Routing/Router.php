@@ -59,15 +59,13 @@ class Router
      * Retrieve the additional Routing Patterns from configuration.
      */
     private $regex = array(
-        ':*'    =>  '.*',
-        ':id'   =>  '\d+',
-        ':all'  =>  '\w+',
-        ':any'  =>  '[^/]+',
-        ':num'  =>  '[0-9]+',
-        ':str'  =>  '[a-zA-Z]+',
-        ':hex'  =>  '[a-f0-9]+',
-        ':hash' =>  '[a-z0-9]+',
-        ':uuid' =>  '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+        ':*'    =>  ':.*',
+        ':any'  =>  ':[^/]+',
+        ':num'  =>  ':[0-9]+',
+        ':str'  =>  ':[a-zA-Z]+',
+        ':hex'  =>  ':[a-f0-9]+',
+        ':hash' =>  ':[a-z0-9]+',
+        ':uuid' =>  ':[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
     );
 
     /**
@@ -187,7 +185,6 @@ class Router
     public function alias($key, $route = null)
     {
         if($route){
-
             if(isset($this->alias[$key])){
 
                 throw new NotFoundException('Cannot redeclare route id '. $key);
@@ -342,7 +339,12 @@ class Router
 
         $path = $this->parseRoute($path, $properties);
 
-        $properties['regex'] = strpos($path, '(') === false ? null : str_replace(array_keys($this->regex), array_values($this->regex), $path);
+        if(strpos($path, '(') !== false){
+            // $properties['regex'] = preg_replace_callback("/\(([^()]+)\)/", function($matches) {
+            // }, $path);
+            $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $path);
+            $properties['regex'] = str_replace(['(', ':'], ['(?P<', '>'], $properties['regex']);
+        }
 
         return new Route($methods, $path, $properties);
     }
@@ -364,12 +366,13 @@ class Router
         $route = $this->router = $this->callRouter($path, $method);
 
         // Found a valid Route; process it.
-        if(!$route) throw new NotFoundException('Invalid Request: '. $path);
+        if(!$route) throw new NotFoundException();
 
         // Set Route method;
         $route->method($method);
 
-        if(!in_array($method, $route->methods())) abort(404);// throw new NotFoundException('Invalid Request');
+        if(!in_array($method, $route->methods())) throw new NotFoundException();
+        
         
             if($route->group()) {
                
@@ -394,6 +397,7 @@ class Router
                 }
             }
         
+
             /**
              * construct instance and include hook
              */
@@ -421,7 +425,7 @@ class Router
             return $this->routes[$path];
         }else{
             foreach ($this->routes as $key => $route) {
-                if(strpos($key, ':') === false) continue;
+                if(strpos($key, '/(') === false) continue;
                 if($this->Matching($path, $route, $method)) return $route;
             }
         }
@@ -434,14 +438,11 @@ class Router
      * @return bool
      */
     
-    public function Matching($path, &$route, $method)
+    protected function Matching($path, &$route, $method)
     {
-        if(!in_array($method, $route->methods())) return false;
         if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
             $route->url = array_shift($matches);
-            $route->parameters = array_map(function($match){
-                return trim($match, '/');
-            }, $matches);
+            $route->parameters += array_filter($matches, "is_string", ARRAY_FILTER_USE_KEY);
             return true;
         }
         return false;
@@ -507,7 +508,7 @@ class Router
      * @param $property
      * @return string
      */
-    private function parseRoute($route, $property)
+    protected function parseRoute($route, $property)
     {
         $prefix = Arr::get($property,'prefix') ?: Arr::get(Arr::get($property,'group'),'prefix');
         $route = '/'.trim(trim($prefix,'/').'/'.trim($route, '/'),'/');

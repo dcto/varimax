@@ -120,8 +120,13 @@ class Route
      */
     public function __construct($method, $path, array $args = array())
     {
-        //$path = preg_replace('/\(.*?\)/', '', $path);
-        $this->id        =   isset($args['id']) ? $args['id'] : ( $path == '/' ? '.' : trim(str_replace('/', '.', $path), '.'));
+        $this->id  =  isset($args['id']) ? $args['id'] : join('.', array_map(function($item){
+            if(($i = strpos($item, ':')) > 0) {
+                return substr($item, 1, $i - 1);
+            }else{
+                return $item ;
+            }
+        }, explode('/', trim($path, '/'))));
         $this->url       =   $path;
         $this->hash      =   hash('crc32b', $this->id);
         $this->methods   =   array_map('strtoupper', is_array($method) ? $method : array($method));
@@ -178,32 +183,6 @@ class Route
         }
     }
 
-    public function test()
-    {
-        # code...
-    }
-
-    /**
-     * set parameters
-     *
-     * @return mixed
-     */
-    public function args()
-    {
-        if(!($args = func_get_args())){
-            return $this->parameters;
-
-        }else {
-            foreach($args as $arg){
-                if(is_array($arg)){
-                    $this->parameters = array_merge($this->parameters, $arg);
-                }else{
-                    array_push($this->parameters, $arg);
-                }
-            }
-        }
-        return $this;
-    }
 
     /**
      * set property
@@ -278,7 +257,7 @@ class Route
      */
     public function __get($property) 
     {
-        return null;
+        return $this->_property($property);
     }
 
     /**
@@ -293,8 +272,7 @@ class Route
      * Push to router
      */
     public function __destruct()
-    {
-       
+    {       
         $this->name = $this->name ?: $this->id;
         $this->calling();
         make('router')->addPushToRoutes($this);
