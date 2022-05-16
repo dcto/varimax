@@ -59,10 +59,11 @@ class Router
      * Retrieve the additional Routing Patterns from configuration.
      */
     private $regex = array(
-        ':*'    =>  ':.*',
-        ':any'  =>  ':[^/]+',
-        ':num'  =>  ':[0-9]+',
-        ':str'  =>  ':[a-zA-Z]+',
+        ':*'    =>  ':.+',
+        ':str'  =>  ':[\w-]+',
+        ':int'  =>  ':[1-9]\d+',
+        ':num'  =>  ':[0-9.-]+',
+        ':any'  =>  ':[\w!@$^&+-=|]+',
         ':hex'  =>  ':[a-f0-9]+',
         ':hash' =>  ':[a-z0-9]+',
         ':uuid' =>  ':[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
@@ -121,16 +122,13 @@ class Router
 
     /* The Resourceful Routes in the Laravel Style.
 
-    Method     |  Path                 |  Action   |
+    Method     |  Path                |  Action   |
     ------------------------------------------------
     GET        |  /test               |  index    |
     GET        |  /test/(:id)         |  select   |
-    GET        |  /test/create        |  create   |
-    POST       |  /test               |  insert   |
-    GET        |  /test/(:id)/modify  |  modify   |
-    PUT/PATCH  |  /test/(:id)         |  update   |
-    DELETE     |  /test/(:id)         |  delete   |
-
+    POST       |  /test/create        |  create   |
+    PUT/PATCH  |  /test/update/(:id)  |  update   |
+    DELETE     |  /test/delete/(:id)  |  delete   |
     */
 
     /**
@@ -141,14 +139,11 @@ class Router
      */
     public function resource($basePath, $controller)
     {
-        $this->register('get',                 $basePath,                 $controller .'@index');
-        $this->register('get',                 $basePath .'/(:any)',      $controller .'@select');
-        $this->register('get',                 $basePath .'/create',      $controller .'@create');
-        $this->register('post',                $basePath,                 $controller .'@insert');
-        $this->register('get',                 $basePath .'/(:any)/modify', $controller .'@modify');
-        $this->register(array('put', 'patch'), $basePath .'/(:any)',      $controller .'@update');
-        $this->register('delete',              $basePath .'/(:any)',      $controller .'@delete');
-
+        $this->register('GET',                 $basePath,                         ['call' =>$controller .'@index']);
+        $this->register('GET',                 $basePath.'/(id:str)',             ['call' =>$controller .'@select']);
+        $this->register('POST',                $basePath.'/create',               ['call' =>$controller .'@create']);
+        $this->register(array('PUT', 'PATCH'), $basePath.'/update/(id:str)',      ['call' =>$controller .'@update']);
+        $this->register('DELETE',              $basePath.'/delete/(id:str)',      ['call' =>$controller .'@delete']);
     }
 
     /**
