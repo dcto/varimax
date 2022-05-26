@@ -35,8 +35,7 @@
     "illuminate/filesystem": "7.*",
     "illuminate/http":"7.*",
     "illuminate/support": "7.*",            
-    "illuminate/pagination": "7.*",    
-    "symfony/http-foundation": "3.*",
+    "illuminate/pagination": "7.*",
     "vlucas/phpdotenv":"3.3"
   },
   "suggest": {    
