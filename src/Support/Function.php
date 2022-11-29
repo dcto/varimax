@@ -539,13 +539,8 @@ if(!function_exists('dump')) {
  * 终断输出
  */
 if(!function_exists('abort')) {
-    function abort($code, $message = '', array $headers = []){
-        if ($code instanceof Response) {
-            throw new \VM\Exception\NotFoundException($code);
-        } elseif ($code instanceof \Illuminate\Contracts\Support\Responsable) {
-            throw new \VM\Exception\NotFoundException($code);
-        }
-
+    function abort(int $code, $message = '', array $headers = []){
+        throw new \VM\Exception\NotFoundException($message,  $code);
         app()->abort($code, $message, $headers);
     }
 }
@@ -858,6 +853,24 @@ if(!function_exists('is_date')) {
         }
     }   
 }
+
+if(!function_exists('is_safe')) { 
+    /**  
+     * 验证安全输入  
+     * @param string $input  
+     * @param mixed $callback  
+     * @return string
+     */
+    function filter($input, ...$filters)
+    {   
+        array_map(function($f) use(&$input){
+            $input = $f($input);
+        }, $filters);
+        return trim($input);
+    }
+}
+
+
 
 if(!function_exists('currency')){
         function currency($currency)

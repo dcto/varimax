@@ -352,8 +352,13 @@ class Router
     {        
         //dispatch the OPTIONS Request
         if($request->method('OPTIONS')) return $response->make();
+
         // Get Http Request Path.
-        $path = trim(urldecode($request->path()));
+        $path = filter($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
+
+        //Disable Request when xss or sql inject
+        $path == $request->path() || die(header("HTTP/1.0 404 Not Found"));
+
         // Get Http Request Method
         $method = $request->method();
 
@@ -432,7 +437,6 @@ class Router
      * @param $method
      * @return bool
      */
-    
     protected function Matching($path, &$route, $method)
     {
         if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
