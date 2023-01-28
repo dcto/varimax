@@ -51,8 +51,8 @@ class View {
     /**
      * [init 初始化模板引擎]
      *
-     * @return \Twig_Environment
-     * @version v1
+     * @return \Twig\Environment
+     * @version v3
      *
      */
     public function __construct()
@@ -61,13 +61,13 @@ class View {
         $this->cache = config('view.cache');
         $this->append = ltrim(config('view.append', 'twig'),'.');
 
-        $loader = new \Twig_Loader_Filesystem($this->dir);
+        $loader = new \Twig\Loader\FilesystemLoader($this->dir);
 
         /**
          * $loader->addPath($templateDir3);
          * $loader->prependPath($templateDir4);
          */
-        $this->twig = new \Twig_Environment($loader, array(
+        $this->twig = new \Twig\Environment($loader, array(
 
             //生成的模板会有一个__toString()方法，可以用来显示生成的Node（缺省为false）
             'debug' => config('view.debug', false),
@@ -85,12 +85,11 @@ class View {
             'strict_variables' => false,
 
             /**
-             * 如果设置为true, 则会为所有模板缺省启用自动转义（缺省为true）。
              * 在Twig 1.8中，可以设置转义策略（html或者js，要关闭可以设置为false）。
              * 在Twig 1.9中的转移策略，可以设置为css，url，html_attr，甚至还可以设置为回调函数。
              * 该函数需要接受一个模板文件名为参数，且必须返回要使用的转义策略，回调命名应该避免同内置的转义策略冲突。
              */
-            'autoescape' => config('view.autoescape', true),
+            'autoescape' => config('view.autoescape', 'html'),
 
             /**
              * 用于指出选择使用什么优化方式（缺省为-1，代表使用所有优化；设置为0则禁止）。
@@ -110,7 +109,7 @@ class View {
 
         /**
          * 注册扩展方法
-         * @var \Twig_Environment
+         * @var \Twig\Environment
          *
          * $this->twig = new Twig_Environment($loader,array('debug'=>true));
          * $this->twig->addExtension(new Twig_Extension_Debug());
@@ -132,7 +131,7 @@ class View {
          * 注册全局可用函数
          * @example {{ function() }}
          */
-        $this->twig->addFunction(new \Twig_SimpleFunction('*',
+        $this->twig->addFunction(new \Twig\TwigFunction('*',
                 function(...$args){
                     return call_user_func_array(array_shift($args), $args);
                 },
@@ -147,7 +146,7 @@ class View {
         $dump = function($variable){
                echo '<pre>'.var_dump($variable).'</pre>';
         };
-        $this->twig->addFunction(new \Twig_SimpleFunction('dump', $dump,  array('pre_escape' => 'html', 'is_safe' => array('html'))));
+        $this->twig->addFunction(new \Twig\TwigFunction('dump', $dump,  array('pre_escape' => 'html', 'is_safe' => array('html'))));
 
         /**
          * [$debug 注册debug函数]
@@ -157,19 +156,19 @@ class View {
             echo "<pre>".print_r($variable)."</pre>";
         };
 
-        $this->twig->addFunction(new \Twig_SimpleFunction('debug', $debug, array('pre_escape' => 'html', 'is_safe' => array('html'))));
+        $this->twig->addFunction(new \Twig\TwigFunction('debug', $debug, array('pre_escape' => 'html', 'is_safe' => array('html'))));
 
         /**
          * 注册过滤器
          */
-        $this->twig->addFilter(new \Twig_SimpleFilter('dump', $dump));
-        $this->twig->addFilter(new \Twig_SimpleFilter('debug', $debug));
+        $this->twig->addFilter(new \Twig\TwigFilter('dump', $dump));
+        $this->twig->addFilter(new \Twig\TwigFilter('debug', $debug));
 
         /**
          * [$suffix 截取字符串]
          * @var [type]
          */
-        $this->twig->addFilter(new \Twig_SimpleFilter('len',function($string, $length, $suffix = false){
+        $this->twig->addFilter(new \Twig\TwigFilter('len',function($string, $length, $suffix = false){
             return $string = mb_strlen($string)>$length
             ? ($suffix ? mb_substr($string, 0, $length).$suffix : mb_substr($string, 0, $length))
             : $string;
