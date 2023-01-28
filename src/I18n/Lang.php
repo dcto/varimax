@@ -106,9 +106,11 @@ class Lang
     public function detect()
     {
         $language = make('request')->language();
-        foreach (config('i18n') as $locale) {
-            if (strstr($language, $locale)) {
-                return $locale;
+        if($i18ns = config('i18n')){
+            foreach ($i18ns as $locale) {
+                if (strstr($language, $locale)) {
+                    return $locale;
+                }
             }
         }
         return $language;
