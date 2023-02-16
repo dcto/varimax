@@ -3,7 +3,7 @@
 namespace VM\Support;
 
 /**
- * Varimax The Full Stack PHP Frameworks.
+ * Varimax The Slim PHP Frameworks.
  * varimax.cn
  * FILE: 2020
  * USER: 陶之11. <sdoz@live.com>

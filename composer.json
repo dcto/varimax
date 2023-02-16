@@ -27,6 +27,7 @@
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
+    "vlucas/phpdotenv":"3.3",
     "guzzlehttp/guzzle":"7.*",
     "illuminate/contracts": "7.*",
     "illuminate/container": "7.*",
@@ -36,12 +37,16 @@
     "illuminate/http":"7.*",
     "illuminate/support": "7.*",            
     "illuminate/pagination": "7.*",
-    "vlucas/phpdotenv":"3.3"
+    "windwalker/renderer":"3.*"
   },
   "suggest": {    
-    "hashids/hashids": "Required HashID In the Eloquent",
-    "nesbot/carbon": "Include Carbon DateTime Formating",
-    "twig/twig": "Required Twig 3.x Of View Module"
+    "hashids/hashids": "Suggest HashID In the Eloquent",
+    "nesbot/carbon": "Suggest Carbon DateTime Formating",
+    "twig/twig": "Suggest Twig 2.x Of View Engine",
+    "league/plates": "Suggest Plates 3.x Of View Engine",
+    "windwalker/edge": "Suggest Edge 3.x Of View Engine",
+    "illuminate/view": "Suggest Blade 7.* Of View Engine",
+    "mustache/mustache": "Suggest Mustcache 2.x Of View Engine"
 },
   "autoload": {
     "psr-4": {

@@ -3,7 +3,7 @@
 namespace VM;
 
 /**
- * Varimax The Full Stack PHP Frameworks.
+ * Varimax The Slim PHP Frameworks.
  * varimax
  * FILE: 2020
  * USER: 陶之11. <sdoz@live.com>
@@ -276,7 +276,7 @@ class Application extends Container
     }
 
     /**
-     * GET Varimax The Full Stack PHP Frameworks Version"
+     * GET Varimax The Slim PHP Frameworks Version"
      * @return string
      */
     public function version()

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Varimax The Full Stack PHP Frameworks.
+ * Varimax The Slim PHP Frameworks.
  * varimax
  * FILE: 2020
  * USER: 陶之11. <sdoz@live.com>
@@ -89,9 +89,8 @@ abstract class Controller
      */
     protected function view($template, $variable = [])
     {
-        return make('view')->show($template, $variable);
+        return make('view')->display($template, $variable);
     }
-
 
     /**
      * [assign]
@@ -104,6 +103,7 @@ abstract class Controller
     {
         make('view')->assign($var, $val);
     }
+
 
     public function __destruct()
     {

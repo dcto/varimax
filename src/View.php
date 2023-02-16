@@ -1,11 +1,11 @@
 <?php
 
 /**
- * Varimax The Full Stack PHP Frameworks.
+ * Varimax The Slim PHP Frameworks.
  * varimax
- * FILE: 2020
+ * FILE: 2023
  * USER: 陶之11. <sdoz@live.com>
- * Time: 2020-08-11-21:21
+ * Time: 2023-02-16
  * SITE: https://www.varimax.cn/
  */
 
@@ -18,56 +18,195 @@ namespace VM;
  */
 class View {
     /***
-     * twig template dir
-     * @var string
+     * template paths
+     * @var array
      */
-    protected $dir = '.';
+    protected $dirs = [];
 
     /**
-     *
-     * @var
-     */
-    protected $twig;
-
-    /**
-     * twig template cache
+     * template cache
      *
      * @var string
      */
     protected $cache;
 
     /**
-     * twig file extension
-     * @var string
-     */
-    protected $append;
-
-    /**
-     * 模板公共变量
+     * template variables
      * @var array
      */
-    protected $variables = array();
+    protected $assign = [];
 
     /**
-     * [init 初始化模板引擎]
-     *
-     * @return \Twig\Environment
-     * @version v3
-     *
+     * template renderer
+     * @var \Windwalker\Renderer\AbstractEngineRenderer
      */
-    public function __construct()
+    protected $engine = null;
+
+    /**
+     * Init view engine
+     */
+    public function __construct($engine = null)
     {
-        $this->dir = config('view.dir', _DIR_._DS_.'View');
-        $this->cache = config('view.cache');
-        $this->append = ltrim(config('view.append', 'twig'),'.');
+        $this->dirs = config('view.dir', _DIR_._DS_.'View');
+        $this->cache = config('view.cache', runtime('view'));
+        $this->engine =  $this->engine($engine ? $engine : config('view.engine', 'blade'));
+        is_dir($this->cache) || mkdir($this->cache, 0777, true);
+    }
 
-        $loader = new \Twig\Loader\FilesystemLoader($this->dir);
+    /**
+     * add path to dirs
+     * @return self
+     */
+    public function dir()
+    {
+        $this->dirs = array_merge($this->dirs, func_get_args());
+        return $this;
+    }
 
+    /**
+     * set view cache dir
+     * @param $dir
+     * @return $this
+     */
+    public function cache($dir)
+    {
+        $this->cache = $dir;
+        return $this;
+    }
+    
+    /**
+     * [assign 模板变量赋值方法]
+     *
+     * @param      $var [变量名]
+     * @param null $val [变量值]
+     */
+    public function assign($var, $val = null)
+    {
+        if(is_array($var)){
+            $this->assign = array_merge_recursive($this->assign, $var);
+        }else{
+            $this->assign[$var] = $val;
+        }
+    }
+
+    /**
+     * set view engine
+     * @param $engine string
+     * @return 
+     */
+    private function engine($engine = null)
+    {
+       if($engine){
+        if(!in_array($engine, $engines = ['php', 'edge', 'twig', 'blade', 'plates', 'mustcache'])){
+            throw new \ErrorException('Only support ['. join(',',$engines) .'] template engine');
+        }
+        $this->$engine();
+       }
+       return $this->engine;
+    }
+
+    /**
+     * [render 模板渲染]
+     *
+     * @param $template
+     * @param $variable
+     * @return string
+     */
+    public function render($template, array $variables = [])
+    {
+        return $this->engine()->render($template, array_merge($this->assign, Controller::$assign, $variables));
+    }
+
+    /**
+     * flush cache
+     * @return mixed
+     */
+    public function flush()
+    {
+        return make('file')->cleanDirectory($this->cache);
+    }
+
+    /**
+     * [display 模版展示]
+     *
+     * @param $template
+     * @param $variable
+     */
+    public function display($template, array $variables = [])
+    {
+        return make('response')->make($this->render($template, $variables));
+    }
+
+    /**
+     * [Php 模板引擎]
+     * @return \Windwalker\Renderer\PhpRenderer
+     * @version 20230215
+     */
+    public function php()
+    {
+        $this->engine = new \Windwalker\Renderer\PhpRenderer($this->dirs);
+        return $this;
+    }
+
+    /**
+     * [Edge 模板引擎]
+     * @return \Windwalker\Renderer\EdgeRenderer
+     * @version 20230215
+     */
+    public function edge()
+    {
+        $this->engine = new \Windwalker\Renderer\EdgeRenderer($this->dirs, ['cache_path' => $this->cache]);
+        return $this;
+    }
+
+    /**
+     * [Blade 模板引擎]
+     * @return \Windwalker\Renderer\BladeRenderer
+     * @version 20230215
+     */
+    public function blade()
+    {
+        $this->engine = new \Windwalker\Renderer\BladeRenderer($this->dirs, ['cache_path' => $this->cache]);
+        return $this;
+    }
+
+    /**
+     * [plates 模板引擎]
+     * @return \Windwalker\Renderer\PlatesRenderer
+     * @version 20230215
+     */
+    public function plates()
+    {
+        $this->engine = new \Windwalker\Renderer\PlatesRenderer($this->dirs);
+        return $this;
+    }
+
+    /**
+     * [Mustache 模板引擎]
+     * @return \Windwalker\Renderer\MustacheRenderer
+     * @version 20230215
+     */
+    public function mustache()
+    {
+        $this->engine = new \Windwalker\Renderer\MustacheRenderer($this->dirs,[
+            'cache' => $this->cache,
+            'cache_file_mode' => 0666,
+            'cache_lambda_templates' => true,
+            'delimiters' => '<% %>',
+        ]);
+        return $this;
+    }
+    
+    /**
+     * [twig 模板引擎]
+     * @return \Windwalker\Renderer\TwigRenderer
+     * @version v2.*
+     */
+    public function twig(){
         /**
-         * $loader->addPath($templateDir3);
-         * $loader->prependPath($templateDir4);
+         * @var \Twig_Environment $this->engine 
          */
-        $this->twig = new \Twig\Environment($loader, array(
+        $this->engine = new \Windwalker\Renderer\TwigRenderer($this->dirs, array(
 
             //生成的模板会有一个__toString()方法，可以用来显示生成的Node（缺省为false）
             'debug' => config('view.debug', false),
@@ -97,41 +236,25 @@ class View {
             'optimizations' => -1,
         ));
 
-        /*
-        $lexer = new \Twig_Lexer($this->twig, array(
-            'tag_comment' => array('{#', '#}'),
-            'tag_block' => array('{%', '%}'),
-            'tag_variable' => array('{^', '^}'),
-            'interpolation' => array('#{', '}'),
-        ));
-        $this->twig->setLexer($lexer);
-        */
-
-        /**
-         * 注册扩展方法
-         * @var \Twig\Environment
-         *
-         * $this->twig = new Twig_Environment($loader,array('debug'=>true));
-         * $this->twig->addExtension(new Twig_Extension_Debug());
-         */
         /**
          * 注册全局变量
+         * @var \Twig_Environment $this->engine
          */
-        $this->twig->addGlobal('_VM_', _VM_);
-        $this->twig->addGlobal('_APP_',_APP_);
-        $this->twig->addGlobal('lang', app('lang'));
-        $this->twig->addGlobal('route', app('router')->route());
-        $this->twig->addGlobal('router', app('router'));
-        $this->twig->addGlobal('request', app('request'));
+        $this->engine->getEngine()->addGlobal('_VM_', _VM_);
+        $this->engine->getEngine()->addGlobal('_APP_',_APP_);
+        $this->engine->getEngine()->addGlobal('lang', app('lang'));
+        $this->engine->getEngine()->addGlobal('route', app('router')->route());
+        $this->engine->getEngine()->addGlobal('router', app('router'));
+        $this->engine->getEngine()->addGlobal('request', app('request'));
 
         //注册模板扩展
-        //$this->twig->addExtension(new \nochso\HtmlCompressTwig\Extension());
+        //$this->engine->getEngine()->addExtension(new \nochso\HtmlCompressTwig\Extension());
 
         /**
          * 注册全局可用函数
          * @example {{ function() }}
          */
-        $this->twig->addFunction(new \Twig\TwigFunction('*',
+        $this->engine->getEngine()->addFunction(new \Twig\TwigFunction('*',
                 function(...$args){
                     return call_user_func_array(array_shift($args), $args);
                 },
@@ -146,7 +269,7 @@ class View {
         $dump = function($variable){
                echo '<pre>'.var_dump($variable).'</pre>';
         };
-        $this->twig->addFunction(new \Twig\TwigFunction('dump', $dump,  array('pre_escape' => 'html', 'is_safe' => array('html'))));
+        $this->engine->getEngine()->addFunction(new \Twig\TwigFunction('dump', $dump,  array('pre_escape' => 'html', 'is_safe' => array('html'))));
 
         /**
          * [$debug 注册debug函数]
@@ -156,126 +279,25 @@ class View {
             echo "<pre>".print_r($variable)."</pre>";
         };
 
-        $this->twig->addFunction(new \Twig\TwigFunction('debug', $debug, array('pre_escape' => 'html', 'is_safe' => array('html'))));
+        $this->engine->getEngine()->addFunction(new \Twig\TwigFunction('debug', $debug, array('pre_escape' => 'html', 'is_safe' => array('html'))));
 
         /**
          * 注册过滤器
          */
-        $this->twig->addFilter(new \Twig\TwigFilter('dump', $dump));
-        $this->twig->addFilter(new \Twig\TwigFilter('debug', $debug));
+        $this->engine->getEngine()->addFilter(new \Twig\TwigFilter('dump', $dump));
+        $this->engine->getEngine()->addFilter(new \Twig\TwigFilter('debug', $debug));
 
         /**
          * [$suffix 截取字符串]
          * @var [type]
          */
-        $this->twig->addFilter(new \Twig\TwigFilter('len',function($string, $length, $suffix = false){
+        $this->engine->getEngine()->addFilter(new \Twig\TwigFilter('len',function($string, $length, $suffix = false){
             return $string = mb_strlen($string)>$length
             ? ($suffix ? mb_substr($string, 0, $length).$suffix : mb_substr($string, 0, $length))
             : $string;
         }));
 
-        return $this->twig;
-    }
-
-    /**
-     * paths for twig
-     * @return View
-     */
-    public function paths()
-    {
-        return $this->path(func_get_args());
-    }
-
-    /**
-     * set path for twig
-     * @param $paths
-     * @param bool $keep keep old path
-     */
-    public function path($paths, $keep = true)
-    {
-        if (!\is_array($paths)) {
-            $paths = [$paths];
-        }
-
-        $keep && $paths = array_merge($paths, $this->twig()->getLoader()->getPaths()) ;
-
-        $this->twig()->getLoader()->setPaths($paths);
-
         return $this;
     }
 
-    /**
-     * set view cache dir
-     * @param $dir
-     * @return $this
-     */
-    public function cache($dir)
-    {
-        $this->twig()->setCache($dir);
-
-        return $this;
-    }
-
-    /**
-     * getTwig
-     *
-     * @return \Twig_Environment
-     */
-    public function twig()
-    {
-        return $this->twig;
-    }
-
-    /**
-     * [assign 模板变量赋值方法]
-     *
-     * @param      $var [变量名]
-     * @param null $val [变量值]
-     */
-    public function assign($var, $val = null)
-    {
-        if(is_array($var))
-        {
-            foreach($var as $key => $v)
-            {
-                $this->variables[$key] = $v;
-            }
-        }else{
-            $this->variables[$var] = $val;
-        }
-    }
-
-    /**
-     * [render 模板渲染]
-     *
-     * @param $template
-     * @param $variable
-     * @return string
-     */
-    public function render($template, $variables)
-    {
-        $template = sprintf($template .'%s'. $this->append, '.');
-        $variables = array_merge($this->variables, (array) $variables, (array) Controller::$assign);
-        return $this->twig()->load($template)->render($variables);
-    }
-
-    /**
-     * [show]
-     *
-     * @param $template
-     * @param $variable
-     */
-    public function show($template, $variables)
-    {
-        return make('response')->make($this->render($template, $variables));
-    }
-
-    /**
-     * flush cache
-     * @return mixed
-     */
-    public function flush()
-    {
-        return make('file')->cleanDirectory(config('view.cache'));
-    }
 }
