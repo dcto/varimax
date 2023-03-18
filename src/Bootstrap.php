@@ -53,7 +53,12 @@ is_file($common = _DOC_._DS_.'library'._DS_.'common.php') && require($common);
 /**
  * load helper from varimax
  */
-is_file($function = _VM_._DS_.'Support'._DS_.'Function.php') && require($function);
+require('Function.php');
+
+/**
+ * load Extends from varimax
+ */
+require('Extends.php');
 
 /**
  * @var $loader \Composer\Autoload\ClassLoader

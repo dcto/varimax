@@ -56,9 +56,7 @@
       "src/Bootstrap.php"
     ],
     "classmap":[
-      "src/Support/Arr.php",
-      "src/Support/Str.php",
-      "src/Support/Facades"
+      "src/Facades"
     ]
   }
 }
