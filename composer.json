@@ -36,6 +36,7 @@
     "illuminate/database": "7.*",
     "illuminate/events": "7.*",
     "illuminate/filesystem": "7.*",
+    "illuminate/http": "7.*",
     "illuminate/support": "7.*",            
     "illuminate/pagination": "7.*",
     "windwalker/renderer":"3.*"
