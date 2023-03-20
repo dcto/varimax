@@ -54,8 +54,8 @@
       "VM\\": "src"
     },
     "files": [
-      "src/Bootstrap.php",
-      "src/Function.php"
+      "src/Function.php",
+      "src/Bootstrap.php"
     ],
     "classmap":[
       "src/Facades"
