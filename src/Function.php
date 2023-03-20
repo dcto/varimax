@@ -501,6 +501,28 @@ if(!function_exists('array_keys_exists')) {
 }
 
 /**
+ * Flatten a multi-dimensional associative array with dots.
+ *
+ * @param  array   $array
+ * @param  string  $prepend
+ * @return array
+ */
+if (!function_exists('array_dot')) {
+    function array_dot($array, $prepend = '', $trim = null)
+    {
+        $arr = [];
+        foreach ($array as $key => $value) {
+            if (is_array($value) && ! empty($value)) {
+                $arr = array_merge($arr, array_dot($value, $prepend. ($trim ? trim($key, $trim) : $key).'.'));
+            } else {
+                $arr[$prepend.$key] = $value;
+            }
+        }
+        return $arr;
+    }
+}
+
+/**
  * 还原array_dot函数
  * @param $dotNotationArray string
  */

@@ -17,7 +17,10 @@
       "email": "sdoz@live.com"
     }
   ],
-
+  "config": {
+    "preferred-install": "dist",
+    "sort-packages": true
+  },
   "require": {
     "php": "^7.2.5",
     "ext-xml":"*",
@@ -28,13 +31,11 @@
     "ext-mbstring": "*",
     "psr/log": "1.*",
     "vlucas/phpdotenv":"3.3",
-    "guzzlehttp/guzzle":"7.*",
     "illuminate/contracts": "7.*",
     "illuminate/container": "7.*",
     "illuminate/database": "7.*",
     "illuminate/events": "7.*",
     "illuminate/filesystem": "7.*",
-    "illuminate/http":"7.*",
     "illuminate/support": "7.*",            
     "illuminate/pagination": "7.*",
     "windwalker/renderer":"3.*"
@@ -50,10 +51,11 @@
 },
   "autoload": {
     "psr-4": {
-      "VM\\": "src/"
+      "VM\\": "src"
     },
     "files": [
-      "src/Bootstrap.php"
+      "src/Bootstrap.php",
+      "src/Function.php"
     ],
     "classmap":[
       "src/Facades"

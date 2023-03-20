@@ -11,9 +11,7 @@
 
 namespace VM\Routing;
 
-use Arr;
 use VM\Http\Request;
-use VM\Http\Redirect;
 use VM\Http\Response;
 use VM\Exception\NotFoundException;
 
@@ -256,7 +254,7 @@ class Router
     {
         $groups = $recursion ? $this->tree() : $this->group;
         
-        return $node ? Arr::get($groups, $node, array()) : $groups;
+        return $node ? data_get($groups, $node, array()) : $groups;
     }
 
     /**
@@ -376,13 +374,13 @@ class Router
         
             if($route->group()) {
                
-                if (!$group = Arr::get($this->group, $route->group())) {
+                if (!$group = data_get($this->group, $route->group())) {
                     throw new NotFoundException('Does not define ' . $route->group() . ' of router group');
                 }
                 /**
                  * construct callback
                  */
-                if ($callable = Arr::get($group, 'call')) {
+                if ($callable = data_get($group, 'call')) {
              
                     if (is_array($callable)) {
                         $callable = $this->Fire(array_shift($callable), array_shift($callable));
@@ -509,7 +507,7 @@ class Router
      */
     protected function parseRoute($route, $property)
     {
-        $prefix = Arr::get($property,'prefix') ?: Arr::get(Arr::get($property,'group'),'prefix');
+        $prefix = data_get($property,'prefix') ?: data_get(data_get($property,'group'),'prefix');
         $route = '/'.trim(trim($prefix,'/').'/'.trim($route, '/'),'/');
         return $route;
     }
@@ -540,9 +538,17 @@ class Router
      */
     protected function findClosure(array $action)
     {
+        foreach ($action as $value) {
+            if (is_callable($value)) {
+                return $value;
+            }
+        }
+        return null;
+        /*
         return Arr::first($action, function($key, $value){
             return is_callable($value);
         });
+        */
     }
 
     /**
@@ -578,8 +584,8 @@ class Router
      */
     protected function updateGroupStack(array $attributes)
     {
-        $attributes['id'] =  Arr::get($attributes, 'id', crc32(serialize($attributes)));
-        $attributes['name'] = Arr::get($attributes, 'name', $attributes['id']);
+        $attributes['id'] =  data_get($attributes, 'id', crc32(serialize($attributes)));
+        $attributes['name'] = data_get($attributes, 'name', $attributes['id']);
         $attributes = $this->mergeGroup($attributes, last($this->groupStack));
         
         if($this->group && isset($this->group[$attributes['id']])){
@@ -605,7 +611,7 @@ class Router
 
         $new['prefix'] = $this->formatGroupPrefix($new);
 
-        return $old ? array_replace_recursive(Arr::except($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
+        return $old ? array_replace_recursive(data_except($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
     }
 
     /**

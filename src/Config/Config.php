@@ -13,7 +13,6 @@ namespace VM\Config;
 
 use ArrayAccess;
 use Illuminate\Contracts\Config\Repository as ConfigContract;
-use Illuminate\Support\Arr;
 
 class Config implements ArrayAccess, ConfigContract
 {
@@ -56,7 +55,7 @@ class Config implements ArrayAccess, ConfigContract
      */
     public function has($key)
     {
-        return Arr::has($this->item, $key);
+        // return array_has($this->item, $key);
     }
 
     /**
@@ -68,10 +67,10 @@ class Config implements ArrayAccess, ConfigContract
      */
     public function get($key, $default = null)
     {
-        if(!isset($this->item[$item =\Str::before($key, '.')])){
+        if(!isset($this->item[$item = explode('.', $key)[0]])){
             $this->add($item);
         }
-        return Arr::get($this->item, $key, $default);
+        return data_get($this->item, $key, $default);
     }
 
     /**
@@ -84,13 +83,9 @@ class Config implements ArrayAccess, ConfigContract
     public function set($key, $value = null)
     {
         $keys = is_array($key) ? $key : [$key => $value];
-
-        $keys = Arr::dot($keys);
-
         foreach ($keys as $key => $value) {
-            Arr::set($this->item, $key, $value);
+            data_set($this->item, $key, $value);
         }
-
         return $this;
     }
 

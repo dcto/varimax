@@ -25,11 +25,6 @@ use Illuminate\Support\ServiceProvider;
 class Application extends Container
 {
     /**
-     * @var string
-     */
-    const VERSION = 'v1.9';
-
-    /**
      * Application Booted
      * @var bool
      */
@@ -40,8 +35,8 @@ class Application extends Container
      *
      * @var array
      */
-    protected $aliases =  array(
-        'config'   => \VM\Config\Config::class,
+    protected $aliases = [
+        'config'    => \VM\Config\Config::class,
         'router'    => \VM\Routing\Router::class,
         'request'   => \VM\Http\Request::class,
         'response'  => \VM\Http\Response::class,
@@ -56,27 +51,27 @@ class Application extends Container
         'curl'      => \VM\Http\Curl\Curl::class,
         'file'      => \VM\FileSystem\FileSystem::class,
         'log'       => \VM\Logger\Logger::class,
-    );
+        'arr'       => \Illuminate\Support\Arr::class,
+        'str'       => \Illuminate\Support\Str::class,
+    ];
 
     /**
      * Service Provider
      *
      * @var array
      */
-    protected $services = array(
+    protected $services = [
         'id'=>\VM\Services\HashIdsServiceProvider::class,
-        'db' =>[
-            \VM\Services\DatabaseServiceProvider::class,
-            \VM\Services\PaginationServiceProvider::class
-        ]
-    );
+        'db' =>[\VM\Services\DatabaseServiceProvider::class, \VM\Services\PaginationServiceProvider::class]
+    ];
 
     /**
      * Provider of loaded
      *
      * @var array
      */
-    protected $providers = array();
+    protected $providers = [
+    ];
 
 
     /**
@@ -140,32 +135,24 @@ class Application extends Container
     /**
      * Register service provider to the application.
      *
-     * @param  \Illuminate\Support\ServiceProvider|array|string  $provider
+     * @param  \Illuminate\Support\ServiceProvider|string  $provider
      * @param  bool $force
      * @return \Illuminate\Support\ServiceProvider
      */
     public function register($providers, $force = false)
-    {
-        foreach ((array) $providers as $provider){
-
-            if (!$provider instanceof ServiceProvider) {
+    {   
+        foreach((array) $providers as $provider){
+            if (!$provider instanceof ServiceProvider || $force) {
                 $provider = new $provider($this);
-            }
-
-            if (isset($this->providers[$item = get_class($provider)]) && !$force) {
-                 $this->providers[$item];
-            }
-
-            if (method_exists($provider, 'register')) {
-                $provider->register();
-            }
-
-            $this->providers[$item] = $provider;
-
-            if (!$provider->isDeferred()) {
-                if (method_exists($provider, 'boot')) {;
-                    $provider->boot();
+                if (method_exists($provider, 'register')) {
+                    $provider->register();
                 }
+            }
+            
+            $this->providers[get_class($provider)] = $provider;
+
+            if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
+                $provider->boot();
             }
         }
     }
@@ -186,19 +173,16 @@ class Application extends Container
      */
     protected function registerServiceProviders()
     {
+        $this->register(\Illuminate\Events\EventServiceProvider::class);
+
         $providers = $this['config']['providers'];
 
-        if(is_array($providers)) {
-            foreach ($providers as $alias => $provider) {
-                if (!is_int($alias)) {
-                    $this->services[$alias] = $provider;
-                } else {
-
-                    $this->register($provider);
-                }
+        foreach ($providers as $alias => $provider) {
+            if (!is_int($alias)) {
+                $this->services[$alias] = $provider;
+            } else {
+                $this->register($provider);
             }
-        }else{
-            throw new \ErrorException('Invalid config of providers');
         }
     }
 
@@ -229,7 +213,6 @@ class Application extends Container
         if (is_string($charset = $this['config']['app.charset'])) {
             mb_internal_encoding($charset);
         }
-
     }
 
     /**
@@ -270,20 +253,8 @@ class Application extends Container
      */
     public function cli()
     {
-
         return;
-
     }
-
-    /**
-     * GET Varimax The Slim PHP Frameworks Version"
-     * @return string
-     */
-    public function version()
-    {
-        return static::VERSION;
-    }
-
 
     /**
      * @param $code

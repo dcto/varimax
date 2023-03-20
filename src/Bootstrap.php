@@ -8,6 +8,7 @@
  * SITE: https://www.varimax.cn/
  */
 
+
 //define _VM_ of constants
 defined('_VM_') || define('_VM_', __DIR__);
 
@@ -49,16 +50,6 @@ is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
  * load common from docker
  */
 is_file($common = _DOC_._DS_.'library'._DS_.'common.php') && require($common);
-
-/**
- * load helper from varimax
- */
-require('Function.php');
-
-/**
- * load Extends from varimax
- */
-require('Extends.php');
 
 /**
  * @var $loader \Composer\Autoload\ClassLoader

@@ -249,21 +249,6 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
         return parent::setTable($this->prefix ? $this->prefix.$name : $name);
     }
 
-    /**
-     * Get the table associated with the model.
-     *
-     * @return string
-     */
-    public function getTable()
-    {
-        if (isset($this->table)) {
-            if(isset($this->prefix)){
-                $this->getConnection()->setTablePrefix($this->prefix);
-            }
-            return $this->table;
-        }
-        return \Str::snake(class_basename($this));        
-    }
 
     /**
      * [table]
