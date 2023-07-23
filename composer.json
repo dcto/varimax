@@ -30,7 +30,6 @@
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
-    "vlucas/phpdotenv":"3.3",
     "illuminate/contracts": "7.*",
     "illuminate/container": "7.*",
     "illuminate/database": "7.*",
@@ -40,6 +39,9 @@
     "illuminate/support": "7.*",            
     "illuminate/pagination": "7.*",
     "windwalker/renderer":"3.*"
+  },
+  "require-dev": {
+    "vlucas/phpdotenv":"5.*"
   },
   "suggest": {    
     "hashids/hashids": "Suggest HashID In the Eloquent",
