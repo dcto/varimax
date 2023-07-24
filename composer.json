@@ -30,6 +30,7 @@
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
+    "vlucas/phpdotenv":"3.3.*",
     "illuminate/contracts": "7.*",
     "illuminate/container": "7.*",
     "illuminate/database": "7.*",
@@ -37,15 +38,12 @@
     "illuminate/filesystem": "7.*",
     "illuminate/http": "7.*",
     "illuminate/support": "7.*",            
-    "illuminate/pagination": "7.*",
-    "windwalker/renderer":"3.*"
-  },
-  "require-dev": {
-    "vlucas/phpdotenv":"5.*"
+    "illuminate/pagination": "7.*"
   },
   "suggest": {    
     "hashids/hashids": "Suggest HashID In the Eloquent",
     "nesbot/carbon": "Suggest Carbon DateTime Formating",
+    "windwalker/renderer": "Suggest 3.* Renderer View Engine ",
     "twig/twig": "Suggest Twig 2.x Of View Engine",
     "league/plates": "Suggest Plates 3.x Of View Engine",
     "windwalker/edge": "Suggest Edge 3.x Of View Engine",
