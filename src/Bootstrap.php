@@ -8,7 +8,6 @@
  * SITE: https://www.varimax.cn/
  */
 
-
 //define _VM_ of constants
 defined('_VM_') || define('_VM_', __DIR__);
 
@@ -19,7 +18,7 @@ defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? dirname(realpath($_SERVER['argv'][0])) : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
-defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? isset( $_GET['app']) ?  $_GET['app']  : 'app' : $app);
+defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? 'app' : $app);
 
 //define _DIR_ constants of app root path
 defined('_DIR_') || define('_DIR_', _DOC_._DS_._APP_);
@@ -45,11 +44,6 @@ is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
  * load helper from app
  */
 is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
-
-/**
- * load common from docker
- */
-is_file($common = _DOC_._DS_.'library'._DS_.'common.php') && require($common);
 
 /**
  * @var $loader \Composer\Autoload\ClassLoader
