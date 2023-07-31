@@ -29,9 +29,6 @@ defined('_WWW_') || define('_WWW_', _DOC_._DS_.'www');
 //define _ROOT_ constants of root
 defined('_ROOT_') || define('_ROOT_', _DOC_);
 
-//define _TIME_ constants to macro time
-defined('_TIME_') || define('_TIME_', microtime(true));
-
 //Access Denied!
 PHP_SAPI == 'cli' || is_dir(_DIR_) || die('Access Denied.');
 
