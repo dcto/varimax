@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Model;
+
+/**
+ * Class %CLASS%
+ * @package App\\Model
+ */
+class %CLASS% extends Model
+{
+
+
+    static public function up()
+    {
+        \Schema::create(static::table(), function(\Illuminate\Database\Schema\Blueprint $table)){
+            $table->increments('id')->comment('ID');
+        }
+        \DB::statement("ALTER TABLE `".\DB::getTablePrefix().static::table(). "` comment ");
+    }
+}

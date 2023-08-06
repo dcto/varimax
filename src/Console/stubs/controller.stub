@@ -1,0 +1,17 @@
+<?php
+
+namespace %NAMESPACE%;
+
+/**
+ * Class %CLASS%
+ * @package App\\Controller
+ */
+class %CLASS% extends Controller
+{
+    
+    public function index()
+    {
+        return response('hello varimax');
+    }
+
+}
