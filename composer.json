@@ -49,17 +49,14 @@
     "windwalker/edge": "Suggest Edge 3.x Of View Engine",
     "illuminate/view": "Suggest Blade 7.* Of View Engine",
     "mustache/mustache": "Suggest Mustcache 2.x Of View Engine"
-},
+  },
   "autoload": {
     "psr-4": {
       "VM\\": "src"
     },
-    "files": [
-      "src/Function.php",
-      "src/Bootstrap.php"
-    ],
     "classmap":[
       "src/Facades"
-    ]
+    ],
+    "files": ["helper.php","vrimax.php"]
   }
 }
