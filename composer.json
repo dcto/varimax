@@ -57,6 +57,8 @@
     "classmap":[
       "src/Facades"
     ],
-    "files": ["helpers.php","varimax.php"]
+    "files": [
+      "varimax.php"
+    ]
   }
 }
