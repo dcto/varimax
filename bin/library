@@ -522,21 +522,6 @@ if (!function_exists('array_dot')) {
     }
 }
 
-/**
- * 还原array_dot函数
- * @param $dotNotationArray string
- */
-if (!function_exists('array_undot')) {
-    function array_undot($dotNotationArray)
-    {
-        $array = [];
-        foreach ($dotNotationArray as $key => $value) {
-            array_set($array, $key, $value);
-        }
-        return $array;
-    }
-}
-
 if(!function_exists('dump')) {
     function dump()
     {
@@ -882,7 +867,7 @@ if(!function_exists('is_safe')) {
      * @param mixed $callback  
      * @return string
      */
-    function filter($input, ...$filters)
+    function is_safe($input, ...$filters)
     {   
         array_map(function($f) use(&$input){
             $input = $f($input);
@@ -899,7 +884,7 @@ if(!function_exists('symbol')){
     * @param  string $currency
     * @return string 
     */
-        function symbol($currency)
+    function symbol($currency)
         {
             $symbols = array(
                 'AED' => '&#1583;.&#1573;', 

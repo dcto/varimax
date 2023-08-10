@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 //define _VM_ of constants
 defined('_VM_') || define('_VM_',dirname(__DIR__, 1));
@@ -7,7 +6,7 @@ defined('_VM_') || define('_VM_',dirname(__DIR__, 1));
 defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 
 //define _DOC_ constants to document root
-defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? dirname(realpath($_SERVER['argv'][0])) : dirname($_SERVER['DOCUMENT_ROOT']));
+defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? dirname(__DIR__, 4) : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
 defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? 'app' : $app);
@@ -25,7 +24,8 @@ defined('_ROOT_') || define('_ROOT_', _DOC_);
  * Load Environment
  */
 is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
-/**
+
+/*
  * load helper
  */
 is_file($helper = _DIR_._DS_.'helper.php') && require($helper); require('library');
@@ -47,4 +47,4 @@ $loader->addPsr4("App\\Provider\\", _ROOT_._DS_.'provider'._DS_);
 /**
  * Bootstrap Of Application
  */
-(new \VM\Application())->boot();
+(new \VM\Application)->boot();
