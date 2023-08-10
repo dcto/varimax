@@ -1,12 +1,4 @@
 <?php
-/**
- * Varimax The Slim PHP Frameworks.
- * varimax
- * FILE: 2020
- * USER: 陶之11. <sdoz@live.com>
- * Time: 2020-08-11 22:03
- * SITE: https://www.varimax.cn/
- */
 
 //define _VM_ of constants
 defined('_VM_') || define('_VM_', __DIR__);
@@ -29,24 +21,22 @@ defined('_WWW_') || define('_WWW_', _DOC_._DS_.'www');
 //define _ROOT_ constants of root
 defined('_ROOT_') || define('_ROOT_', _DOC_);
 
-//Access Denied!
-PHP_SAPI == 'cli' || is_dir(_DIR_) || die('Access Denied.');
-
 /**
- * Load DotEnv Environment
+ * Load Environment
  */
 is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
 
 /**
- * load helper from app
+ * load helpers
  */
 is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
 
+is_file($helper = _VM_ ._DS_.'helpers.php') && require($helper);
+
 /**
- * @var $loader \Composer\Autoload\ClassLoader
+ * autoloader
  */
 $loader = require(_ROOT_._DS_.'vendor'._DS_.'autoload.php');
-
 //Set App Psr4
 $loader->setPsr4("App\\", _DIR_);
 

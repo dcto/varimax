@@ -17,9 +17,13 @@
       "email": "sdoz@live.com"
     }
   ],
+  "autoload": {
+    "classmap":["src/Facades"],
+    "files": ["varimax.php"],
+    "psr-4": {"VM\\": "src"}
+  },
   "config": {
-    "preferred-install": "dist",
-    "sort-packages": true
+    "preferred-install": "dist"
   },
   "require": {
     "php": "^7.3",
@@ -49,16 +53,5 @@
     "windwalker/edge": "Suggest Edge 3.x Of View Engine",
     "illuminate/view": "Suggest Blade 7.* Of View Engine",
     "mustache/mustache": "Suggest Mustcache 2.x Of View Engine"
-  },
-  "autoload": {
-    "psr-4": {
-      "VM\\": "src"
-    },
-    "classmap":[
-      "src/Facades"
-    ],
-    "files": [
-      "varimax.php"
-    ]
   }
 }
