@@ -18,8 +18,11 @@
     }
   ],
   "autoload": {
-    "classmap":["src/Facades"],
-    "files": ["bin/varimax", "bin/library"]
+    "psr-4": {"VM\\": "src"},
+    "files": ["bin/varimax"],
+    "classmap":[
+      "src/Facades"
+    ]
   },
   "bin": [
     "bin/varimax"
