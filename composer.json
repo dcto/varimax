@@ -20,9 +20,7 @@
   "autoload": {
     "psr-4": {"VM\\": "src"},
     "files": ["bin/varimax"],
-    "classmap":[
-      "src/Facades"
-    ]
+    "classmap":["src/Facades"]
   },
   "bin": [
     "bin/varimax"
