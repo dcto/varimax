@@ -1,4 +1,9 @@
+#!/usr/bin/env php
 <?php
+/**
+ * autoloader
+ */
+$loader = require(_ROOT_._DS_.'vendor'._DS_.'autoload.php');
 
 //define _VM_ of constants
 defined('_VM_') || define('_VM_', __DIR__);
@@ -27,17 +32,12 @@ defined('_ROOT_') || define('_ROOT_', _DOC_);
 is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
 
 /**
- * load helpers
+ * load helper
  */
 is_file($helper = _DIR_._DS_.'helper.php') && require($helper);
 
-is_file($helper = _VM_ ._DS_.'helpers.php') && require($helper);
-
-/**
- * autoloader
- */
-$loader = require(_ROOT_._DS_.'vendor'._DS_.'autoload.php');
-//Set App Psr4
+//Set App Psr
+$loader->setPsr4("VM\\", __DIR__);
 $loader->setPsr4("App\\", _DIR_);
 
 //add App Model
