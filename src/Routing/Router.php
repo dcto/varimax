@@ -352,7 +352,7 @@ class Router
         if($request->method('OPTIONS')) return $response->make();
 
         // Get Http Request Path.
-        $path = filter($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
+        $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
         //Disable Request when xss or sql inject
         $path == $request->path() || die(header("HTTP/1.0 404 Not Found"));
