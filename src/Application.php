@@ -72,29 +72,37 @@ class Application extends Container
     protected $providers = [
     ];
 
-
     /**
      * Bootstrap The Application
      */
-    public function boot()
+    static public function boostrap()
     {
-        static::setInstance($this);
+        static::setInstance($container = new self);
 
-        $this->instance('app', $this);
+        $container->instance('app', static::$instance);
 
-        $this->instance(static::class, $this);
+        $container->instance(static::class, $container);
 
-        $this->registerExceptionHandle();
+        $container->registerExceptionHandle();
 
-        $this->registerConfigEnvironment();
+        $container->registerConfigEnvironment();
 
-        $this->registerServiceProviders();
+        $container->registerServiceProviders();
 
-        $this->registerFacades();
+        $container->registerFacades();
         
-        $this->boot = true;
+        $container->boot = true;
 
-        PHP_SAPI == 'cli' ? $this->cli() : $this->run();
+        PHP_SAPI == 'cli' ? $container->cli() : $container->run();
+    }
+
+    /**
+     * Load Command Console
+     */
+    static public function command(){
+        $command = new \Symfony\Component\Console\Application;
+        $command->add(new \VM\Console\Generator);
+        $command->run();
     }
 
     /**

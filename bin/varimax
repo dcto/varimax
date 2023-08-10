@@ -45,6 +45,6 @@ $loader->addPsr4("App\\Model\\", _ROOT_._DS_.'model'._DS_);
 $loader->addPsr4("App\\Provider\\", _ROOT_._DS_.'provider'._DS_);
 
 /**
- * Bootstrap Of Application
+ * Load Command and Bootstrap of Application
  */
-(new \VM\Application)->boot();
+(PHP_SAPI=='cli' && _APP_=='varimax') ? \VM\Application::command() : \VM\Application::boostrap() ;

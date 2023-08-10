@@ -20,6 +20,10 @@ use VM\Exception\NotFoundException;
  */
 class Router
 {
+    /**
+     * @var string
+     */
+    private $url = null;
 
     /**
      * @var array
