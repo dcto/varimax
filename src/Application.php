@@ -101,7 +101,8 @@ class Application extends Container
      */
     static public function command(){
         $command = new \Symfony\Component\Console\Application;
-        $command->add(new \VM\Console\Generator);
+        $command->add(new \VM\Console\CommandController);
+        $command->add(new \VM\Console\CommandModel);
         $command->run();
     }
 
