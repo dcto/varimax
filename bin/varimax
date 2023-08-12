@@ -1,4 +1,5 @@
 <?php
+#!/usr/bin/php
 //define _VM_ of constants
 defined('_VM_') || define('_VM_',dirname(__DIR__, 1));
 

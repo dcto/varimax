@@ -4,7 +4,7 @@ namespace %NAMESPACE%;
 
 /**
  * Class %CLASS%
- * @package App\\Controller
+ * @package App\Controller
  */
 class %CLASS% extends Controller
 {
