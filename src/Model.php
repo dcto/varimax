@@ -477,26 +477,6 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
     }
 
     /**
-     * 修复Eloquent联合主键 [Warning: Illegal offset type in isset or empty] BUG问题
-     * Set the keys for a save update query.
-     * This is a fix for tables with composite keys
-     * TODO: Investigate this later on
-     * @see https://github.com/laravel/framework/issues/5517#issuecomment-113655441
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @return \Illuminate\Database\Eloquent\Builder
-     */
-    protected function setKeysForSaveQuery(\Illuminate\Database\Eloquent\Builder $query) {
-        if ($this->isCompositeKey()) {
-            foreach ((array) $this->primaryKey as $pk) {
-                $query->where($pk, '=', $this->original[$pk]);
-            }
-            return $query;
-        }else{
-            return parent::setKeysForSaveQuery($query);
-        }
-    }
-
-    /**
      * 修复Eloquent联合主键 [Warning: array_key_exists(): The first argument should be either a string or an integer] BUG问题
      * @see https://github.com/maksimru/composite-primary-keys/blob/master/src/Http/Traits/HasCompositePrimaryKey.php#L231
      * @param  string  $column
