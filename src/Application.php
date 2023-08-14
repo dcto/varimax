@@ -170,14 +170,13 @@ class Application extends Container
     protected function registerServiceProviders()
     {
         $this->register(\Illuminate\Events\EventServiceProvider::class);
-
-        $providers = $this['config']['providers'];
-
-        foreach ($providers as $alias => $provider) {
-            if (!is_int($alias)) {
-                $this->services[$alias] = $provider;
-            } else {
-                $this->register($provider);
+        if(is_array($providers = $this['config']['providers'])){
+            foreach ($providers as $alias => $provider) {
+                if (!is_int($alias)) {
+                    $this->services[$alias] = $provider;
+                } else {
+                    $this->register($provider);
+                }
             }
         }
     }

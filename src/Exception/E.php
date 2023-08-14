@@ -31,9 +31,7 @@ class E {
      * 注册异常拦截
      */
     static public function register()
-    {
-        define('E_FATAL',  E_ERROR | E_USER_ERROR |  E_CORE_ERROR | E_COMPILE_ERROR | E_RECOVERABLE_ERROR| E_PARSE );
-        
+    {       
         if($debug = getenv('DEBUG')){
             //错误级别
             error_reporting(E_ALL);
