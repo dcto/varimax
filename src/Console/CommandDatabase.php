@@ -1,8 +1,13 @@
 <?php
-
+/**
+* 
+* @package app
+* @author  dc.To
+* @version 20230814
+* @copyright ©2023 dc team all rights reserved.
+*/
 namespace VM\Console;
 
-use Illuminate\Database\Eloquent\Model;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -22,7 +27,7 @@ class CommandDatabase extends \Symfony\Component\Console\Command\Command
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        $name = $input->getArgument('name');
+        $name =  ucfirst($input->getArgument('name'));
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$name.'] table dataset?(Y/n) ', false);
 
@@ -31,7 +36,7 @@ class CommandDatabase extends \Symfony\Component\Console\Command\Command
                 /**
                  * @var $model \VM\Model
                  */
-                $model =  new \ReflectionClass("App\\Model\\".ucfirst($name));
+                $model = make("\\App\\Model\\".$name);
                 config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                 \Schema::dropIfExists($model->getTable());
                 $model::up();
@@ -42,7 +47,6 @@ class CommandDatabase extends \Symfony\Component\Console\Command\Command
             }
 
         }
-
         return Command::SUCCESS;
     }
 }
