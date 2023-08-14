@@ -19,6 +19,16 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
      */
     protected $output;
 
+
+    static public function register(){
+        $command = new \Symfony\Component\Console\Application;
+        $command->add(new CommandController);
+        $command->add(new CommandDatabase);
+        $command->add(new CommandModel);
+        $command->run();
+    }
+
+
     public function configure()
     {
         foreach ($this->getArguments() as $argument) {

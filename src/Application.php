@@ -10,8 +10,6 @@ namespace VM;
  * SITE: https://www.varimax.cn/
  */
 
-use VM\Exception\HttpException;
-use VM\Exception\NotFoundException;
 use Illuminate\Container\Container;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
@@ -94,16 +92,6 @@ class Application extends Container
         $container->boot = true;
 
         PHP_SAPI == 'cli' ? $container->cli() : $container->run();
-    }
-
-    /**
-     * Load Command Console
-     */
-    static public function command(){
-        $command = new \Symfony\Component\Console\Application;
-        $command->add(new \VM\Console\CommandController);
-        $command->add(new \VM\Console\CommandModel);
-        $command->run();
     }
 
     /**
@@ -195,6 +183,15 @@ class Application extends Container
     }
 
     /**
+     * Dispatch Command Request
+     * @todo resolve the command cli mode
+     */
+    public function registerConsoleCommand()
+    {
+        \VM\Console\Command::register();
+    }
+
+    /**
      * [registerExceptionHandling]
      *
      */
@@ -224,6 +221,14 @@ class Application extends Container
     }
 
     /**
+     * Dispatch Cli Mode Request
+     */
+    public function cli()
+    {
+        _APP_=='varimax' && $this->registerConsoleCommand();
+    }
+
+    /**
      * Dispatch HTTP Request
      *
      * @return \VM\Http\Response\Response string
@@ -244,39 +249,5 @@ class Application extends Container
         }
         
         return $this->make('response')->make($dispatch)->send();
-    }
-
-
-    /**
-     * Dispatch Command Request
-     * @todo resolve the command cli mode
-     */
-    public function cmd()
-    {
-        return;
-    }
-
-    /**
-     * Dispatch Cli Mode Request
-     */
-    public function cli()
-    {
-        return;
-    }
-
-    /**
-     * @param $code
-     * @param string $message
-     * @param array $headers
-     * @throws NotFoundException
-     * @throws HttpException
-     */
-    public function abort($code, $message = '', array $headers = [])
-    {
-        if ($code == 404) {
-            throw new NotFoundException($message);
-        }
-
-        throw new HttpException($code, $message, null, $headers);
     }
 }

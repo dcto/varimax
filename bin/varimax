@@ -46,6 +46,6 @@ is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
 is_file($helper = _DIR_._DS_.'helper.php') && require($helper); require('library');
 
 /**
- * Load Command and Bootstrap of Application
+ * Bootstrap of Application
  */
-(PHP_SAPI=='cli' && _APP_=='varimax') ? \VM\Application::command() : \VM\Application::boostrap();
+\VM\Application::boostrap();
