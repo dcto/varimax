@@ -124,7 +124,6 @@ class E {
          * @var $e \Exception
          */
         $trace = $e->getTrace();
-        $trace[] = array('file' => $e->getFile(), 'line' => $e->getLine(), 'function' => 'break');
         $traces = array();
 
         foreach ($trace as $error) {
@@ -138,18 +137,18 @@ class E {
                     $mark = '';
                     foreach ($error['args'] as $arg) {
                         $fun .= $mark;
-                        if (is_array($arg)) {
+                        if ($arg instanceof \Closure){
+                            $fun .= 'Closure';
+                        }else if(is_object($arg)){
+                            $fun .= 'Object';
+                        }else if (is_array($arg)) {
                             $fun .= 'Array';
                         } elseif (is_bool($arg)) {
-                            $fun .= $arg ? 'true' : 'false';
-                        } elseif (is_int($arg)) {
-                            $fun .= getenv('DEBUG') ? $arg : '%d';
-                        } elseif (is_float($arg)) {
-                            $fun .= getenv('DEBUG') ? $arg : '%f';
+                            $fun .= $arg ? 'True' : 'False';
                         } else {
-                            $fun .= getenv('DEBUG') ? '\'' . htmlspecialchars(substr($arg, 0, 10)) . (strlen($arg) > 10 ? ' ...' : '') . '\'' : '%s';
+                            $fun .= $arg;
                         }
-                        $mark = ', ';
+                    $mark = ', ';
                     }
                 }
                 $fun .= ')';
