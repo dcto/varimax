@@ -19,7 +19,7 @@ class E {
      *
      * @var integer
      */
-    static private $debug = 1;
+    static private $debug = 2;
 
     /**
      * 备用内存大小
@@ -31,7 +31,7 @@ class E {
      * 注册异常拦截
      */
     static public function register()
-    {       
+    {
         if($debug = getenv('DEBUG')){
             //错误级别
             error_reporting(E_ALL);
@@ -120,13 +120,12 @@ class E {
      * @param $e
      * @return string
      */
-    final static function debugBacktrace($e)
+    final static function debugBacktrace(\Exception $e)
     {
         /**
          * @var $e \Exception
          */
         $trace = $e->getTrace();
-        krsort($trace);
         $trace[] = array('file' => $e->getFile(), 'line' => $e->getLine(), 'function' => 'break');
         $traces = array();
 
@@ -146,11 +145,11 @@ class E {
                         } elseif (is_bool($arg)) {
                             $fun .= $arg ? 'true' : 'false';
                         } elseif (is_int($arg)) {
-                            $fun .= (defined('SITE_DEBUG') && SITE_DEBUG) ? $arg : '%d';
+                            $fun .= static::$debug ? $arg : '%d';
                         } elseif (is_float($arg)) {
-                            $fun .= (defined('SITE_DEBUG') && SITE_DEBUG) ? $arg : '%f';
+                            $fun .= static::$debug ? $arg : '%f';
                         } else {
-                            $fun .= (defined('SITE_DEBUG') && SITE_DEBUG) ? '\'' . htmlspecialchars(substr($arg, 0, 10)) . (strlen($arg) > 10 ? ' ...' : '') . '\'' : '%s';
+                            $fun .= static::$debug ? '\'' . htmlspecialchars(substr($arg, 0, 10)) . (strlen($arg) > 10 ? ' ...' : '') . '\'' : '%s';
                         }
                         $mark = ', ';
                     }
