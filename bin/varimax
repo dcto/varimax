@@ -38,7 +38,7 @@ $loader->addPsr4("App\\Provider\\", _ROOT_._DS_.'provider'._DS_);
 /**
  * Load Environment
  */
-is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::createMutable(_DOC_)->load();
+is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::createUnsafeImmutable(_DOC_)->load();
 
 /*
  * Load helpers
