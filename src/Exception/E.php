@@ -32,13 +32,11 @@ class E {
      */
     static public function register()
     {
-        if($debug = getenv('DEBUG')){
+        if(self::$debug = getenv('DEBUG')){
             //错误级别
             error_reporting(E_ALL);
             //开启错误
             ini_set('display_errors', 'On');
-            //错误调试
-            self::$debug = $debug;
         }
 
         //预留内存
@@ -49,7 +47,7 @@ class E {
              self::onException($e);
         });
 
-        //截获各种错误 此处切不可掉换位置
+        //截获各种错误
         set_error_handler(function($code, $message, $file, $line){
             self::onError($code, $message, $file, $line);
         });
@@ -145,11 +143,11 @@ class E {
                         } elseif (is_bool($arg)) {
                             $fun .= $arg ? 'true' : 'false';
                         } elseif (is_int($arg)) {
-                            $fun .= static::$debug ? $arg : '%d';
+                            $fun .= getenv('DEBUG') ? $arg : '%d';
                         } elseif (is_float($arg)) {
-                            $fun .= static::$debug ? $arg : '%f';
+                            $fun .= getenv('DEBUG') ? $arg : '%f';
                         } else {
-                            $fun .= static::$debug ? '\'' . htmlspecialchars(substr($arg, 0, 10)) . (strlen($arg) > 10 ? ' ...' : '') . '\'' : '%s';
+                            $fun .= getenv('DEBUG') ? '\'' . htmlspecialchars(substr($arg, 0, 10)) . (strlen($arg) > 10 ? ' ...' : '') . '\'' : '%s';
                         }
                         $mark = ', ';
                     }
