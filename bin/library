@@ -20,22 +20,6 @@ if(!function_exists('app')){
 }
 
 /**
- * Gets the value of an environment variable. Supports boolean, empty and null.
- *
- * @param  string  $key
- * @param  mixed   $default
- * @return mixed
- */
-if (!function_exists('env')) {
-
-    function env($key, $default = null)
-    {
-        $value = getenv($key);
-        return $value ?: $default;
-    }
-}
-
-/**
  * make alias name for app
  * @param null $make
  * @param array $parameters
