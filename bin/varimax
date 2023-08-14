@@ -22,30 +22,30 @@ defined('_WWW_') || define('_WWW_', _DOC_._DS_.'www');
 defined('_ROOT_') || define('_ROOT_', _DOC_);
 
 /**
- * Load Environment
- */
-is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
-
-/*
- * load helper
- */
-is_file($helper = _DIR_._DS_.'helper.php') && require($helper); require('library');
-
-/**
- * autoloader
+ * Autoloader
  */
 $loader = require(_ROOT_._DS_.'vendor'._DS_.'autoload.php');
 
 //Set App Psr
 $loader->setPsr4("App\\", _DIR_);
 
-//add App Model
+//Add App Model
 $loader->addPsr4("App\\Model\\", _ROOT_._DS_.'model'._DS_);
 
-//add App Provider
+//Add App Provider
 $loader->addPsr4("App\\Provider\\", _ROOT_._DS_.'provider'._DS_);
+
+/**
+ * Load Environment
+ */
+is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::create(_DOC_)->load();
+
+/*
+ * Load helpers
+ */
+is_file($helper = _DIR_._DS_.'helper.php') && require($helper); require('library');
 
 /**
  * Load Command and Bootstrap of Application
  */
-(PHP_SAPI=='cli' && _APP_=='varimax') ? \VM\Application::command() : \VM\Application::boostrap() ;
+(PHP_SAPI=='cli' && _APP_=='varimax') ? \VM\Application::command() : \VM\Application::boostrap();
