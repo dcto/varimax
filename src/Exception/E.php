@@ -19,7 +19,7 @@ class E {
      *
      * @var integer
      */
-    static private $debug = 2;
+    static private $debug = 0;
 
     /**
      * 备用内存大小
@@ -123,43 +123,20 @@ class E {
         /**
          * @var $e \Exception
          */
-        $trace = $e->getTrace();
-        $traces = array();
-
-        foreach ($trace as $error) {
-            if (!empty($error['function'])) {
-                $fun = '';
-                if (!empty($error['class'])) {
-                    $fun .= $error['class'] . $error['type'];
+        return array_map(function($trace){ 
+            isset($trace['class']) && $trace['function'] = $trace['class'].$trace['type'].$trace['function'];
+            $trace['function'] .= '('.join(', ' , array_map(function($arg){
+                if(in_array(gettype($arg),['array', 'object', 'boolean'])){
+                    if($arg instanceof \Closure) return '\Closure';
+                    if(is_object($arg)) return get_class($arg);
+                    if(is_bool($arg)) return $arg ? 'True' : 'False';
+                    return json_encode($arg, true);
+                }else{
+                    return is_string($arg) ? "'".$arg."'" : $arg;
                 }
-                $fun .= $error['function'] . '(';
-                if (!empty($error['args'])) {
-                    $mark = '';
-                    foreach ($error['args'] as $arg) {
-                        $fun .= $mark;
-                        if ($arg instanceof \Closure){
-                            $fun .= 'Closure';
-                        }else if(is_object($arg)){
-                            $fun .= 'Object';
-                        }else if (is_array($arg)) {
-                            $fun .= 'Array';
-                        } elseif (is_bool($arg)) {
-                            $fun .= $arg ? 'True' : 'False';
-                        } else {
-                            $fun .= $arg;
-                        }
-                    $mark = ', ';
-                    }
-                }
-                $fun .= ')';
-                $error['function'] = $fun;
-            }
-            if (!isset($error['line'])) {
-                continue;
-            }
-            $traces[] = array('file' => str_replace(array(_VM_, ''), array('', '/'), $error['file']), 'line' => $error['line'], 'function' => $error['function']);
-        }
-        return $traces;
+            }, $trace['args'])).')';
+            return array('file' => str_replace(_DOC_,'', $trace['file']), 'line' => $trace['line'], 'function' => $trace['function']);
+        },$e->getTrace());
     }
 
     /**
@@ -204,9 +181,8 @@ class E {
             ob_get_contents() && ob_end_clean();
             http_response_code($e instanceof Exception ? $e->getStatus() : 500);
 
-            if (self::$debug == 2 || (isset($_GET['debug']) && $_GET['debug'] === 'VM')) {
+            if (self::$debug == 2) {
                 $debugBacktrace = self::debugBacktrace($e);
-
                     echo '<html><head><title>' . $e->getMessage() . '</title><meta name="robots" content="none" /><style type="text/css">body {font: 12pt verdana; margin: 10px auto;}div {background: #f5f5f5; border-radius: 5px; line-height: 200%; margin-bottom: 1em; padding: 1em;}table {background: #aaa;}.stack {background-color: #ffc;}.title {background-color: #eee;}</style></head><body><div id="title"><b>' . Exception::error($e->getCode()) . '</b>: ' . $e->getMessage() . '</div>';
                     if ($debugBacktrace) {
                         echo '<div id="debug"><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="5" cellspacing="1" width="100%" class="table"><tbody>';
