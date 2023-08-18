@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -19,7 +18,7 @@ class E {
      *
      * @var integer
      */
-    static private $debug = 0;
+    static private $debug = 2;
 
     /**
      * 备用内存大小
@@ -135,7 +134,7 @@ class E {
                     return is_string($arg) ? "'".$arg."'" : $arg;
                 }
             }, $trace['args'])).')';
-            return array('file' => str_replace(_DOC_,'', $trace['file']), 'line' => $trace['line'], 'function' => $trace['function']);
+            return array('file' => str_replace(_DOC_,'', isset($trace['file']) ? $trace['file'] : '\Closure'), 'line' => isset($trace['line']) ? $trace['line'] : 0, 'function' => $trace['function']);
         },$e->getTrace());
     }
 
