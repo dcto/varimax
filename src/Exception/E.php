@@ -49,7 +49,7 @@ class E {
         set_exception_handler(array(__CLASS__,'onException'));
 
         //截获致命性错误
-        // register_shutdown_function([__CLASS__,'onShutdown']);
+        register_shutdown_function([__CLASS__,'onShutdown']);
     }
 
     /**
@@ -155,7 +155,7 @@ class E {
                 '[BACKTRACES]' =>     PHP_EOL.$e->getTraceAsString()
             );
             array_walk($_ERROR, function (&$v, $k) { $v = $k.' '.$v;});
-            if(!is_dir($logDir = runtime('logs','e',_APP_))){
+            if(!is_dir($logDir =  _DOC_._DS_.'runtime'._DS_.'logs'._DS_.'e'._DS_._APP_ )){
                 mkdir($logDir, 0777, true);
             }
             file_put_contents($logDir._DS_.date('Ymd').'.log', implode(PHP_EOL, $_ERROR).PHP_EOL.str_repeat('=',100).PHP_EOL.PHP_EOL, FILE_APPEND);
@@ -173,7 +173,7 @@ class E {
         if (PHP_SAPI == 'cli') {
             echo $e->getFile() . "\t[LINE]:" . $e->getLine() . "\t" . '[ERROR]:' . $e->getMessage() . PHP_EOL . PHP_EOL;
         }else{
-            ob_get_contents() && ob_end_clean();
+            ob_end_clean();
             http_response_code($e instanceof Exception ? $e->getStatus() : 500);
             static::$debug == 1 && die($e->getMessage());
             if(static::$debug == 2) {
@@ -186,6 +186,7 @@ class E {
                 }
                 echo str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Exception::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
             }
+           
         }
     }
 }
