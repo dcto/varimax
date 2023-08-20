@@ -178,9 +178,9 @@ class E {
             static::$debug == 1 && die($e->getMessage());
             if(static::$debug == 2) {
                 if(is_array ($debugBacktrace = static::debugBacktrace($e))){
-                    $c = count($debugBacktrace);
+                    $c = count($debugBacktrace) - 5;
                     $debugBacktrace = '<tr bgcolor="#eee"><td>No.</td><td>File</td><td>Line</td><td>Code</td></tr>'. join('', array_map(function($v) use(&$c){
-                            return vsprintf('<tr bgcolor="#ffc"><td>'.$c--.'</td><td>%s</td><td>%d</td><td>%s</td></tr>', $v);}, $debugBacktrace));
+                        if($c>0) return vsprintf('<tr bgcolor="#ffc"><td>'.$c--.'</td><td>%s</td><td>%d</td><td>%s</td></tr>', $v);}, $debugBacktrace));
                 }else{
                     $debugBacktrace = "<tr><td><ul>{$debugBacktrace}</ul></td></tr>";
                 }
