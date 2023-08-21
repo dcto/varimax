@@ -118,9 +118,7 @@ class E {
             isset($trace['class']) && $trace['function'] = $trace['class'].$trace['type'].$trace['function'];
             if(isset($trace['args'])){
                 $trace['function'] .= '('.join(', ' , array_map(function($arg){
-
                     if(in_array(gettype($arg),['array', 'object', 'boolean'])){
-                       
                         if(is_object($arg)) return get_class($arg);
                         if(is_bool($arg)) return $arg ? 'True' : 'False';
                         return json_encode($arg, true);
@@ -146,7 +144,7 @@ class E {
                 '[CODE]'       =>     Exception::codes($e->getCode()),
                 '[FILE]'       =>     $e->getFile(),
                 '[LINE]'       =>     $e->getLine(),
-                '[INFO]'       =>     Exception::error($e->getCode()).' '.$e->getMessage(),
+                '[INFO]'       =>     $e->getMessage(),
                 '[METHOD]'     =>     PHP_SAPI=='cli' ? PHP_SAPI : $_SERVER['REQUEST_METHOD'],
                 '[REMOTE]'     =>     PHP_SAPI=='cli' ? PHP_SAPI : $_SERVER["REMOTE_ADDR"],
                 '[REQUEST]'    =>     PHP_SAPI=='cli' ? __FILE__.implode(' ', $argv) : 'http://'.$_SERVER['SERVER_NAME'].':'.$_SERVER["SERVER_PORT"].$_SERVER["REQUEST_URI"],
@@ -158,7 +156,7 @@ class E {
             if(!is_dir($logDir =  _DOC_._DS_.'runtime'._DS_.'logs'._DS_.'e'._DS_._APP_ )){
                 mkdir($logDir, 0777, true);
             }
-            file_put_contents($logDir._DS_.date('Ymd').'.log', implode(PHP_EOL, $_ERROR).PHP_EOL.str_repeat('=',100).PHP_EOL.PHP_EOL, FILE_APPEND);
+            file_put_contents($logDir._DS_.date('Ymd').'.log', join(PHP_EOL, $_ERROR).PHP_EOL.PHP_EOL, FILE_APPEND);
 
     }
 
@@ -186,7 +184,7 @@ class E {
                 }
                 echo str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Exception::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
             }
-           
+            die;
         }
     }
 }
