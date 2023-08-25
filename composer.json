@@ -47,14 +47,9 @@
     "illuminate/support": "8.*",            
     "illuminate/pagination": "8.*"
   },
-  "suggest": {    
-    "hashids/hashids": "Suggest HashID In the Eloquent",
+  "suggest": {
+    "hashids/hashids": "Suggest hashids with the data Id",
     "nesbot/carbon": "Suggest Carbon DateTime Formating",
-    "windwalker/renderer": "Suggest 3.* Renderer View Engine ",
-    "twig/twig": "Suggest Twig 2.x Of View Engine",
-    "league/plates": "Suggest Plates 3.x Of View Engine",
-    "windwalker/edge": "Suggest Edge 3.x Of View Engine",
-    "illuminate/view": "Suggest Blade 7.* Of View Engine",
-    "mustache/mustache": "Suggest Mustcache 2.x Of View Engine"
+    "varimax/view":"Suggest varimax template engine"
   }
 }
