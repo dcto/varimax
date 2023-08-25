@@ -80,31 +80,6 @@ abstract class Controller
         return make($abstract, $parameters);
     }
 
-    /**
-     * [view]
-     *
-     * @param       $template
-     * @param array $params
-     *
-     */
-    protected function view($template, $variable = [])
-    {
-        return make('view')->display($template, $variable);
-    }
-
-    /**
-     * [assign]
-     *
-     * @param      $var
-     * @param null $val
-     *
-     */
-    protected function assign($var, $val = null)
-    {
-        make('view')->assign($var, $val);
-    }
-
-
     public function __destruct()
     {
         $this->off();
