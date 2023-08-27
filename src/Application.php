@@ -44,7 +44,6 @@ class Application extends Container
         'cache'     => \VM\Cache\Cache::class,
         'crypt'     => \VM\Crypt\Crypt::class,
         'lang'      => \VM\I18n\Lang::class,
-        'view'      => \VM\View::class,
         'curl'      => \VM\Http\Curl\Curl::class,
         'file'      => \VM\FileSystem\FileSystem::class,
         'log'       => \VM\Logger\Logger::class,
