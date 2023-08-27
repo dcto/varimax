@@ -11,10 +11,9 @@
 
 namespace VM\Config;
 
-use ArrayAccess;
 use Illuminate\Contracts\Config\Repository as ConfigContract;
 
-class Config implements ArrayAccess, ConfigContract
+class Config implements \ArrayAccess, ConfigContract
 {
     /**
      * All of the configuration item.
