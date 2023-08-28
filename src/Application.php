@@ -223,7 +223,7 @@ class Application extends Container
      */
     public function cli()
     {
-        'varimax' && $this->registerConsoleCommand();
+        'varimax'==_APP_ && $this->registerConsoleCommand();
     }
 
     /**
