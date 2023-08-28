@@ -45,11 +45,11 @@ abstract class Controller
     static $assign = array();
 
 
-    public function __construct()
+    public function __construct(Application $app)
     {
         if(PHP_SAPI != 'cli'){
 
-            static::$router = make('router')->route();
+            static::$router = $app->make('router')->route();
 
             static::$assign['CONTROLLER'] = static::$controller = static::$router->controller();
 
