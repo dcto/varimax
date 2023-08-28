@@ -1,6 +1,5 @@
 <?php
 namespace VM;
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -10,28 +9,13 @@ namespace VM;
  * SITE: https://www.varimax.cn/
  */
 
-use Illuminate\Container\Container;
-use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\ServiceProvider;
-
 /**
  * Class Application
  *
  * @package VM
  */
-class Application extends Container
+class Application extends \Illuminate\Container\Container
 {
-    /**
-     * Application Booted
-     * @var bool
-     */
-    protected $boot;
-
-    /**
-     * Application aliases
-     *
-     * @var array
-     */
     protected $aliases = [
         'config'    => \VM\Config\Config::class,
         'router'    => \VM\Routing\Router::class,
@@ -47,26 +31,6 @@ class Application extends Container
         'curl'      => \VM\Http\Curl\Curl::class,
         'file'      => \VM\FileSystem\FileSystem::class,
         'log'       => \VM\Logger\Logger::class,
-        'arr'       => \Illuminate\Support\Arr::class,
-        'str'       => \Illuminate\Support\Str::class,
-    ];
-
-    /**
-     * Service Provider
-     *
-     * @var array
-     */
-    protected $services = [
-        'id'=>\VM\Services\HashIdsServiceProvider::class,
-        'db' =>[\VM\Services\DatabaseServiceProvider::class, \VM\Services\PaginationServiceProvider::class]
-    ];
-
-    /**
-     * Provider of loaded
-     *
-     * @var array
-     */
-    protected $providers = [
     ];
 
     /**
@@ -74,11 +38,9 @@ class Application extends Container
      */
     static public function boostrap()
     {
-        static::setInstance($container = new self);
+        static::setInstance($container = new static);
 
         $container->instance('app', static::$instance);
-
-        $container->instance(static::class, $container);
 
         $container->registerExceptionHandle();
 
@@ -86,80 +48,25 @@ class Application extends Container
 
         $container->registerServiceProviders();
 
-        $container->registerFacades();
-        
-        $container->boot = true;
-
         PHP_SAPI == 'cli' ? $container->cli() : $container->run();
     }
 
     /**
-     * Resolve the given type from the container.
+     * Resolve make services.
      *
      * @param string $abstract
      * @param array $parameters
      * @return mixed
      */
-    public function make($abstract, array $parameters = [])
-    {
-        if(!$this->bound($abstract) && isset($this->services[$abstract])){
-
-            $this->register($this->services[$abstract]);
-
-        }else if(!$this->bound($abstract = $this->getAlias($abstract))){
-
-            $this->singleton($abstract);
-        }
-
-        return parent::make($abstract, $parameters);
-    }
-
-    /**
-     * Get Application Config
-     *
-     * @param $key
-     * @param $value
-     * @param null $default
-     * @return mixed
-     */
-    public function config($key, $value, $default = null)
-    {
-        return $this->make('config')->get($key, $value, $default);
-    }
-
-    /**
-     * Register service provider to the application.
-     *
-     * @param  \Illuminate\Support\ServiceProvider|string  $provider
-     * @param  bool $force
-     * @return \Illuminate\Support\ServiceProvider
-     */
-    public function register($providers, $force = false)
-    {   
-        foreach((array) $providers as $provider){
-            if (!$provider instanceof ServiceProvider || $force) {
-                $provider = new $provider($this);
-                if (method_exists($provider, 'register')) {
-                    $provider->register();
-                }
-            }
-            
-            $this->providers[get_class($provider)] = $provider;
-
-            if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
-                $provider->boot();
-            }
+    public function make($abstract, $parameters = []){
+        if($this->bound($abstract)){
+            return $this->resolve($abstract, $parameters);
+        }else{
+            $this->singleton($abstract, $this->getAlias($abstract));
+            return $this->resolve($abstract, $parameters);
         }
     }
 
-
-    /**
-     * Register Facades
-     */
-    protected function registerFacades()
-    {
-        Facade::setFacadeApplication($this);
-    }
 
     /**
      * Register all of the config base service providers.
@@ -168,14 +75,13 @@ class Application extends Container
      */
     protected function registerServiceProviders()
     {
-        $this->register(\Illuminate\Events\EventServiceProvider::class);
-        if(is_array($providers = $this['config']['providers'])){
-            foreach ($providers as $alias => $provider) {
-                if (!is_int($alias)) {
-                    $this->services[$alias] = $provider;
-                } else {
-                    $this->register($provider);
-                }
+        foreach($this->config['providers'] as $provider){
+            $provider = new $provider($this);
+            if (method_exists($provider, 'register')) {
+                $provider->register();
+            }
+            if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
+                $provider->boot();
             }
         }
     }
