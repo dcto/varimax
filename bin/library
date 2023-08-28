@@ -1,5 +1,6 @@
 <?php
 #!/usr/bin/php
+
 /**
  * Get the available container instance.
  *
@@ -114,18 +115,13 @@ if(!function_exists('config')) {
  * @return string
  */
 if(!function_exists('root')) {
-    function root()
+    function root(...$args)
     {
-        $args = func_get_args();
         if(!$args) return _ROOT_;
         $dir = _ROOT_;
-
         array_map(function ($arg) use (&$dir) {
             $dir .= '/' . trim($arg, '/');
         }, $args);
-
-        if($args[0] == 'runtime'){
-        }
         return $dir;
     }
 }
@@ -134,9 +130,8 @@ if(!function_exists('root')) {
  * root alias name
  */
 if(!function_exists('path')) {
-    function path()
+    function path(...$args)
     {
-        $args = func_get_args();
         return call_user_func_array("root", $args);
     }
 }
@@ -148,9 +143,9 @@ if(!function_exists('path')) {
  * @return string
  */
 if (! function_exists('base_path')) {
-    function base_path($path = '')
+    function base_path(...$args)
     {
-        return root($path);
+        return root($args);
     }
 }
 
@@ -158,9 +153,8 @@ if (! function_exists('base_path')) {
  * runtime DIR
  */
 if(!function_exists('runtime')) {
-    function runtime()
+    function runtime(...$args)
     {
-        $args = func_get_args();
         $args && $args[0] = trim($args[0],'/');
         array_unshift($args, 'runtime');
         return call_user_func_array("root", $args);
