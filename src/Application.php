@@ -227,15 +227,15 @@ class Application extends Container
     }
 
     /**
-     * Dispatch HTTP Request
+     * Dispatch HTTP
      *
      * @return \VM\Http\Response\Response string
      * @throws \ErrorException
      */
     public function run()
     {
-        return with(require(_DIR_.'/routes.php'), function($router){
-            $dispatch = $this->router->dispatch($this->request, $this->response, $router);
+        return with($this->router->load('routes'), function($router){
+            $dispatch = $router->dispatch($this->request, $this->response);
             if($dispatch instanceof \VM\Http\Response\Response) {
                return $dispatch->send();
             }

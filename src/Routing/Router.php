@@ -285,14 +285,12 @@ class Router
      * @param $routes
      * @throws NotFoundException
      */
-    public function load($routes)
+    public function load(...$routes)
     {
-        if(is_readable($routes)){
-            require($routes);
-            return $this;
-        }else{
-            throw new NotFoundException('Unable routing from '. basename($routes));
-        }
+        array_map(function($route){
+                require($route.'.php');
+        }, $routes);
+        return $this;
     }
 
     /**
@@ -615,7 +613,7 @@ class Router
 
         $new['prefix'] = $this->formatGroupPrefix($new);
 
-        return $old ? array_replace_recursive(data_except($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
+        return $old ? array_replace_recursive(array_diff_assoc($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
     }
 
     /**
