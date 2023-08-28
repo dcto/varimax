@@ -234,18 +234,12 @@ class Application extends Container
      */
     public function run()
     {
-        /**
-         * dispatch
-         */
-        $dispatch = $this->make('router')->load(root(_APP_,'routes.php'))->dispatch($this->make('request') , $this->make('response'));
-
-        /**
-         * @var $dispatch \VM\Http\Response\Response
-         */
-        if($dispatch instanceof \VM\Http\Response\Response) {
-            return $dispatch->send();
-        }
-        
-        return $this->make('response')->make($dispatch)->send();
+        return with(require(_DIR_.'/routes.php'), function($router){
+            $dispatch = $this->router->dispatch($this->request, $this->response, $router);
+            if($dispatch instanceof \VM\Http\Response\Response) {
+               return $dispatch->send();
+            }
+            return $this->response->make($dispatch)->send();
+        });
     }
 }
