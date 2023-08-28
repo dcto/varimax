@@ -223,7 +223,7 @@ class Application extends Container
      */
     public function cli()
     {
-        _APP_=='varimax' && $this->registerConsoleCommand();
+        'varimax' && $this->registerConsoleCommand();
     }
 
     /**
@@ -234,7 +234,7 @@ class Application extends Container
      */
     public function run()
     {
-        return with($this->router->load('routes'), function($router){
+        return with($this->router->load(app_path('routes')), function($router){
             $dispatch = $router->dispatch($this->request, $this->response);
             if($dispatch instanceof \VM\Http\Response\Response) {
                return $dispatch->send();
