@@ -22,8 +22,8 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 
     static public function register(){
         $command = new \Symfony\Component\Console\Application;
-        $command->add(new CommandController);
-        $command->add(new CommandDatabase);
+        $command->add(new CommandMake('controller'));
+        $command->add(new CommandMake('model'));
         $command->add(new CommandModel);
         $command->run();
     }
