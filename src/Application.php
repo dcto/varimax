@@ -39,7 +39,7 @@ class Application extends \Illuminate\Container\Container
         'lang'      => \VM\I18n\Lang::class,
         'curl'      => \VM\Http\Curl\Curl::class,
         'file'      => \VM\FileSystem\FileSystem::class,
-        'log'       => \VM\Logger\Logger::class,
+        'log'       => \VM\Logger\Logger::class
     ];
 
     /**
@@ -56,18 +56,42 @@ class Application extends \Illuminate\Container\Container
         static::$instance->registerExceptionHandle();
 
         static::$instance->registerServiceProviders();
-        
+
         \App::setFacadeApplication(static::$instance);
     
         PHP_SAPI == 'cli' ? static::$instance->cli() : static::$instance->run();
     }
 
-
+    /**
+     * Make an instance of the applicationr
+     * @return mixed
+     */
     public function make($abstract, $parameters = []){
         if(!$this->bound($abstract = $this->getAlias($abstract))){
             $this->singleton($abstract);
         }
         return parent::make($abstract, $parameters);
+    }
+
+    /**
+     * Register a service provider with the application
+     * @param $provider 
+     * @return void
+     */
+    public function register($provider){
+       
+        $provider = new $provider($this);
+
+        method_exists($provider, 'register') && $provider->register();
+
+        if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
+
+            $provider->callBootingCallbacks();
+
+            $this->call([$provider, 'boot']);
+
+            $provider->callBootedCallbacks();
+        }
     }
 
     /**
@@ -87,15 +111,11 @@ class Application extends \Illuminate\Container\Container
      */
     protected function registerServiceProviders()
     {
-        if(isset($this->config['providers']) && is_array($this->config['providers'])){
+        $this->register(\Illuminate\Events\EventServiceProvider::class);
+
+        if(is_array($this->config['providers'])){
             foreach($this->config['providers'] as $provider){
-                $provider = new $provider($this);
-                if (method_exists($provider, 'register')) {
-                    $provider->register();
-                }
-                if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
-                    $provider->boot();
-                }
+                $this->register($provider);
             }
         }
     }
@@ -155,6 +175,7 @@ class Application extends \Illuminate\Container\Container
     protected function run()
     {
         return $this->router->load(app_path('routes'), function($router){
+            print_r($this);
             $dispatch = $router->dispatch($this->request, $this->response);
             if($dispatch instanceof \VM\Http\Response\Response) {
                return $dispatch->send();
