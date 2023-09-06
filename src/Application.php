@@ -174,7 +174,7 @@ class Application extends \Illuminate\Container\Container
      */
     protected function run()
     {
-        return $this->router->load(app_path('routes'), function($router){
+        return $this->router->load(app_dir('routes'), function($router){
             $dispatch = $router->dispatch($this->request, $this->response);
             if($dispatch instanceof \VM\Http\Response\Response) {
                return $dispatch->send();
