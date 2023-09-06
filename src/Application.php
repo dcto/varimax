@@ -15,12 +15,7 @@ namespace VM;
  * @package VM
  */
 class Application extends \Illuminate\Container\Container
-{
-    /**
-     * Application name;
-     */
-    protected $application = null;
-    
+{    
     /**
      * Application aliases items
      */
@@ -163,7 +158,7 @@ class Application extends \Illuminate\Container\Container
      */
     protected function cli()
     {
-        $this['application'] == 'varimax' && $this->registerConsoleCommand();
+        _APP_ == 'varimax' && $this->registerConsoleCommand();
     }
 
     /**
