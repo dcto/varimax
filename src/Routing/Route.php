@@ -29,7 +29,7 @@ namespace VM\Routing;
  * @method \VM\Routing\Route|string action(string $action = null)
  * @method \VM\Routing\Route|array parameters(mixed $parameters = null)
  */
-class Route
+class Route implements \ArrayAccess
 {
     /**
      * @var int id
@@ -266,6 +266,22 @@ class Route
     public function __toString()
     {
         return $this->url();
+    }
+    
+    public function offsetExists($property): bool{
+        return isset($this->$property);
+    } 
+    
+    public function offsetGet($property):mixed{
+        return $this->$property;
+    }
+    
+    public function offsetSet($property, $value):void{
+        $this->$property = $value;
+    }
+
+    public function offsetUnset($property):void{
+        unset($this->$property);
     }
     
     /**

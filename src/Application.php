@@ -8,7 +8,7 @@ namespace VM;
  * Time: 2020-08-11 21:49
  * SITE: https://www.varimax.cn/
  */
-
+use Illuminate\Support\Facades\Facade;
 /**
  * Class Application
  *
@@ -16,7 +16,16 @@ namespace VM;
  */
 class Application extends \Illuminate\Container\Container
 {
+    /**
+     * Application name;
+     */
+    protected $application = null;
+    
+    /**
+     * Application aliases items
+     */
     protected $aliases = [
+        'app'       => \VM\Application::class,
         'config'    => \VM\Config\Config::class,
         'router'    => \VM\Routing\Router::class,
         'request'   => \VM\Http\Request::class,
@@ -38,35 +47,38 @@ class Application extends \Illuminate\Container\Container
      */
     static public function boostrap()
     {
-        static::setInstance($container = new static);
+        static::setInstance(new static);
 
-        $container->instance('app', static::$instance);
+        static::$instance->regiseterAbstractAliases();
 
-        $container->registerExceptionHandle();
+        static::$instance->registerConfigEnvironment();
 
-        $container->registerConfigEnvironment();
+        static::$instance->registerExceptionHandle();
 
-        $container->registerServiceProviders();
+        static::$instance->registerServiceProviders();
+        
+        Facade::setFacadeApplication(static::$instance);
+    
+        PHP_SAPI == 'cli' ? static::$instance->cli() : static::$instance->run();
+    }
 
-        PHP_SAPI == 'cli' ? $container->cli() : $container->run();
+
+    public function make($abstract, $parameters = []){
+        if(!$this->bound($abstract = $this->getAlias($abstract))){
+            $this->singleton($abstract);
+        }
+        return parent::make($abstract, $parameters);
     }
 
     /**
-     * Resolve make services.
-     *
-     * @param string $abstract
-     * @param array $parameters
-     * @return mixed
-     */
-    public function make($abstract, $parameters = []){
-        if($this->bound($abstract)){
-            return $this->resolve($abstract, $parameters);
-        }else{
-            $this->singleton($abstract, $this->getAlias($abstract));
-            return $this->resolve($abstract, $parameters);
+    * Register all of aliases
+    * @return void 
+    */
+    private function regiseterAbstractAliases(){
+        foreach($this->aliases as $alias => $abstract){
+            $this->alias($abstract, $alias);
         }
     }
-
 
     /**
      * Register all of the config base service providers.
@@ -75,13 +87,15 @@ class Application extends \Illuminate\Container\Container
      */
     protected function registerServiceProviders()
     {
-        foreach($this->config['providers'] as $provider){
-            $provider = new $provider($this);
-            if (method_exists($provider, 'register')) {
-                $provider->register();
-            }
-            if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
-                $provider->boot();
+        if(isset($this->config['providers']) && is_array($this->config['providers'])){
+            foreach($this->config['providers'] as $provider){
+                $provider = new $provider($this);
+                if (method_exists($provider, 'register')) {
+                    $provider->register();
+                }
+                if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
+                    $provider->boot();
+                }
             }
         }
     }
@@ -90,7 +104,7 @@ class Application extends \Illuminate\Container\Container
      * Dispatch Command Request
      * @todo resolve the command cli mode
      */
-    public function registerConsoleCommand()
+    private function registerConsoleCommand()
     {
         \VM\Console\Command::register();
     }
@@ -108,7 +122,7 @@ class Application extends \Illuminate\Container\Container
      * [registerSystemEnvironment]
      */
     private function registerConfigEnvironment()
-    {
+    {   
         /**
          * setting timezone
          */
@@ -127,9 +141,9 @@ class Application extends \Illuminate\Container\Container
     /**
      * Dispatch Cli Mode Request
      */
-    public function cli()
+    protected function cli()
     {
-        'varimax'==_APP_ && $this->registerConsoleCommand();
+        $this['application'] == 'varimax' && $this->registerConsoleCommand();
     }
 
     /**
@@ -138,9 +152,9 @@ class Application extends \Illuminate\Container\Container
      * @return \VM\Http\Response\Response string
      * @throws \ErrorException
      */
-    public function run()
+    protected function run()
     {
-        return with($this->router->load(app_path('routes')), function($router){
+        return $this->router->load(app_path('routes'), function($router){
             $dispatch = $router->dispatch($this->request, $this->response);
             if($dispatch instanceof \VM\Http\Response\Response) {
                return $dispatch->send();
