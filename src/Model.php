@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -333,11 +332,11 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     protected static function boot()
     {
-        //Bootstrap
-        make('db');
+        app()->register(\VM\Services\DatabaseServiceProvider::class);
     
         //加载Traits
-       static::bootTraits();
+        static::bootTraits();
+
 
         static::retrieved(function($model){
             method_exists($model, 'model') && $model->model($model);

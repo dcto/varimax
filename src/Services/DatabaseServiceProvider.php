@@ -12,31 +12,26 @@ namespace VM\Services;
  */
 
 use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
 
 class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvider
 {
     /**
-     * Bootstrap the application events.
-     *
+     * Register the service provider.
      * @return void
      */
-    public function boot()
-    {        
-        Model::setConnectionResolver($this->app['db']);
-
-        Model::setEventDispatcher($this->app['events']);
-
-        $this->registerQueryEvents();
-
-        $this->registerNestCollect();
-
-        $this->registerQueryLogs() ;
+    public function register(){
+        parent::register();
+        $this->booted(function(){
+            $this->registerQueryEvents();
+            $this->registerNestCollect();
+            $this->registerDbQueryLogs();
+        });
     }
 
     /**
-     * register nest Collect
+     * Register Nest Collection Into Illuminate Builder 
+     * @return void
      */
     protected function registerNestCollect(){
         Collection::macro('top', function($id, $col = 'id'){return $this->where($col, $id);});
@@ -74,7 +69,7 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
     }
 
     /**
-     * register Query Extend
+     * Register Query Extend
      */
     protected function registerQueryExtends()
     {
@@ -118,16 +113,16 @@ class DatabaseServiceProvider extends \Illuminate\Database\DatabaseServiceProvid
     /**
      * Register Query Logs
      */
-    protected function registerQueryLogs()
+    protected function registerDbQueryLogs()
     {
-        if(getenv('ENV') || config('app.log') > 1){
-            \DB::listen(function($query) {
+        if(getenv('ENV') || $this->app['config']['app.log'] > 1){
+            $this->app['db']->listen(function($query) {
                 $sql = vsprintf(str_replace('?', '%s', $query->sql), $query->bindings);                
-                if($query->time > config('database.timeout', 500)){
-                    \Log::dir('db-'. $query->connectionName, 'slow')->warning('['.$query->time.' ms] '.$sql);
+                if($query->time > 500){
+                    $this->app['log']->dir('db.'. $query->connectionName, 'slow')->warning('['.$query->time.' ms] '.$sql);
                 }
-                if(getenv('ENV') || config('app.log') > 2){
-                    \Log::dir('db-'. $query->connectionName, _APP_)->debug('['.$query->time.' ms] '.$sql);
+                if(getenv('ENV') || $this->app['config']['app.log'] > 1){
+                    $this->app['log']->dir('db.'. $query->connectionName, _APP_)->debug('['.$query->time.' ms] '.$sql);
                 }
             });
         }
