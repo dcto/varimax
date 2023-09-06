@@ -8,7 +8,7 @@ namespace VM;
  * Time: 2020-08-11 21:49
  * SITE: https://www.varimax.cn/
  */
-use Illuminate\Support\Facades\Facade;
+
 /**
  * Class Application
  *
@@ -57,7 +57,7 @@ class Application extends \Illuminate\Container\Container
 
         static::$instance->registerServiceProviders();
         
-        Facade::setFacadeApplication(static::$instance);
+        \App::setFacadeApplication(static::$instance);
     
         PHP_SAPI == 'cli' ? static::$instance->cli() : static::$instance->run();
     }
