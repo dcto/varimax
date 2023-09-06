@@ -20,7 +20,7 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
 {
     public function __construct()
     {
-        parent::__construct('model:up');
+        parent::__construct('model:reset');
         $this->addArgument('name', InputArgument::REQUIRED);
         $this->setDescription('up to database from a model');
     }
@@ -39,7 +39,7 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
                 $model = make("\\App\\Model\\".$name);
                 config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                 \Schema::dropIfExists($model->getTable());
-                $model::up();
+                $model->up();
                 $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$name.'] success!'));
             }catch(\Exception $e){
                 $output->writeln(sprintf('<fg=red>%s</>',  $e->getMessage()));
