@@ -78,6 +78,7 @@ class Router
      */
     private $groupStack = array();
 
+
     /**
      * Defines a route with or without Callback and Method.
      *
@@ -285,12 +286,12 @@ class Router
      * @param $routes
      * @throws NotFoundException
      */
-    public function load(...$routes)
+    public function load($routes, $callback = null)
     {
         array_map(function($route){
-                require($route.'.php');
-        }, $routes);
-        return $this;
+               require($route.'.php');
+        }, (array) $routes);
+        return $callback ? $callback($this) : $this;
     }
 
     /**
@@ -671,4 +672,5 @@ class Router
         }
         return '';
     } 
+    
 }
