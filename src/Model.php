@@ -332,6 +332,7 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     protected static function boot()
     {
+        //Register Database Service
         app()->register(\VM\Services\DatabaseServiceProvider::class);
     
         //加载Traits

@@ -75,6 +75,8 @@ class Application extends \Illuminate\Container\Container
      */
     public function register($provider){
        
+        if($this->resolved($provider)) return true;
+        
         $provider = new $provider($this);
 
         method_exists($provider, 'register') && $provider->register();
