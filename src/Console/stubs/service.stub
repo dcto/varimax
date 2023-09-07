@@ -5,7 +5,7 @@ namespace App\Service;
 /**
 * @package Service
 */
-class %CLASS% extends \VM\Service\ServiceProvider 
+class %CLASS% extends \VM\Services\ServiceProvider 
 {
 
     /**
