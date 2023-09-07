@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace VM\Services;
 
 /**
 * @package Services
