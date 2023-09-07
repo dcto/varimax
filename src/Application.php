@@ -70,24 +70,24 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Register a service provider with the application
-     * @param $provider 
+     * @param $service 
      * @return void
      */
-    public function register($provider){
+    public function register($service){
        
-        if($this->resolved($provider)) return true;
+        if($this->resolved($service)) return true;
         
-        $provider = new $provider($this);
+        $service = new $service($this);
 
-        method_exists($provider, 'register') && $provider->register();
+        method_exists($service, 'register') && $service->register();
 
-        if (!$provider->isDeferred() && method_exists($provider, 'boot')) {
+        if (!$service->isDeferred() && method_exists($service, 'boot')) {
 
-            $provider->callBootingCallbacks();
+            $service->callBootingCallbacks();
 
-            $this->call([$provider, 'boot']);
+            $this->call([$service, 'boot']);
 
-            $provider->callBootedCallbacks();
+            $service->callBootedCallbacks();
         }
     }
 
@@ -110,9 +110,9 @@ class Application extends \Illuminate\Container\Container
     {
         $this->register(\Illuminate\Events\EventServiceProvider::class);
 
-        if(is_array($this->config['providers'])){
-            foreach($this->config['providers'] as $provider){
-                $this->register($provider);
+        if(is_array($this->config['service'])){
+            foreach($this->config['service'] as $service){
+                $this->register($service);
             }
         }
     }
