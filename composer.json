@@ -37,6 +37,7 @@
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
+    "psr/http-message": "1.*",
     "vlucas/phpdotenv":"5.*",
     "illuminate/contracts": "8.*",
     "illuminate/container": "8.*",
