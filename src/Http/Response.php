@@ -2,7 +2,6 @@
 
 namespace VM\Http;
 
-use VM\Application;
 use VM\Http\Response\Encode;
 use VM\Http\Response\StreamBase;
 use VM\Http\Response\ResponseTraits;
