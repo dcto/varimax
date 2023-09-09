@@ -172,11 +172,17 @@ class Application extends \Illuminate\Container\Container
     protected function run()
     {
         return $this->router->load(app_dir('routes'), function($router){
-            $dispatch = $router->dispatch($this->request, $this->response);
-            if($dispatch instanceof \VM\Http\Response\Response) {
-               return $dispatch->send();
-            }
-            return $this->response->make($dispatch)->send();
+            return (new \Illuminate\Pipeline\Pipeline($this))
+            ->send($this->request)->through($this['config']['pipeline'])
+            ->then(function($next) use($router){
+                if($next instanceof \VM\Http\Request) {
+                   return $router->dispatch($next, $this->response);
+                }
+                if($next instanceof \VM\Http\Response\Response){
+                    $next->send();
+                }
+                
+            });
         });
     }
 }
