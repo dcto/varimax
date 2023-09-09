@@ -391,7 +391,7 @@ class Router
                         $callable = $this->Fire($callable);
                     }
                     
-                    if ($callable instanceof Response\Response) {
+                    if ($callable instanceof Response) {
                         
                         return $callable;
                     }
@@ -456,7 +456,7 @@ class Router
      */
     protected function Fire($callable, $parameters = [])
     {
-        if($callable instanceof Response\Response){
+        if($callable instanceof Response){
             return $callable;
 
         }else if($callable instanceof \Closure) {
