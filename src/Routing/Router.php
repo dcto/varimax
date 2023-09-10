@@ -11,6 +11,7 @@
 
 namespace VM\Routing;
 
+use VM\Application;
 use VM\Http\Request;
 use VM\Http\Response;
 use VM\Exception\NotFoundException;
@@ -20,6 +21,12 @@ use VM\Exception\NotFoundException;
  */
 class Router
 {
+
+    /**
+     * @var Application
+     */
+    private $app;
+
     /**
      * @var string
      */
@@ -78,6 +85,11 @@ class Router
      */
     private $groupStack = array();
 
+
+    public function __construct(Application $app)
+    {
+        $this->app;
+    }
 
     /**
      * Defines a route with or without Callback and Method.
@@ -349,11 +361,8 @@ class Router
      * dispatch to the router
      * @return mixed
      */
-    public function dispatch(Request $request, Response $response)
+    public function dispatch(Request $request)
     {        
-        //dispatch the OPTIONS Request
-        if($request->method('OPTIONS')) return $response->make();
-
         // Get Http Request Path.
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
@@ -398,18 +407,16 @@ class Router
                 }
             }
         
-
             /**
              * construct instance and include hook
              */
-            $instance = $this->Fire($route->calling(), $route->args());
-
-            if(is_string($instance)){
+            return $this->Fire($route->calling(), $route->args());
+            // if(is_string($instance)){
             
-                return $response->make($instance);
-            }else{
-              return $instance;
-            }
+            //     return $response->make($instance);
+            // }else{
+            //   return $instance;
+            // }
     }
 
     /**

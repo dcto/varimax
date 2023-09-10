@@ -175,13 +175,14 @@ class Application extends \Illuminate\Container\Container
             return (new \Illuminate\Pipeline\Pipeline($this))
             ->send($this->request)->through($this['config']['pipeline'])
             ->then(function($next) use($router){
-                if($next instanceof \VM\Http\Request) {
-                   return $router->dispatch($next, $this->response);
+                if($next instanceof \VM\Http\Request){
+                    $next = $router->dispatch($next);
                 }
-                if($next instanceof \VM\Http\Response\Response){
-                    $next->send();
+
+                if($next instanceof \VM\Http\Response){
+                    return $next->send();
                 }
-                
+                return $next;
             });
         });
     }
