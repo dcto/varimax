@@ -31,14 +31,16 @@ class Response implements ResponseInterface
      * Make an Response instance
      * @param string $content
      * @param int $status
-     * @param array $headers
+     * @param array $headers 
      */
     public function make(string $content = '', int $status = 200, array $headers = [])
     {
-        $this->response = new BaseResponse();
+        if($content instanceof self) return $content;
+        $this->setResponse(new BaseResponse);
         return $this->withStatus($status)
         ->withHeaders($headers)
         ->withBody(new StreamBase($content));
+
     }
 
     /**
@@ -46,9 +48,9 @@ class Response implements ResponseInterface
      *
      * @param mixed $data will transfer to a string value
      */
-    public function raw($content = '', $status = 200)
+    public function raw(mixed $content = null, int $status = 200)
     {
-        $this->response = new BaseResponse();
+        $this->setResponse(new BaseResponse);
         return $this->withStatus($status)
         ->withHeader('content-type', 'text/plain; charset=utf-8')
         ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, false)));
@@ -59,9 +61,9 @@ class Response implements ResponseInterface
      *
      * @param array|Arrayable|Xmlable $data
      */
-    public function xml($content = [], $root = 'root', $status = 200)
+    public function xml(array $content = [], string $root = 'root', int $status = 200)
     {
-        $this->response = new BaseResponse();
+        $this->setResponse(new BaseResponse);
         return $this->withStatus($status)
         ->withHeader('content-type', 'application/xml; charset=utf-8')
         ->withBody(new StreamBase(Encode::toXml($content, null, $root)));
@@ -75,9 +77,9 @@ class Response implements ResponseInterface
      * @param array $headers
      * @return ResponseInterface
      */
-    public function json($data = [], $status = 200, $options = JSON_UNESCAPED_UNICODE)
+    public function json(array $data = [], int $status = 200, int $options = JSON_UNESCAPED_UNICODE)
     {
-        $this->response = new JsonResponse();
+        $this->setResponse(new JsonResponse);
         return $this->withStatus($status)
             ->withHeader('content-type', 'application/json; charset=utf-8')
             ->withBody(new StreamBase(Encode::toJson($data, $options)));
@@ -91,9 +93,9 @@ class Response implements ResponseInterface
      * 
      * @return ResponseInterface
      */
-    public function html($html, $data = [], $status = 200, array $headers = [])
+    public function html(string $html, array $data = [], int $status = 200, array $headers = [])
     {
-        $this->response = new BaseResponse();
+        $this->setResponse(new BaseResponse);
         return $this->withStatus($status);
         foreach($headers as $header => $value){
             $this->withHeader($header, $value);
@@ -105,9 +107,9 @@ class Response implements ResponseInterface
     /**
      * Redirect to a url with a status.
      */
-    public function redirect($url,  $status = 302) {
+    public function redirect(string $url,  int $status = 302) {
 
-        $this->response = new RedirectResponse($url, $status);
+        $this->setResponse(new RedirectResponse($url, $status));
         return $this->withStatus($status)->withHeader('Location', $url);
     }
 
@@ -154,14 +156,23 @@ class Response implements ResponseInterface
 
     /**
      * Get the response object from self.
-     *
-     * @return object|ResponseInterface it's an object that implemented PsrResponseInterface, or maybe it's a proxy class
+     * 
+     * @return BaseResponse it's an object that , or maybe it's a proxy class
      */
     protected function getResponse()
     {
-        if ($this->response instanceof ResponseInterface) {
-            return $this->response;
-        }
+        return $this->response;
+    }
+
+    /**
+     * Get the response object from self.
+     * 
+     * @return BaseResponse it's an object that , or maybe it's a proxy class
+     */
+    protected function setResponse(BaseResponse $response)
+    {
+        $this->response = $response;
+        return $this;
     }
 
     /**
@@ -196,8 +207,7 @@ class Response implements ResponseInterface
      */
     public function __call($name, $arguments)
     {
-        $response = $this->response;
-
+        $response = $this->getResponse();
         if (! method_exists($response, $name)) {
             throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $name));
         }

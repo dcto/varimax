@@ -128,6 +128,19 @@ trait ResponseTraits {
         return $this;
     }
 
+
+    /**
+    * Muiltaple set Headers
+    * @param  void 
+    */
+    public function withHeaders($headers)
+    {
+        foreach($headers as $name=>$value){
+            $this->withHeader($name, $value);
+        }
+        return $this;
+    }
+
     /**
      * Return an instance with the specified header appended with the given value.
      * Existing values for the specified header will be maintained. The new
