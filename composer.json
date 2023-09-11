@@ -18,12 +18,12 @@
     }
   ],
   "autoload": {
-    "psr-4": {"VM\\": "src"},
-    "files": ["bin/varimax"],
-    "classmap":["src/Facades"]
+    "classmap":["src/Facades"],
+    "files": ["bin/varimax.php"],
+    "psr-4": {"VM\\": "src"}
   },
   "bin": [
-    "bin/varimax"
+    "bin/varimax.php"
   ],
   "config": {
     "preferred-install": "dist"
