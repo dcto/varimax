@@ -20,28 +20,28 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
 {
     public function __construct()
     {
-        parent::__construct('model:update');
+        parent::__construct('model:schema');
         $this->addArgument('name', InputArgument::REQUIRED);
         $this->setDescription('up to database from a model');
     }
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        $name =  ucfirst($input->getArgument('name'));
+        $name =  "\App\\Model\\". ucfirst($input->getArgument('name'));
+        /**
+         * @var $model \VM\Model
+         */
+        $model =  new $name();
         $helper = $this->getHelper('question');
-        $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$name.'] table dataset?(Y/n) ', false);
+        $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$model->table().'] table dataset?(Y/n) ', false);
 
         if ($helper->ask($input, $output, $question)) {
             try{
-                /**
-                 * @var $model \VM\Model
-                 */
-                $model = make("\\App\\Model\\".$name);
                 config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                 if(\Schema::hasTable($model->table())){
-                   \Schema::table($model->table(), $model->schema());
+                    \Schema::table($model->table(), fn($table)=>$model->schema($table));
                 }else{
-                    \Schema::create($model->table(), $model->schema());
+                    \Schema::create($model->table(),fn($table)=>$model->schema($table));
                 }
                 $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$name.'] success!'));
             }catch(\Exception $e){

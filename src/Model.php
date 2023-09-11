@@ -140,8 +140,14 @@ namespace VM;
  * @method static|\VM\Model atDate(string $column, string $date ) [range date with symbol ~]
  */
 
+
 abstract class Model extends \Illuminate\Database\Eloquent\Model
 {
+    /**
+     * trait to Soft Deletes;
+     */
+    use \Illuminate\Database\Eloquent\SoftDeletes;
+
     /**
      * 父ID
      * @var string
@@ -235,6 +241,12 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * @var array
      */
     static $tables = array();
+
+    /**
+     * Soft delete 
+     * @var bool
+     */
+    public $softDelete = false;
 
     /**
      * Set the table associated with the model.

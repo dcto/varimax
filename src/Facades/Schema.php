@@ -21,7 +21,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Database\Connection getConnection()
  * @method static $this setConnection(\Illuminate\Database\Connection $connection)
  * @method static void blueprintResolver(\Closure $resolver)
- * @method
  */
 class Schema extends Facade
 {
