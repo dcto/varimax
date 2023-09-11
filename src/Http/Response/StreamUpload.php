@@ -12,7 +12,7 @@ use Psr\Http\Message\StreamInterface;
  * Author: Martijn van der Ven <martijn@vanderven.se>.
  * @license https://github.com/Nyholm/psr7/blob/master/LICENSE
  */
-final class BaseStream implements StreamInterface
+final class StreamUpload implements StreamInterface
 {
     /** @var array Hash of readable and writable stream types */
     private const READ_WRITE_HASH = [
