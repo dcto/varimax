@@ -15,8 +15,10 @@ class %CLASS% extends Model
     public function schema($table)
     {
         $table->increments('id')->comment('ID');
+        $table->unsignedInteger('pid')->default(0)->comment('PID');
+        $table->string('title', 96)->comment('标题');
         $table->boolean('state')->comment('状态:0=禁用,1=启用');
         $table->timestamps();
-        
+        $table->softDelete();
     }
 }
