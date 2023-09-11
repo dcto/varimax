@@ -33,8 +33,9 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
          * @var $model \VM\Model
          */
         $model =  new $name();
+        $table = \DB::getTablePrefix().$model->table();
         $helper = $this->getHelper('question');
-        $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$model->table().'] table dataset?(Y/n) ', false);
+        $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$table.'] table dataset?(Y/n) ', false);
 
         if ($helper->ask($input, $output, $question)) {
             try{
@@ -44,14 +45,19 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
                         config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                         \Schema::dropIfExists($model->table());
                         \Schema::create($model->table(),fn($table)=>$model->schema($table));
-                        $model->insert($dataset);
-                    }catch(QueryException $e){
-                        file_put_contents(runtime($model->table().'.sql'), $dataset->toJson());
+                        $model->insert($dataset->toArray());
+                    }catch(\Exception $e){
+                        $sqlStatement = '';
+                        $dataset->each(function($item) use (&$sqlStatement){
+                         $item = $item->toArray();
+                            $sqlStatement .= sprintf('INSERT INTO `'.$table.'` (`%s`) VALUES (\'%s\');', join('`,`', array_keys($item)), join('\',\'', array_values($item)) );
+                        });
+                        file_put_contents(runtime($table.time().'.sql'), $sqlStatement);
                     }
                 }else{
                     \Schema::create($model->table(),fn($table)=>$model->schema($table));
                 }
-                $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$name.'] success!'));
+                $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$table.'] success!'));
             }catch(\Exception $e){
                 $output->writeln(sprintf('<fg=red>%s</>',  $e->getMessage()));
                 return 1;
