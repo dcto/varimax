@@ -8,10 +8,11 @@ namespace App\Model;
  */
 class %CLASS% extends Model
 {
-
-    
-
-    public function up()
+    /**
+     * @param \Blueprint $table
+     * @return void
+     */
+    public function schema($table)
     {
         \Schema::create($this->getTable(), function(\Illuminate\Database\Schema\Blueprint $table){
             $table->increments('id')->comment('ID');
