@@ -24,6 +24,7 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
         $command = new \Symfony\Component\Console\Application;
         $command->add(new CommandMake('controller'));
         $command->add(new CommandMake('model'));
+        $command->add(new CommandMake('pipeline'));
         $command->add(new CommandMake('service'));
         $command->add(new CommandModel);
         $command->run();
