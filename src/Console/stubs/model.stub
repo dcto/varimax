@@ -14,9 +14,9 @@ class %CLASS% extends Model
      */
     public function schema($table)
     {
-        \Schema::create($this->getTable(), function(\Illuminate\Database\Schema\Blueprint $table){
-            $table->increments('id')->comment('ID');
-        });
-        \DB::statement("ALTER TABLE `{$$this->getTable()}` comment '表注释'");
+        $table->increments('id')->comment('ID');
+        $table->boolean('state')->comment('状态:0=禁用,1=启用');
+        $table->timestamps();
+        
     }
 }
