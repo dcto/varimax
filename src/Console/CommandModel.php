@@ -8,6 +8,7 @@
 */
 namespace VM\Console;
 
+use Illuminate\Database\QueryException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -37,9 +38,16 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
 
         if ($helper->ask($input, $output, $question)) {
             try{
-                config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                 if(\Schema::hasTable($model->table())){
-                    \Schema::table($model->table(), fn($table)=>$model->schema($table));
+                    $dataset = $model->all();
+                    try{
+                        config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                        \Schema::dropIfExists($model->table());
+                        \Schema::create($model->table(),fn($table)=>$model->schema($table));
+                        $model->insert($dataset);
+                    }catch(QueryException $e){
+                        file_put_contents(runtime($model->table().'.sql'), $dataset->toJson());
+                    }
                 }else{
                     \Schema::create($model->table(),fn($table)=>$model->schema($table));
                 }

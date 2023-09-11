@@ -246,7 +246,7 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * Soft delete 
      * @var bool
      */
-    public $softDelete = false;
+    static $softDelete = false;
 
     /**
      * Set the table associated with the model.
@@ -444,6 +444,16 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
                 }, $builder->getQuery()->wheres);
             });
         }
+    }
+
+    /**
+     * Boot the soft deleting trait for a model.
+     *
+     * @return void
+     */
+    public static function bootSoftDeletes()
+    { 
+        static::$softDelete && static::addGlobalScope(new \Illuminate\Database\Eloquent\SoftDeletingScope);
     }
 
     /**
