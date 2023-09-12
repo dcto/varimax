@@ -33,13 +33,13 @@ class Response implements ResponseInterface
      * @param int $status
      * @param array $headers 
      */
-    public function make(string $content = '', int $status = 200, array $headers = [])
+    public function make($content = '', int $status = 200, array $headers = [])
     {
         if($content instanceof self) return $content;
         $this->setResponse(new BaseResponse);
         return $this->withStatus($status)
         ->withHeaders($headers)
-        ->withBody(new StreamBase($content));
+        ->withBody(new StreamBase((string) $content));
 
     }
 
