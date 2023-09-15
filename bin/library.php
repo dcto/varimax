@@ -292,21 +292,6 @@ if(!function_exists('javascript')) {
 
 
 /**
- * view response
- * @param $view
- * @param array $data
- * @param int $status
- * @param array $headers
- * @return \VM\View
- */
-if(!function_exists('view')) {
-    function view($view, $data = [], $status = 200, array $headers = [])
-    {
-        return make('response')->view($view, $data, $status, $headers);
-    }
-}
-
-/**
  * json response
  * @param array $data
  * @param int $status

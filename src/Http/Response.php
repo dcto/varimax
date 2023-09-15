@@ -106,10 +106,11 @@ class Response implements ResponseInterface
      * 
      * @return ResponseInterface
      */
-    public function html(string $html, array $data = [], int $status = 200, array $headers = [])
+    public function html(string $html, int $status = 200, array $headers = [])
     {
         return $this->setResponse(new BaseResponse)
             ->withStatus($status)
+            ->withHeader('content-type', 'text/html; charset=utf-8')
             ->withHeaders($headers)
             ->withBody(new StreamBase($html));
     }
