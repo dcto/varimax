@@ -56,13 +56,13 @@ class Response implements ResponseInterface
      * @param array $headers
      * @return self
      */
-    public function raw(mixed $content = null, int $status = 200, array $headers = [])
+    public function raw($content = null, int $status = 200, array $headers = [])
     {
        return $this->setResponse(new BaseResponse)
             ->withStatus($status)
             ->withHeader('content-type', 'text/plain; charset=utf-8')
             ->withHeaders($headers)
-            ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, false)));
+            ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, true)));
     }
 
     /**
