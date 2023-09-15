@@ -1,6 +1,4 @@
 <?php
-
-use Illuminate\Support\Facades\Facade;
 /**
  * Str class
  * 
@@ -53,7 +51,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static void createUuidsUsing(callable $factory = null) Set the callable that will be used to generate UUIDs.
  * @method static void createUuidsNormally() Indicate that UUIDs should be created normally and not using a custom factory.
  */
-class Str extends Facade
+class Str extends \Illuminate\Support\Str
 {
     /**
      * Get the registered name of the component.
