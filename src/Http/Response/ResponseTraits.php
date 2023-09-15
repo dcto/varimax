@@ -13,7 +13,7 @@ trait ResponseTraits {
      */
     public function getProtocolVersion(): string
     {
-        return $this->response->getProtocolVersion();
+        return $this->getResponse()->getProtocolVersion();
     }
 
     /**
@@ -29,7 +29,7 @@ trait ResponseTraits {
      */
     public function withProtocolVersion($version)
     {
-        return $this->response->setProtocolVersion($version);
+        return $this->getResponse()->setProtocolVersion($version);
     }
 
     /**
@@ -55,7 +55,7 @@ trait ResponseTraits {
      */
     public function getHeaders(): array
     {
-        return $this->response->getHeaders();
+        return $this->getResponse()->getHeaders();
     }
 
     /**
@@ -68,7 +68,7 @@ trait ResponseTraits {
      */
     public function hasHeader($name): bool
     {
-        return $this->response->header->get($name);
+        return $this->getResponse()->header->get($name);
     }
 
     /**
@@ -124,20 +124,26 @@ trait ResponseTraits {
      */
     public function withHeader($name, $value)
     {
-        $this->response->headers->set($name, $value);
+        $this->getResponse()->headers->set($name, $value);
         return $this;
     }
 
 
     /**
     * Muiltaple set Headers
-    * @param  void 
+    * @param array|string $headers
+    * @return PsrResponseInterface
     */
-    public function withHeaders($headers)
+    public function withHeaders(...$headers)
     {
-        foreach($headers as $name=>$value){
-            $this->withHeader($name, $value);
-        }
+        array_map(function($header){
+            if(is_array($header)){
+                $this->withHeader(key($header), pos($header));
+            }else{
+                $header = explode(':', $header);
+                $this->withHeader($header[0], $header[1]);
+            }
+        }, count($headers) == 1 ? array_chunk($headers[0],1, true) : $headers);
         return $this;
     }
 
@@ -157,7 +163,7 @@ trait ResponseTraits {
      */
     public function withAddedHeader($name, $value)
     {
-        $this->response->headers->set($name, $value);
+        $this->getResponse()->headers->set($name, $value);
         return $this;
     }
 
@@ -183,7 +189,7 @@ trait ResponseTraits {
      */
     public function getBody(): StreamInterface
     {
-        return $this->response->getBody();
+        return $this->getResponse()->getBody();
     }
 
     /**
@@ -199,7 +205,7 @@ trait ResponseTraits {
      */
     public function withBody(StreamInterface $body)
     {
-        $this->response->setContent($body);
+        $this->getResponse()->setContent($body);
         return $this;
     }
 
@@ -212,7 +218,7 @@ trait ResponseTraits {
      */
     public function getStatusCode(): int
     {
-        return $this->response->getStatusCode();
+        return $this->getResponse()->getStatusCode();
     }
 
     /**
@@ -235,7 +241,7 @@ trait ResponseTraits {
      */
     public function withStatus($code, $reasonPhrase = '')
     {
-        $this->response->setStatusCode($code, $reasonPhrase);
+        $this->getResponse()->setStatusCode($code, $reasonPhrase);
         return $this;
     }
 
@@ -253,6 +259,6 @@ trait ResponseTraits {
      */
     public function getReasonPhrase(): string
     {
-        return $this->response->getReasonPhrase();
+        return $this->getResponse()->getReasonPhrase();
     }
 }

@@ -22,6 +22,12 @@ class Response implements ResponseInterface
 {
     use Macroable, ResponseTraits;
 
+
+    /**
+     * @var array
+     */
+    protected $headers = [];
+
     /**
      * @var BaseResponse
      */
@@ -32,41 +38,48 @@ class Response implements ResponseInterface
      * @param string $content
      * @param int $status
      * @param array $headers 
+     * @return self
      */
     public function make($content = '', int $status = 200, array $headers = [])
     {
         if($content instanceof self) return $content;
-        $this->setResponse(new BaseResponse);
-        return $this->withStatus($status)
+        return $this->setResponse(new BaseResponse)
+        ->withStatus($status)
         ->withHeaders($headers)
         ->withBody(new StreamBase((string) $content));
-
     }
 
     /**
      * Format data to a string and return data with content-type:text/plain header.
-     *
-     * @param mixed $data will transfer to a string value
+     * @param mixed $content will transfer to a string value
+     * @param int $status
+     * @param array $headers
+     * @return self
      */
-    public function raw(mixed $content = null, int $status = 200)
+    public function raw(mixed $content = null, int $status = 200, array $headers = [])
     {
-        $this->setResponse(new BaseResponse);
-        return $this->withStatus($status)
-        ->withHeader('content-type', 'text/plain; charset=utf-8')
-        ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, false)));
+       return $this->setResponse(new BaseResponse)
+            ->withStatus($status)
+            ->withHeader('content-type', 'text/plain; charset=utf-8')
+            ->withHeaders($headers)
+            ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, false)));
     }
 
     /**
      * Format data to XML and return data with Content-Type:application/xml header.
-     *
-     * @param array|Arrayable|Xmlable $data
+     * @param array|Arrayable|Xmlable $content
+     * @param string $root
+     * @param int $status
+     * @param array $headers
+     * @return self
      */
-    public function xml(array $content = [], string $root = 'root', int $status = 200)
+    public function xml(array $content = [], string $root = 'root', int $status = 200, array $headers = [])
     {
-        $this->setResponse(new BaseResponse);
-        return $this->withStatus($status)
-        ->withHeader('content-type', 'application/xml; charset=utf-8')
-        ->withBody(new StreamBase(Encode::toXml($content, null, $root)));
+        return $this->setResponse(new BaseResponse)
+            ->withStatus($status)
+            ->withHeader('content-type', 'application/xml; charset=utf-8')
+            ->withHeaders($headers)
+            ->withBody(new StreamBase(Encode::toXml($content, null, $root)));
     }
 
     /**
@@ -79,8 +92,8 @@ class Response implements ResponseInterface
      */
     public function json(array $data = [], int $status = 200, int $options = JSON_UNESCAPED_UNICODE)
     {
-        $this->setResponse(new JsonResponse);
-        return $this->withStatus($status)
+        return $this->setResponse(new JsonResponse)
+            ->withStatus($status)
             ->withHeader('content-type', 'application/json; charset=utf-8')
             ->withBody(new StreamBase(Encode::toJson($data, $options)));
     }
@@ -95,22 +108,26 @@ class Response implements ResponseInterface
      */
     public function html(string $html, array $data = [], int $status = 200, array $headers = [])
     {
-        $this->setResponse(new BaseResponse);
-        return $this->withStatus($status);
-        foreach($headers as $header => $value){
-            $this->withHeader($header, $value);
-        }
-        return $this->withBody(new StreamBase($html));
+        return $this->setResponse(new BaseResponse)
+            ->withStatus($status)
+            ->withHeaders($headers)
+            ->withBody(new StreamBase($html));
     }
 
 
     /**
      * Redirect to a url with a status.
+     * @param string $url
+     * @param int $status
+     * @param array $headers
+     * @return ResponseInterface
      */
-    public function redirect(string $url,  int $status = 302) {
-
-        $this->setResponse(new RedirectResponse($url, $status));
-        return $this->withStatus($status)->withHeader('Location', $url);
+    public function redirect(string $url,  int $status = 302, array $headers = []) 
+    {
+        return $this->setResponse(new RedirectResponse($url, $status))
+            ->withStatus($status)
+            ->withHeader('Location', $url)
+            ->withHeaders($headers);
     }
 
 
@@ -155,6 +172,27 @@ class Response implements ResponseInterface
     }
 
     /**
+     * Set the response header 
+     * @param $key string
+     * @param $value string
+     * @return self
+     */
+    public function header($key, $value = null){
+        if(!$value) return $this->getHeader($key);
+        return $this->withHeader($key, $value);
+    }
+
+    /**
+     * Set bulk response header 
+     * @param array|string $headers
+     * @return self
+     */
+    public function headers(...$headers){
+        if(!$headers) return $this->getHeaders();
+        return $this->withHeaders(...$headers);
+    }
+
+    /**
      * Get the response object from self.
      * 
      * @return BaseResponse it's an object that , or maybe it's a proxy class
@@ -167,7 +205,7 @@ class Response implements ResponseInterface
     /**
      * Get the response object from self.
      * 
-     * @return BaseResponse it's an object that , or maybe it's a proxy class
+     * @return self it's an object that , or maybe it's a proxy class
      */
     protected function setResponse(BaseResponse $response)
     {
