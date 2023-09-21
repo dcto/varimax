@@ -1105,7 +1105,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param  string  $offset
      * @return bool
      */
-    public function offsetExists($offset)
+    public function offsetExists($offset) : bool
     {
         return array_key_exists($offset, $this->all());
     }
@@ -1128,9 +1128,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param  mixed  $value
      * @return mixed
      */
-    public function offsetSet($offset, $value)
+    public function offsetSet($offset, $value) : void
     {
-        return $this->set($offset, $value);
+         $this->set($offset, $value);
     }
 
     /**
