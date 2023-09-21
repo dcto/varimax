@@ -1,0 +1,27 @@
+<?php 
+
+namespace App\Pipeline;
+
+/**
+ * @package Pipeline
+ */
+class %CLASS% extends \VM\Pipeline {
+
+
+    public function handle(\VM\Http\Request $request, \Closure $next, ...$guards)
+    {
+        /**
+         * Pipeline the request
+         */
+        //$request->set();
+        //return $next($request);
+
+        /**
+         * Pipeline the response
+         */
+        //$response = $next($request);
+        //return $next(make('response')->make('content'));
+    }
+    
+
+}   

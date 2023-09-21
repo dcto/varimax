@@ -126,8 +126,8 @@ if(!function_exists('root')) {
 /**
  * root alias name
  */
-if(!function_exists('path')) {
-    function app_path(...$args)
+if(!function_exists('app_dir')) {
+    function app_dir(...$args)
     {
         return root(_APP_, ...$args);
     }
@@ -290,21 +290,6 @@ if(!function_exists('javascript')) {
     }
 }
 
-
-/**
- * view response
- * @param $view
- * @param array $data
- * @param int $status
- * @param array $headers
- * @return \VM\View
- */
-if(!function_exists('view')) {
-    function view($view, $data = [], $status = 200, array $headers = [])
-    {
-        return make('response')->view($view, $data, $status, $headers);
-    }
-}
 
 /**
  * json response

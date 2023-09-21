@@ -1,7 +1,4 @@
 <?php
-
-use Illuminate\Support\Facades\Facade;
-
 /**
  * Class Arr
  *
@@ -38,7 +35,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static array where(array $array, callable $callback) Filter the array using the given callback.
  * @method static array wrap(mixed $value) If the given value is not an array and not null, wrap it in one.
  */
-class Arr extends Facade
+class Arr extends \Illuminate\Support\Arr
 {
     /**
      * Get the registered name of the component.

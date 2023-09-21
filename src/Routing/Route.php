@@ -29,7 +29,7 @@ namespace VM\Routing;
  * @method \VM\Routing\Route|string action(string $action = null)
  * @method \VM\Routing\Route|array parameters(mixed $parameters = null)
  */
-class Route
+class Route implements \ArrayAccess
 {
     /**
      * @var int id
@@ -87,6 +87,11 @@ class Route
     public $methods;
 
     /**
+     * @var array
+     */
+    public $pipeline;
+
+    /**
      * @var string current route callable
      */
     public $callable;
@@ -136,6 +141,7 @@ class Route
             $this->menu      =   isset($args['menu']) ? $args['menu'] : ( isset($args['group']['menu']) ? $args['group']['menu'] : '' );
             $this->regex     =   isset($args['regex']) ? $args['regex'] : null;
             $this->group     =   isset($args['group']['id']) ? $args['group']['id'] : $this->group;
+            $this->pipeline  =   isset($args['pipeline']) ? $args['pipeline'] : ( isset($args['group']['pipeline']) ? (array) $args['group']['pipeline'] : [] );
             $this->callable  =   isset($args['call']) ? $args['call']: $this->callable;
             $this->namespace =   isset($args['namespace']) ? $args['namespace'] : ( isset($args['group']['namespace']) ? $args['group']['namespace'] : $this->namespace );
         }
@@ -208,6 +214,28 @@ class Route
     }
 
     /**
+     * Fire The Route
+     * @param $callback
+     * @param array $parameter
+     * @return mixed
+     */
+    public function fire()
+    {
+        if($this->callable instanceof \VM\Http\Response){
+            return $this->callable;
+
+        }else if($this->callable instanceof \Closure) {
+            return call_user_func_array($this->callable, $this->parameters);
+
+        }else if(is_string($this->callable) && strpos($this->callable, '@')){
+            return app()->call($this->calling(), $this->parameters);
+
+        }else{
+            return $this->callable;
+        }
+    }
+
+    /**
      * @return string
      */
     public function calling()
@@ -266,6 +294,22 @@ class Route
     public function __toString()
     {
         return $this->url();
+    }
+    
+    public function offsetExists($property): bool{
+        return isset($this->$property);
+    } 
+    
+    public function offsetGet($property):mixed{
+        return $this->$property;
+    }
+    
+    public function offsetSet($property, $value):void{
+        $this->$property = $value;
+    }
+
+    public function offsetUnset($property):void{
+        unset($this->$property);
     }
     
     /**

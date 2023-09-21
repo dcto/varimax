@@ -18,18 +18,18 @@
     }
   ],
   "autoload": {
-    "psr-4": {"VM\\": "src"},
-    "files": ["bin/varimax"],
-    "classmap":["src/Facades"]
+    "classmap":["src/Facades"],
+    "files": ["bin/varimax.php"],
+    "psr-4": {"VM\\": "src"}
   },
   "bin": [
-    "bin/varimax"
+    "bin/varimax.php"
   ],
   "config": {
     "preferred-install": "dist"
   },
   "require": {
-    "php": "^7.3",
+    "php": "^7.3|^8.0",
     "ext-xml":"*",
     "ext-json":"*",
     "ext-curl":"*",
@@ -37,6 +37,7 @@
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
+    "psr/http-message": "1.*",
     "vlucas/phpdotenv":"5.*",
     "illuminate/contracts": "8.*",
     "illuminate/container": "8.*",
@@ -44,7 +45,8 @@
     "illuminate/events": "8.*",
     "illuminate/filesystem": "8.*",
     "illuminate/http": "8.*",
-    "illuminate/support": "8.*",            
+    "illuminate/support": "8.*",  
+    "illuminate/pipeline": "8.*",          
     "illuminate/pagination": "8.*"
   },
   "suggest": {

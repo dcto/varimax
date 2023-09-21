@@ -2,207 +2,266 @@
 
 namespace VM\Http;
 
+use VM\Http\Response\Encode;
+use VM\Http\Response\StreamBase;
+use VM\Http\Response\ResponseTraits;
+use Psr\Http\Message\ResponseInterface;
+use Illuminate\Support\Traits\Macroable;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\Response as BaseResponse;
 
-use VM\Http\Response\Base;
-use VM\Http\Response\Json;
-use VM\Http\Response\Redirect;
-use VM\Http\Response\Streamed;
-use VM\Http\Response\BinaryFile;
-use Illuminate\Contracts\Support\Arrayable;
+use function get_class;
 
 /**
  * Class Response
  * @package VM\Http
  */
-class Response {
+class Response implements ResponseInterface 
+{
+    use Macroable, ResponseTraits;
 
 
     /**
-     * [error Response]
-     * @param $status [错误状态]
-     * @param null $message [错误信息]
-     * @return Base
+     * @var array
      */
-    public function error($status, $message = null)
-    {
-        $message = $message ?: Base::$statusTexts[$status];
-
-        return $this->make($message, $status);
-    }
-
+    protected $headers = [];
 
     /**
-     * [error Response]
-     * @param $status [错误状态]
-     * @param null $message [错误信息]
-     * @return Base
+     * @var BaseResponse
      */
-    public function abort($status = 200, $message = null)
-    {
-        die($this->error($status, $message)->send());
-    }
-
+    protected $response;
 
     /**
-     * [make Response]
-     *
-     * @param string $content [响应x内容]
-     * @param int    $status [状态值]
-     * @param array  $headers [header]
-     * @author 11.
-     * @return Base
-     */
-    public function make($content = '', $status = 200 , array $headers = [])
-    {
-        if(!is_string($content)){
-            $content = print_r($content, true);
-        }
-        return new Base($content, $status, $headers);
-    }
-
-
-    /**
-     * [show make别名]
-     *
+     * Make an Response instance
      * @param string $content
-     * @param int    $status
-     * @param array  $headers
-     * @author 11.
+     * @param int $status
+     * @param array $headers 
+     * @return self
      */
-    public function show($content = '', $status = 200 , array $headers = [])
+    public function make($content = '', int $status = 200, array $headers = [])
     {
-       return $this->make($content, $status, $headers);
+        if($content instanceof self) return $content;
+        return $this->setResponse(new BaseResponse)
+        ->withStatus($status)
+        ->withHeaders($headers)
+        ->withBody(new StreamBase((string) $content));
+    }
+
+    /**
+     * Format data to a string and return data with content-type:text/plain header.
+     * @param mixed $content will transfer to a string value
+     * @param int $status
+     * @param array $headers
+     * @return self
+     */
+    public function raw($content = null, int $status = 200, array $headers = [])
+    {
+       return $this->setResponse(new BaseResponse)
+            ->withStatus($status)
+            ->withHeader('content-type', 'text/plain; charset=utf-8')
+            ->withHeaders($headers)
+            ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, true)));
+    }
+
+    /**
+     * Format data to XML and return data with Content-Type:application/xml header.
+     * @param array|Arrayable|Xmlable $content
+     * @param string $root
+     * @param int $status
+     * @param array $headers
+     * @return self
+     */
+    public function xml(array $content = [], string $root = 'root', int $status = 200, array $headers = [])
+    {
+        return $this->setResponse(new BaseResponse)
+            ->withStatus($status)
+            ->withHeader('content-type', 'application/xml; charset=utf-8')
+            ->withHeaders($headers)
+            ->withBody(new StreamBase(Encode::toXml($content, null, $root)));
+    }
+
+    /**
+     * Format data to JSON and return data with Content-Type:application/json header.
+     *
+     * @param array|Arrayable|Jsonable $data
+     * @param int $status
+     * @param array $headers
+     * @return ResponseInterface
+     */
+    public function json(array $data = [], int $status = 200, int $options = JSON_UNESCAPED_UNICODE)
+    {
+        return $this->setResponse(new JsonResponse)
+            ->withStatus($status)
+            ->withHeader('content-type', 'application/json; charset=utf-8')
+            ->withBody(new StreamBase(Encode::toJson($data, $options)));
     }
 
 
     /**
-     * [view 视图响应]
-     *
-     * @param array $data [传入值]
-     * @param int   $status [状在值]
-     * @param array $headers [header]
-     * @author 11.
+     * @param string $html
+     * @param array $data
+     * @param int $status
+     * 
+     * @return ResponseInterface
      */
-    public function view($view, $data = [], $status = 200, array $headers = [])
+    public function html(string $html, int $status = 200, array $headers = [])
     {
-       return $this->make(make('view')->render($view, $data), $status, $headers);
+        return $this->setResponse(new BaseResponse)
+            ->withStatus($status)
+            ->withHeader('content-type', 'text/html; charset=utf-8')
+            ->withHeaders($headers)
+            ->withBody(new StreamBase($html));
     }
 
+
     /**
-     * [json Json格式响应]
-     *
-     * @param array $data [传入值]
-     * @param int   $status [状态值]
-     * @param array $headers [header]
-     * @param int   $options [其他设置]
-     * @return Json
-     * @author 11.
+     * Redirect to a url with a status.
+     * @param string $url
+     * @param int $status
+     * @param array $headers
+     * @return ResponseInterface
      */
-    public function json($data = [], $status = 200, array $headers = [], $options = 0)
+    public function redirect(string $url,  int $status = 302, array $headers = []) 
     {
-        if ($data instanceof Arrayable && ! $data instanceof \JsonSerializable) {
-            $data = $data->toArray();
+        return $this->setResponse(new RedirectResponse($url, $status))
+            ->withStatus($status)
+            ->withHeader('Location', $url)
+            ->withHeaders($headers);
+    }
+
+
+    /**
+     * Create a file download response.
+     *
+     * @param string $file the file path which want to send to client
+     * @param string $name the alias name of the file that client receive
+     */
+    public function download(string $file, string $name = '')
+    {
+        $file = new \SplFileInfo($file);
+        $this->response = new BinaryFileResponse($file);
+
+        if (! $file->isReadable()) {
+            throw new \RuntimeException('The file Unreadable.');
         }
-        return new Json($data, $status, $headers, $options);
-    }
 
+        $filename = $name ?: $file->getBasename();
+        $etag = $this->createEtag($file);
+        $this->response->setEtag($etag);
+        $contentType = value(function () use ($file) {
+            return finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file) ?? 'application/octet-stream';
+        });
 
-    /**
-     * [jsonp Jsonp响应格式]
-     *
-     * @param array $data [传入值]
-     * @param int   $status [状态值]
-     * @param array $headers [header]
-     * @param int   $options [其他设置]
-     * @return Json
-     * @author 11.
-     */
-    public function jsonp($callback, $data = [], $status = 200, array $headers = [], $options = 0)
-    {
-        return $this->json($data, $status, $headers, $options)->setCallback($callback);
-    }
-
-    /**
-     * [url 跳转]
-     *
-     * @param       $url [地址]
-     * @param int   $status [状态值]
-     * @param array $headers [header]
-     * @return Redirect|string
-     * @author 11.
-     */
-    public function url($url, $status = 302, array $headers = [])
-    {
-        if(!filter_var($url, FILTER_VALIDATE_URL)){
-            return $this->abort('Invalid URL: '. $url, 404);
+        // Determine if ETag the client expects matches calculated ETag
+        $request = new \VM\Http\Request;
+        $ifMatch = $request->header('if-match');
+        $ifNoneMatch = $request->header('if-none-match');
+        $clientEtags = explode(',', $ifMatch ?: $ifNoneMatch);
+        array_walk($clientEtags, 'trim');
+        if (in_array($etag, $clientEtags, true)) {
+            return $this->withStatus(304)->withHeader('content-type', $contentType);
         }
-        return $this->redirect($url, $status, $headers);
+
+        return $this->withHeader('content-description', 'File Transfer')
+            ->withHeader('content-type', $contentType)
+            ->withHeader('content-disposition', "attachment; filename={$filename}; filename*=UTF-8''" . rawurlencode($filename))
+            ->withHeader('content-transfer-encoding', 'binary')
+            ->withHeader('pragma', 'public')
+            ->withHeader('etag', $etag);
     }
 
     /**
-     * [route 跳转到路由器]
-     *
-     * @param       $tag [路由地址名]
-     * @param int   $status [状态值]
-     * @param array $headers [header]
-     * @return Redirect
-     * @author 11.
+     * Set the response header 
+     * @param $key string
+     * @param $value string
+     * @return self
      */
-    public function route($tag, $status = 302, array $headers = [])
-    {
-        $url = make('router')->router($tag)->route;
-
-        return $this->redirect($url, $status, $headers);
+    public function header($key, $value = null){
+        if(!$value) return $this->getHeader($key);
+        return $this->withHeader($key, $value);
     }
 
-
     /**
-     * [stream 数据流响应]
-     *
-     * @param \Closure $callback [回调]
-     * @param int      $status [状态值]
-     * @param array    $headers [header]
-     * @return Streamed
-     * @author 11.
+     * Set bulk response header 
+     * @param array|string $headers
+     * @return self
      */
-    public function stream($callback, $status = 200, array $headers = [])
-    {
-        return new Streamed($callback, $status, $headers);
+    public function headers(...$headers){
+        if(!$headers) return $this->getHeaders();
+        return $this->withHeaders(...$headers);
     }
 
+    /**
+     * Get the response object from self.
+     * 
+     * @return BaseResponse it's an object that , or maybe it's a proxy class
+     */
+    protected function getResponse()
+    {
+        return $this->response;
+    }
 
     /**
-     * [download 响应下载]
-     *
-     * @param \SplFileInfo|string $file [文件地址]
-     * @param null                $name [文件名]
-     * @param array               $headers header
-     * @param string              $disposition
-     * @return BinaryFile
-     * @author 11.
+     * Get the response object from self.
+     * 
+     * @return self it's an object that , or maybe it's a proxy class
      */
-    public function download($file, $name = null, array $headers = [], $disposition = 'attachment')
+    protected function setResponse(BaseResponse $response)
     {
-       $response = new BinaryFile($file, 200, $headers, true, $disposition);
-        if (! is_null($name)) {
-             $response->setContentDisposition($disposition, $name, str_replace('%', '', \Illuminate\Support\Str::ascii($name)));
+        $this->response = $response;
+        return $this;
+    }
+
+    /**
+     * withCookie
+     */
+    public function withCookie(Cookie $cookie): ResponseInterface
+    {
+        return $this->call(__FUNCTION__, func_get_args());
+    }
+
+    /**
+     * Get ETag header according to the checksum of the file.
+     */
+    protected function createEtag(\SplFileInfo $file, bool $weak = false): string
+    {
+        $etag = '';
+        if ($weak) {
+            $lastModified = $file->getMTime();
+            $filesize = $file->getSize();
+            if (! $lastModified || ! $filesize) {
+                return $etag;
+            }
+            $etag = sprintf('W/"%x-%x"', $lastModified, $filesize);
+        } else {
+            $etag = md5_file($file->getPathname());
         }
-        return $response;
+        return $etag;
     }
-
 
     /**
-     * [redirect 跳转]
-     *
-     * @param       $url [地址]
-     * @param int   $status [状态值]
-     * @param array $headers [header]
-     * @return Redirect
-     * @author 11.
+     * Dynamic call method
      */
-    public function redirect($url, $status = 302, $headers = [])
+    public function __call($name, $arguments)
     {
-        return new Redirect($url, $status, $headers);
+        $response = $this->getResponse();
+        if (! method_exists($response, $name)) {
+            throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $name));
+        }
+        return $response->{$name}(...$arguments);
     }
 
+    /**
+     * Static call method
+     */
+    public static function __callStatic($name, $arguments)
+    {
+        $response = (new self)->getResponse();
+        if (! method_exists($response, $name)) {
+            throw new \BadMethodCallException(sprintf('Call to undefined static method %s::%s()', self::class, $name));
+        }
+        return $response::{$name}(...$arguments);
+    }
 }

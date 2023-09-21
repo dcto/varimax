@@ -11,6 +11,7 @@
 
 namespace VM\Routing;
 
+use VM\Application;
 use VM\Http\Request;
 use VM\Http\Response;
 use VM\Exception\NotFoundException;
@@ -20,6 +21,12 @@ use VM\Exception\NotFoundException;
  */
 class Router
 {
+
+    /**
+     * @var Application
+     */
+    private $app;
+
     /**
      * @var string
      */
@@ -50,6 +57,11 @@ class Router
     private $routes = array();
 
     /**
+     * @var \VM\Http\Request
+     */
+    private $request;
+
+    /**
      * An array of HTTP request Methods.
      *
      * @var array $methods
@@ -77,6 +89,12 @@ class Router
      * @var array $groupStack
      */
     private $groupStack = array();
+
+
+    public function __construct(\VM\Http\Request $request)
+    {
+        $this->request = $request;
+    }
 
     /**
      * Defines a route with or without Callback and Method.
@@ -285,12 +303,13 @@ class Router
      * @param $routes
      * @throws NotFoundException
      */
-    public function load(...$routes)
+    public function through($routes, $callback = null)
     {
         array_map(function($route){
-                require($route.'.php');
-        }, $routes);
-        return $this;
+               require($route.'.php');
+        }, (array) $routes);
+        return $callback ? $callback($this->dispatch($this->request)) 
+        : $this->dispatch($this->request);
     }
 
     /**
@@ -348,11 +367,8 @@ class Router
      * dispatch to the router
      * @return mixed
      */
-    public function dispatch(Request $request, Response $response)
+    public function dispatch(Request $request)
     {        
-        //dispatch the OPTIONS Request
-        if($request->method('OPTIONS')) return $response->make();
-
         // Get Http Request Path.
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
@@ -363,52 +379,51 @@ class Router
         $method = $request->method();
 
         // Get Route in the Routes stack
-        $route = $this->router = $this->callRouter($path, $method);
+       $this->router = $this->callRouter($path, $method);
 
         // Found a valid Route; process it.
-        if(!$route) throw new NotFoundException();
+        if(!$this->router) throw new NotFoundException();
 
         // Set Route method;
-        $route->method($method);
+        $this->router->method($method);
 
-        if(!in_array($method, $route->methods())) throw new NotFoundException();
+        if(!in_array($method, $this->router->methods())) throw new NotFoundException();
         
+        return $this->router;
         
-            if($route->group()) {
+            // if($route->group()) {
                
-                if (!$group = data_get($this->group, $route->group())) {
-                    throw new NotFoundException('Does not define ' . $route->group() . ' of router group');
-                }
+                // if (!$group = data_get($this->group, $route->group())) {
+                //     throw new NotFoundException('Does not define ' . $route->group() . ' of router group');
+                // }
                 /**
                  * construct callback
                  */
-                if ($callable = data_get($group, 'call')) {
+            //     if ($callable = data_get($group, 'call')) {
              
-                    if (is_array($callable)) {
-                        $callable = $this->Fire(array_shift($callable), array_shift($callable));
-                    } else {
-                        $callable = $this->Fire($callable);
-                    }
+            //         if (is_array($callable)) {
+            //             $callable = $this->Fire(array_shift($callable), array_shift($callable));
+            //         } else {
+            //             $callable = $this->Fire($callable);
+            //         }
                     
-                    if ($callable instanceof Response\Response) {
+            //         if ($callable instanceof Response) {
                         
-                        return $callable;
-                    }
-                }
-            }
+            //             return $callable;
+            //         }
+            //     }
+            // }
         
-
             /**
              * construct instance and include hook
              */
-            $instance = $this->Fire($route->calling(), $route->args());
-
-            if(is_string($instance)){
+            // return $this->Fire($route->calling(), $route->args());
+            // if(is_string($instance)){
             
-                return $response->make($instance);
-            }else{
-              return $instance;
-            }
+            //     return $response->make($instance);
+            // }else{
+            //   return $instance;
+            // }
     }
 
     /**
@@ -445,33 +460,6 @@ class Router
             return true;
         }
         return false;
-    }
-    
-    /**
-     * ThroughRoute
-     * @param $callback
-     * @param array $parameter
-     * @return mixed
-     */
-    protected function Fire($callable, $parameters = [])
-    {
-        if($callable instanceof Response\Response){
-            return $callable;
-
-        }else if($callable instanceof \Closure) {
-            return call_user_func_array($callable, $parameters);
-
-        }else if(is_array($callable) || is_object($callable)){
-            return print_r($callable);
-
-        }else if(is_string($callable) && strpos($callable, '@')){
-            return app()->call($callable, $parameters);
-
-        }else if(is_string($callable)){
-            echo $callable;
-        }else{
-            throw new NotFoundException("Invalid router callable $callable of the {$this->router->url()}");
-        }
     }
 
     /**
@@ -671,4 +659,5 @@ class Router
         }
         return '';
     } 
+    
 }

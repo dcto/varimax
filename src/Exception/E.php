@@ -171,7 +171,7 @@ class E {
         if (PHP_SAPI == 'cli') {
             echo $e->getFile() . "\t[LINE]:" . $e->getLine() . "\t" . '[ERROR]:' . $e->getMessage() . PHP_EOL . PHP_EOL;
         }else{
-            ob_end_clean();
+            ob_get_contents() && ob_end_clean();
             http_response_code($e instanceof Exception ? $e->getStatus() : 500);
             static::$debug == 1 && die($e->getMessage());
             if(static::$debug == 2) {

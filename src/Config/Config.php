@@ -41,9 +41,6 @@ class Config implements \ArrayAccess, ConfigContract
                 $this->set((array) require($config_env));
             }
         }
-        if (!$this->item) {
-            throw new \ErrorException('Unable load config');
-        }
     }
 
     /**

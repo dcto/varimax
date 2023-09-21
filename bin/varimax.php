@@ -43,7 +43,7 @@ is_file(_DOC_ . _DS_ . '.env') && \Dotenv\Dotenv::createUnsafeImmutable(_DOC_)->
 /*
  * Load helpers
  */
-is_file($helper = _DIR_._DS_.'helper.php') && require($helper); require('library');
+is_file($helper = _DIR_._DS_.'helper.php') && require($helper); require('library.php');
 
 /**
  * Bootstrap of Application

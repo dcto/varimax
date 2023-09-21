@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -141,8 +140,14 @@ namespace VM;
  * @method static|\VM\Model atDate(string $column, string $date ) [range date with symbol ~]
  */
 
+
 abstract class Model extends \Illuminate\Database\Eloquent\Model
 {
+    /**
+     * trait to Soft Deletes;
+     */
+    use \Illuminate\Database\Eloquent\SoftDeletes;
+
     /**
      * 父ID
      * @var string
@@ -236,6 +241,12 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * @var array
      */
     static $tables = array();
+
+    /**
+     * Soft delete 
+     * @var bool
+     */
+    static $softDelete = false;
 
     /**
      * Set the table associated with the model.
@@ -333,11 +344,12 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      */
     protected static function boot()
     {
-        //Bootstrap
-        make('db');
+        //Register Database Service
+        app()->register(\VM\Services\DatabaseServiceProvider::class);
     
         //加载Traits
-       static::bootTraits();
+        static::bootTraits();
+
 
         static::retrieved(function($model){
             method_exists($model, 'model') && $model->model($model);
@@ -432,6 +444,16 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
                 }, $builder->getQuery()->wheres);
             });
         }
+    }
+
+    /**
+     * Boot the soft deleting trait for a model.
+     *
+     * @return void
+     */
+    public static function bootSoftDeletes()
+    { 
+        static::$softDelete && static::addGlobalScope(new \Illuminate\Database\Eloquent\SoftDeletingScope);
     }
 
     /**

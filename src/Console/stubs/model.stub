@@ -8,14 +8,17 @@ namespace App\Model;
  */
 class %CLASS% extends Model
 {
-
-    
-
-    public function up()
+    /**
+     * @param \Blueprint $table
+     * @return void
+     */
+    public function schema($table)
     {
-        \Schema::create($this->getTable(), function(\Illuminate\Database\Schema\Blueprint $table){
-            $table->increments('id')->comment('ID');
-        });
-        \DB::statement("ALTER TABLE `{$$this->getTable()}` comment '表注释'");
+        $table->increments('id')->comment('ID');
+        $table->unsignedInteger('pid')->default(0)->comment('PID');
+        $table->string('title', 96)->comment('标题');
+        $table->boolean('state')->comment('状态:0=禁用,1=启用');
+        $table->timestamps();
+        $table->softDeletes();
     }
 }

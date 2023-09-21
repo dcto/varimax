@@ -1,0 +1,30 @@
+<?php
+
+namespace App\Service;
+
+/**
+* @package Service
+*/
+class %CLASS% extends \VM\Services\ServiceProvider 
+{
+
+    /**
+    * Bootstrap service.
+    * @param  void 
+    * @return void 
+    */
+    public function boot()
+    {
+
+    }
+
+    /**
+    * Register service provider.
+    * @param  void 
+    * @return void 
+    */
+    public function register()
+    {
+
+    }
+}
