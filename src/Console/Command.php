@@ -1,5 +1,11 @@
 <?php
-
+/**
+* 
+* @package console
+* @author  dc.To
+* @version 20230922
+* @copyright ©2023 dc team all rights reserved.
+*/
 namespace VM\Console;
 
 use Symfony\Component\Console\Input\InputArgument;
@@ -21,18 +27,19 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
 
 
     static public function register(){
-        $command = new \Symfony\Component\Console\Application;
-        $command->add(new CommandMake('controller'));
-        $command->add(new CommandMake('model'));
-        $command->add(new CommandMake('pipeline'));
-        $command->add(new CommandMake('service'));
-        $command->add(new CommandModel);
-        $command->run();
+        $application = new \Symfony\Component\Console\Application('VARIMAX', 'v3.0');
+        $application->add(new CommandModel);
+        $application->add(new CommandMake('controller'));
+        $application->add(new CommandMake('model'));
+        $application->add(new CommandMake('pipeline'));
+        $application->add(new CommandMake('service'));
+        $application->run();
+        
     }
 
 
     public function configure()
-    {
+    {        
         foreach ($this->getArguments() as $argument) {
             $this->addArgument(...$argument);
         }
@@ -49,21 +56,19 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
      */
     public function execute(InputInterface $input, OutputInterface $output)
     {
+        
         $this->input = $input;
         $this->output = $output;
 
         $name = $this->qualifyClass($this->getNameInput());
-
         $path = $this->getPath($name);
-
         // First we will check to see if the class already exists. If it does, we don't want
         // to create the class and overwrite the user's code. So, we will bail out so the
         // code is untouched. Otherwise, we will continue generating this class' files.
         if (($input->getOption('force') === false) && $this->alreadyExists($this->getNameInput())) {
-            $output->writeln(sprintf('<fg=red>%s</>', $name . ' already exists!'));
+            $output->writeln(sprintf('<error>%s</error>', $path . ' already exists!'));
             return 0;
         }
-
         // Next, we will generate the path to the location where this class' file should get
         // written. Then, we will build the class and make the proper replacements on the
         // stub files so that it gets the correctly formatted namespace and class name.
@@ -117,7 +122,7 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
      */
     protected function getPath($name)
     {
-        return _DOC_._DS_.str_replace('\\', '/', $name).'.php';
+        return _DOC_._DS_.$this->input->getOption('app')._DS_.str_replace('\\', '/', $name).'.php';
     }
 
     /**
@@ -221,12 +226,13 @@ abstract class Command extends \Symfony\Component\Console\Command\Command
     protected function getOptions()
     {
         return [
+            ['app', 'a', InputOption::VALUE_OPTIONAL, 'The application', 'app'],
             ['force', 'f', InputOption::VALUE_NONE, 'Whether force to rewrite.'],
             ['namespace', 'N', InputOption::VALUE_OPTIONAL, 'The namespace for class.', null],
         ];
     }
 
-
+    
 
     /**
      * Get the stub file for the generator.

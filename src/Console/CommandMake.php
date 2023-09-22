@@ -8,13 +8,13 @@ namespace VM\Console;
 class CommandMake extends Command
 {
 
-    protected $make = null;
+    protected $make;
 
     public function __construct($make)
     {
         $this->make = $make;
-        parent::__construct('make:'.$make);
-        $this->setDescription('make a '.$make.' class');
+        parent::__construct('make:'.$this->make);
+        $this->setDescription('make a '.$this->make.' class');
     }
 
     protected function getStub(): string
@@ -24,7 +24,7 @@ class CommandMake extends Command
 
     protected function getDefaultNamespace(): string
     {
-        return 'App\\'.ucfirst($this->make);
+        return ucfirst($this->make);
     }
 
     protected function getPath($name)
