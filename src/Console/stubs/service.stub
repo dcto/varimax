@@ -3,6 +3,7 @@
 namespace App\Service;
 
 /**
+* Class %CLASS% 
 * @package Service
 */
 class %CLASS% extends \VM\Services\ServiceProvider 

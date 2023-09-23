@@ -1,10 +1,10 @@
 <?php
 
-namespace %NAMESPACE%;
+namespace App\Controller;
 
 /**
  * Class %CLASS%
- * @package App\Controller
+ * @package Controller
  */
 class %CLASS% extends Controller
 {

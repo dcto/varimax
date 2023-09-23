@@ -3,6 +3,7 @@
 namespace App\Pipeline;
 
 /**
+ * Class %CLASS% 
  * @package Pipeline
  */
 class %CLASS% extends \VM\Pipeline {
