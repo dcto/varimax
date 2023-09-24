@@ -1116,7 +1116,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param  string  $offset
      * @return mixed
      */
-    public function offsetGet($offset)
+    public function offsetGet($offset) : mixed
     {
         return $this->get($offset);
     }
@@ -1139,9 +1139,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param  string  $offset
      * @return mixed
      */
-    public function offsetUnset($offset)
+    public function offsetUnset($offset) : void
     {
-        return $this->delete($offset);
+        $this->delete($offset);
     }
 
     /**
