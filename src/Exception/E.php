@@ -136,7 +136,7 @@ class E {
      * 记录异常信息s
      * @param $e \Exception
      */
-    final static private function logException($e)
+    final static function logException($e)
     {
         global $argv;
             $_ERROR = array(
