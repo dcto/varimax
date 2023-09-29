@@ -166,12 +166,8 @@ class Config implements \ArrayAccess, ConfigContract
      * @param  string  $key
      * @return mixed
      */
-<<<<<<< HEAD
     #[\ReturnTypeWillChange]
     public function offsetGet($key)
-=======
-    public function offsetGet($key) : mixed
->>>>>>> a2361d5f710521bc5f5cfcf5463055380ded2c58
     {
         return $this->get($key);
     }
