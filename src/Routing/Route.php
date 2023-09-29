@@ -300,7 +300,9 @@ class Route implements \ArrayAccess
         return isset($this->$property);
     } 
     
-    public function offsetGet($property):mixed{
+    #[\ReturnTypeWillChange]
+    public function offsetGet($property)
+    {
         return $this->$property;
     }
     

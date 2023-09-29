@@ -219,6 +219,7 @@ class Response implements \ArrayAccess
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset) 
     {
         return $this->offsetExists($offset) ? $this->data[$offset] : null;

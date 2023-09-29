@@ -1116,6 +1116,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param  string  $offset
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         return $this->get($offset);
