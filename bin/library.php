@@ -154,7 +154,9 @@ if(!function_exists('runtime')) {
     {
         $args && $args[0] = trim($args[0],'/');
         array_unshift($args, 'runtime');
-        return call_user_func_array("root", $args);
+        $dir = call_user_func_array("root", $args);
+        is_dir($dir) || mkdir($dir, 0777, true);
+        return $dir;
     }
 }
 
