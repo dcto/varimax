@@ -119,7 +119,7 @@ if(!function_exists('root')) {
     {
         return $args ? _DOC_._DS_.join(_DS_, array_map(function($arg){
             return trim($arg, _DS_);
-        }, $args)) : _DOC;
+        }, $args)) : _DOC_;
     }
 }
 
