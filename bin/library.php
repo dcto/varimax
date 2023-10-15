@@ -152,10 +152,8 @@ if (! function_exists('base_path')) {
 if(!function_exists('runtime')) {
     function runtime(...$args)
     {
-        $args && $args[0] = trim($args[0],'/');
-        array_unshift($args, 'runtime');
-        $dir = call_user_func_array("root", $args);
-        is_dir($dir) || mkdir($dir, 0777, true);
+        $dir = root(__FUNCTION__, ...$args);
+        file_exists($dir) || mkdir($dir, 0777, true);
         return $dir;
     }
 }
