@@ -152,9 +152,9 @@ if (! function_exists('base_path')) {
 if(!function_exists('runtime')) {
     function runtime(...$args)
     {
-        $dir = root(__FUNCTION__, ...$args);
-        file_exists($dir) || mkdir($dir, 0777, true);
-        return $dir;
+        $path = root(__FUNCTION__, ...$args);
+        file_exists($dir = pathinfo($path, PATHINFO_EXTENSION) ? dirname($path) : $path) || mkdir($dir, 0777, true);
+        return $path;
     }
 }
 
