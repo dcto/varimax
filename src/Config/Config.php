@@ -33,7 +33,7 @@ class Config implements \ArrayAccess, ConfigContract
         if (is_file($config = root('config', 'config.php'))) {
             $this->item = (array) require($config);
         }
-        if (is_file($config = _DIR_ . _DS_ . 'config.php')) {
+        if (is_file($config = app_dir('config.php'))) {
             $this->set((array) require($config));
         }
         if(getenv('ENV')){
@@ -95,7 +95,7 @@ class Config implements \ArrayAccess, ConfigContract
     {
         if (is_null($value) && !isset($this->item[$key])) {
             is_file($config = root('config',$key.'.php')) && $this->set($key, require($config));
-            is_file($config = runtime('config',$key.'.php')) && $this->set($key, require($config));
+            is_file($config = app_dir('config',$key.'.php')) && $this->set($key, require($config));
         } else if(is_string($value) && is_file($value)){
             return $this->set($key, require($value));
         }else{
