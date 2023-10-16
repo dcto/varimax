@@ -184,7 +184,6 @@ class E {
                 }
                 echo str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Exception::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
             }
-            die;
         }
     }
 }
