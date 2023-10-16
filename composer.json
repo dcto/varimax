@@ -23,7 +23,6 @@
     "psr-4": {"VM\\": "src"}
   },
   "bin": [
-    "bin/servers.php",
     "bin/varimax.php"
   ],
   "config": {
