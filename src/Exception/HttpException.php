@@ -11,14 +11,13 @@
 
 namespace VM\Exception;
 
-use Symfony\Component\Translation\Exception\ExceptionInterface;
 
 /**
  * Class HttpException
  *
  * @package VM\Exception
  */
-class HttpException extends \RuntimeException implements ExceptionInterface
+class HttpException extends \RuntimeException
 {
     protected $status = 500;
 

@@ -11,7 +11,7 @@
 
 namespace VM\Exception;
 
-class SystemException extends Exception
+class SystemException extends Error
 {
     protected $status = 500;
 

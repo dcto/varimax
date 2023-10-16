@@ -16,7 +16,7 @@ namespace VM\Exception;
  *
  * @package VM\Exception
  */
-class FileException extends Exception
+class FileException extends Error
 {
     protected $status = 403;
 

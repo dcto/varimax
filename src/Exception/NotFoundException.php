@@ -11,7 +11,7 @@
 
 namespace VM\Exception;
 
-class NotFoundException extends Exception
+class NotFoundException extends Error
 {
     protected $status = 404;
 
