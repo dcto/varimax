@@ -111,8 +111,7 @@ class Session implements  \IteratorAggregate, \Countable
         if($this->handler instanceof \SessionHandlerInterface){
            return $this->handler;
         }
-
-        if(!in_array($handler, $handlers = array('files', 'redis', 'sqlite', 'memcached'))){
+        if(!$handler || !in_array($handler, $handlers = array('files', 'redis', 'sqlite', 'memcached'))){
             throw new \InvalidArgumentException('Invalid '.$handler.' session handler, only supports  '. implode(',', $handlers));
         }
 
@@ -338,7 +337,7 @@ class Session implements  \IteratorAggregate, \Countable
      *
      * @return int The number of attributes
      */
-    public function count()
+    public function count() : int
     {
         return count($_SESSION);
     }
@@ -441,7 +440,7 @@ class Session implements  \IteratorAggregate, \Countable
      *
      * @return \ArrayIterator An \ArrayIterator instance
      */
-    public function getIterator()
+    public function getIterator() : \ArrayIterator
     {
         return new \ArrayIterator($_SESSION);
     }
