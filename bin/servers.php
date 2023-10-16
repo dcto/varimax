@@ -1,6 +1,4 @@
 <?php
-
-chdir(__DIR__);
 $filePath = realpath(ltrim($_SERVER["REQUEST_URI"], '/'));
 if ($filePath && is_dir($filePath)){
     // attempt to find an index file
