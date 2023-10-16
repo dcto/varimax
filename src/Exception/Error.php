@@ -6,7 +6,7 @@ namespace VM\Exception;
  * Class ErrorException
  * @package VM\Exception
  */
-class Exception extends \Exception
+class Error extends \Exception
 {
     /**
      * HTTP STATUS

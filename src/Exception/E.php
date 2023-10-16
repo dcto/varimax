@@ -141,7 +141,7 @@ class E {
         global $argv;
             $_ERROR = array(
                 '[TIME]'       =>     date('Y-m-d H:i:s'),
-                '[CODE]'       =>     Exception::codes($e->getCode()),
+                '[CODE]'       =>     Error::codes($e->getCode()),
                 '[FILE]'       =>     $e->getFile(),
                 '[LINE]'       =>     $e->getLine(),
                 '[INFO]'       =>     $e->getMessage(),
@@ -172,7 +172,7 @@ class E {
             echo $e->getFile() . "\t[LINE]:" . $e->getLine() . "\t" . '[ERROR]:' . $e->getMessage() . PHP_EOL . PHP_EOL;
         }else{
             ob_get_contents() && ob_end_clean();
-            http_response_code($e instanceof Exception ? $e->getStatus() : 500);
+            http_response_code($e instanceof Error ? $e->getStatus() : 500);
             static::$debug == 1 && die($e->getMessage());
             if(static::$debug == 2) {
                 if(is_array ($debugBacktrace = static::debugBacktrace($e))){
@@ -182,7 +182,7 @@ class E {
                 }else{
                     $debugBacktrace = "<tr><td><ul>{$debugBacktrace}</ul></td></tr>";
                 }
-                echo str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Exception::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
+                echo str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Error::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
             }
         }
     }
