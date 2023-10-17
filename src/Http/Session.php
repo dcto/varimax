@@ -1,5 +1,7 @@
 <?php
-
+/**
+ * @package Http
+ */
 namespace VM\Http;
 
 class Session implements  \IteratorAggregate, \Countable
@@ -102,16 +104,17 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * [sessionHandler]
      *
-     * @param null $handler
+     * @param string $handler
      * @param array $options
      * @return mixed
      */
-    private function sessionHandler($handler = null)
+    private function sessionHandler($handler)
     {
         if($this->handler instanceof \SessionHandlerInterface){
            return $this->handler;
         }
-        if(!$handler || !in_array($handler, $handlers = array('files', 'redis', 'sqlite', 'memcached'))){
+
+        if(!in_array($handler, $handlers = array('files', 'redis', 'sqlite', 'memcached'))){
             throw new \InvalidArgumentException('Invalid '.$handler.' session handler, only supports  '. implode(',', $handlers));
         }
 
