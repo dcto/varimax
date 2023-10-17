@@ -28,7 +28,6 @@ class Application extends \Illuminate\Container\Container
         'redirect'  => \VM\Http\Redirect::class,
         'cookie'    => \VM\Http\Cookie::class,
         'session'   => \VM\Http\Session::class,
-        'captcha'   => \VM\Captcha\Captcha::class,
         'cache'     => \VM\Cache\Cache::class,
         'crypt'     => \VM\Crypt\Crypt::class,
         'lang'      => \VM\I18n\Lang::class,
