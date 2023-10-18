@@ -11,9 +11,6 @@
 
 namespace VM\Routing;
 
-use VM\Application;
-use VM\Http\Request;
-use VM\Http\Response;
 use VM\Exception\NotFoundException;
 
 /**
@@ -21,12 +18,6 @@ use VM\Exception\NotFoundException;
  */
 class Router
 {
-
-    /**
-     * @var Application
-     */
-    private $app;
-
     /**
      * @var string
      */
@@ -367,7 +358,7 @@ class Router
      * dispatch to the router
      * @return mixed
      */
-    public function dispatch(Request $request)
+    public function dispatch(\VM\Http\Request $request)
     {        
         // Get Http Request Path.
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
@@ -576,7 +567,7 @@ class Router
     {
         $attributes['id'] =  data_get($attributes, 'id', crc32(serialize($attributes)));
         $attributes['name'] = data_get($attributes, 'name', $attributes['id']);
-        $attributes = $this->mergeGroup($attributes, last($this->groupStack));
+        $attributes = $this->mergeGroup($attributes, end($this->groupStack));
         
         if($this->group && isset($this->group[$attributes['id']])){
             throw new \InvalidArgumentException('The Route Group exist');
@@ -654,7 +645,7 @@ class Router
     private function getLastGroupPrefix()
     {
         if (! empty($this->groupStack)) {
-            $last = last($this->groupStack);
+            $last = end($this->groupStack);
             return isset($last['prefix']) ? $last['prefix'] : '';
         }
         return '';
