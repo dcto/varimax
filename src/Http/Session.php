@@ -1,10 +1,19 @@
 <?php
 /**
- * @package Http
+ * Varimax The Slim PHP Frameworks.
+ * varimax
+ * FILE: 2020
+ * USER: 陶之11. <sdoz@live.com>
+ * Time: 2020-08-11 22:03
+ * SITE: https://www.varimax.cn/
  */
+
 namespace VM\Http;
 
-class Session implements  \IteratorAggregate, \Countable
+/**
+ * @package Session
+ */
+class Session implements \IteratorAggregate, \Countable
 {
     /**
      * The session handler implementation.
@@ -80,7 +89,7 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function start()
+    public function start($options = [])
     {
         if($this->isStarted()) return $this;
         
@@ -94,7 +103,7 @@ class Session implements  \IteratorAggregate, \Countable
 
         $this->sessionHandler(config('session.driver'));
 
-        session_start();
+        session_start($options);
 
         $this->started = isset($_SESSION);
 
@@ -186,9 +195,7 @@ class Session implements  \IteratorAggregate, \Countable
     public function get($key, $default = null)
     {
         if($this->isStarted()) {
-
-            $value = \Arr::get($_SESSION, $key, $default);
-
+            $value = data_get($_SESSION, $key, $default);
             return $value ? ($this->encrypt ? make('crypt')->de($value) : $value) : $default;
         }else{
             throw new \RuntimeException('Unable to automatic start session, manual operation start it\'s');
@@ -202,7 +209,7 @@ class Session implements  \IteratorAggregate, \Countable
     {
         $value = $this->encrypt ? make('crypt')->en($value) : $value;
 
-        return \Arr::set($_SESSION, $key, $value);
+        return data_set($_SESSION, $key, $value);
     }
 
     /**
@@ -260,9 +267,10 @@ class Session implements  \IteratorAggregate, \Countable
     /**
      * 持久化存储
      */
-    public function save()
+    public function save(\Closure $callback = null)
     {
-
+        $callback && $callback($this->all());
+        return $this;
     }
 
     /**
@@ -275,9 +283,7 @@ class Session implements  \IteratorAggregate, \Countable
     public function flash($key, $value)
     {
         $this->put($key, $value);
-
         $this->push('_flash.new', $key);
-
         $this->removeFromOldFlashData([$key]);
     }
 
@@ -321,7 +327,7 @@ class Session implements  \IteratorAggregate, \Countable
         foreach($attribute as $k=>$v) {
             $this->set($k, $v);
         }
-        return true;
+        return $this;
     }
 
 
@@ -358,7 +364,8 @@ class Session implements  \IteratorAggregate, \Countable
      */
     public function flush()
     {
-        $_SESSION = array();
+        $this->destroy();
+        return $this;
     }
 
     /**
