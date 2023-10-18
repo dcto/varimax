@@ -10,103 +10,45 @@
 
 namespace VM\Http;
 
+
 /**
  * @package Session
  */
 class Session implements \IteratorAggregate, \Countable
 {
+    
     /**
-     * The session handler implementation.
-     *
-     * @var \SessionHandlerInterface
-     */
-    private $handler;
-
-    /**
-     * The session value encrypt
-     * @var bool
-     */
-    private $encrypt = false;
-
-    /**
-     * Session store started status.
-     *
-     * @var bool
-     */
-    private $started = false;
-
-    /**
+     * @see http://php.net/session.configuration
      * @var array
      */
-    private $options = array(
-        'name',
-        'referer_check',
-        'serialize_handler',
-        'use_cookies',
-        'use_only_cookies',
-        'use_trans_sid',
-        'cache_limiter',
-        'cookie_domain',
-        'cookie_httponly',
-        'cookie_lifetime',
-        'cookie_path',
-        'cookie_secure',
-        'entropy_file',
-        'entropy_length',
-        'gc_divisor',
-        'gc_maxlifetime',
-        'gc_probability',
-        'hash_bits_per_character',
-        'hash_function',
-        'upload_progress.enabled',
-        'upload_progress.cleanup',
-        'upload_progress.prefix',
-        'upload_progress.name',
-        'upload_progress.freq',
-        'upload_progress.min-freq',
-        'url_rewriter.tags'
-    );
+    private $options = [];
 
-    /**
-     * Create a new session instance.
-     *
-     * @param  string $key
-     * @param  \SessionHandlerInterface $handler
-     * @param  string|null $id
-     * @return void
-     */
-    public function __construct()
+    public function __construct($options = [])
     {
-        $this->started = isset($_SESSION);
-
-        $this->encrypt = config('session.encrypt', false);
-
-        $this->setOptions(config('session.options', array()));
-
-        config('session.start', true) && $this->start(); 
+        $this->options = $options + config('session') + ['use_trans_sid'=>1, 'use_cookies'=>1, 'use_only_cookies'=>0];
+        if(isset($this->options['auto_start'])){
+           ini_set('session.auto_start', $this->options['auto_start']);
+           if($this->options['auto_start']) {
+                unset($this->options['auto_start']);
+                $this->start();
+           }        
+        }
     }
 
     /**
      * {@inheritdoc}
      */
     public function start($options = [])
-    {
-        if($this->isStarted()) return $this;
-        
-        if (\PHP_SESSION_ACTIVE === session_status()) {
-            throw new \RuntimeException('Failed to start the session: already started by PHP.');
+    {        
+        if ($this->status()) {
+            throw new \RuntimeException('Failed to start the session: already started.');
         }
 
         if (ini_get('session.use_cookies') && headers_sent($file, $line)) {
             throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
-
-        $this->sessionHandler(config('session.driver'));
-
-        session_start($options);
-
-        $this->started = isset($_SESSION);
-
+        
+        session_start($options + $this->options);
         return $this;
     }
 
@@ -117,66 +59,29 @@ class Session implements \IteratorAggregate, \Countable
      * @param array $options
      * @return mixed
      */
-    private function sessionHandler($handler)
-    {
-        if($this->handler instanceof \SessionHandlerInterface){
-           return $this->handler;
-        }
-
-        if(!in_array($handler, $handlers = array('files', 'redis', 'sqlite', 'memcached'))){
-            throw new \InvalidArgumentException('Invalid '.$handler.' session handler, only supports  '. implode(',', $handlers));
-        }
-
-        app()->alias(__NAMESPACE__.'\\Session\\Handler\\'.ucfirst($handler).'SessionHandler','session.'.$handler);
-
-        $this->handler = app('session.'. $handler);
-
-        session_set_save_handler($this->handler, false);
-
-        return $this->handler;
-    }
-
-
-    /**
-     * get handler
-     *
-     * @return \SessionHandlerInterface
-     */
-    public function handler()
-    {
-        return $this->handler;
-    }
+    // protected function sessionHandler($handler)
+    // {
+    //     if($this->handler instanceof \SessionHandlerInterface){
+    //        return $this->handler;
+    //     }
+    //     if(!in_array($handler, $handlers = array('null', 'files', 'redis', 'memcache', 'memcached'))){
+    //         throw new \InvalidArgumentException('Invalid '.$handler.' session handler, only supports  '. implode(',', $handlers));
+    //     }
+    //     app()->alias(__NAMESPACE__.'\\Session\\'.ucfirst($handler).'SessionHandler','session.'.$handler);
+    //     session_set_save_handler($this->handler = app('session.'. $handler), false);
+    //     return $this->handler;
+    // }
 
     /**
      * Get or regenerate current session ID.
      *
      * @param bool $newId
      *
-     * @return string|$this
+     * @return string|self
      */
     public function id($id = null)
     {
-        $id == session_id() || session_id($id);
-        return $id ? $this : session_id();
-    }
-
-
-    /**
-     * @return string
-     */
-    public function getId()
-    {
-        return session_id();
-    }
-
-
-    /**
-     * @param string $id
-     * @return string
-     */
-    public function setId($id)
-    {
-        return session_id($id);
+        return  $id && session_id($id) === '' ? $this : session_id();
     }
 
     /**
@@ -194,12 +99,10 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function get($key, $default = null)
     {
-        if($this->isStarted()) {
-            $value = data_get($_SESSION, $key, $default);
-            return $value ? ($this->encrypt ? make('crypt')->de($value) : $value) : $default;
-        }else{
-            throw new \RuntimeException('Unable to automatic start session, manual operation start it\'s');
+        if($this->status()) {
+             return data_get($_SESSION, $key, $default);
         }
+        throw new \RuntimeException('Unable to automatic start session, manual operation start it\'s');
     }
 
     /**
@@ -207,9 +110,11 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function set($key, $value)
     {
-        $value = $this->encrypt ? make('crypt')->en($value) : $value;
-
-        return data_set($_SESSION, $key, $value);
+        if($this->status()){
+            data_set($_SESSION, $key, $value);
+            return $this;
+        }
+        throw new \RuntimeException('Unable to automatic start session, manual operation start it\'s');
     }
 
     /**
@@ -373,28 +278,17 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function destroy()
     {
-        try{
+        if($this->status()){
             session_unset();
             session_destroy();
             session_write_close();
-            if (ini_get('session.use_cookies')) {
-                $params = session_get_cookie_params();
-                setcookie(
-                    session_name(),
-                    '',
-                    time() - 4200,
-                    $params['path'],
-                    $params['domain'],
-                    $params['secure'],
-                    $params['httponly']
-                );
-            }
-        $this->started = false;
+            session_abort();
+        }
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '',time() - 4200, $params['path'],$params['domain'],$params['secure'],$params['httponly']);
+        }
         return true;
-      }catch(\Exception $e){
-        throw $e;  
-        return false;
-      }
     }
 
     /**
@@ -410,39 +304,9 @@ class Session implements \IteratorAggregate, \Countable
     /**
      * {@inheritdoc}
      */
-    public function isStarted()
+    public function status()
     {
-        return $this->started;
-    }
-
-    /**
-     * Set option to session
-     *
-     * @see http://php.net/session.configuration
-     *
-     * @param $key
-     * @param $value
-     */
-    public function option($key, $value)
-    {
-        ini_set(\Str::startsWith($key, 'session.') ? $key : 'session.'.$key, $value);
-    }
-
-    /**
-     * Sets session.* ini variables.
-     *
-     * For convenience we omit 'session.' from the beginning of the keys.
-     * Explicitly ignores other ini keys.
-     *
-     * @param array $options Session ini directives array(key => value)
-     *
-     * @see http://php.net/session.configuration
-     */
-    public function setOptions(array $options)
-    {
-        foreach ($options as $key => $value) {
-            in_array($key, $this->options) && ini_set('session.'.$key, $value);
-        }
+        return \PHP_SESSION_ACTIVE === session_status();
     }
 
     /**
