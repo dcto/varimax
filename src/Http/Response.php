@@ -90,7 +90,7 @@ class Response implements ResponseInterface
      */
     public function json($context = [], int $status = 200,  array $headers = [], string $callback = null, int $options = JSON_UNESCAPED_UNICODE)
     {
-        $this->withHeader('content-type', 'text/plain; charset=utf-8')
+        $this->withHeader('content-type', 'application/json; charset=utf-8')
             ->withHeaders($headers)
             ->setResponse(new JsonResponse(new Stream(Encode::toJson($context, $options)), $status, [], true));
         $callback && $this->getResponse()->setCallback($callback);
