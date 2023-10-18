@@ -108,8 +108,8 @@ class Cookie{
     public function make($name, $value, $expire = null, $path = null, $domain = null, $secure = null, $httpOnly = null, $raw = null, $sameSite = null)
     {
         $value = $this->encrypt ? app('crypt')->en($value) : $value;
-        $expire = ($expire ?? $this->expire) > 0 ? time() + ($expire * 60) : 0;
-        return new HttpCookie($this->name($name), $value, $expire, 
+        $expire = $expire ?? $this->expire;
+        return new HttpCookie($this->name($name), $value, ($expire > 0 ? time() + $expire : $expire), 
             $path ?? $this->path, 
             $domain ?? $this->domain, 
             $secure ?? $this->secure, 
