@@ -3,16 +3,14 @@
 namespace VM\Http;
 
 use VM\Http\Response\Encode;
-use VM\Http\Response\StreamBase;
+use VM\Http\Response\Stream;
 use VM\Http\Response\ResponseTraits;
 use Psr\Http\Message\ResponseInterface;
-use Illuminate\Support\Traits\Macroable;
-use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
-
-use function get_class;
 
 /**
  * Class Response
@@ -20,18 +18,25 @@ use function get_class;
  */
 class Response implements ResponseInterface 
 {
-    use Macroable, ResponseTraits;
-
+    use ResponseTraits;
 
     /**
-     * @var array
+     * @var ResponseHeaderBag
      */
-    protected $headers = [];
+    protected $headers;
 
     /**
      * @var BaseResponse
      */
     protected $response;
+
+    /**
+     * constructor Response
+     */
+    public function __construct()
+    {
+        $this->headers = new ResponseHeaderBag();
+    }
 
     /**
      * Make an Response instance
@@ -40,79 +45,71 @@ class Response implements ResponseInterface
      * @param array $headers 
      * @return self
      */
-    public function make($content = '', int $status = 200, array $headers = [])
+    public function make($context = '', int $status = 200, array $headers = [])
     {
-        if($content instanceof self) return $content;
-        return $this->setResponse(new BaseResponse)
-        ->withStatus($status)
-        ->withHeaders($headers)
-        ->withBody(new StreamBase((string) $content));
-    }
-
-    /**
-     * Format data to a string and return data with content-type:text/plain header.
-     * @param mixed $content will transfer to a string value
-     * @param int $status
-     * @param array $headers
-     * @return self
-     */
-    public function raw($content = null, int $status = 200, array $headers = [])
-    {
-       return $this->setResponse(new BaseResponse)
-            ->withStatus($status)
-            ->withHeader('content-type', 'text/plain; charset=utf-8')
-            ->withHeaders($headers)
-            ->withBody(new StreamBase(is_string($content) ? $content : print_r($content, true)));
+        return $this->withHeaders($headers)->setResponse(new BaseResponse(new Stream((string) $context), $status));
     }
 
     /**
      * Format data to XML and return data with Content-Type:application/xml header.
-     * @param array|Arrayable|Xmlable $content
+     * @param array|Arrayable|Xmlable $context
+     * @param int $status
+     * @param array $headers
      * @param string $root
+     * @return self
+     */
+    public function xml(array $context = [], string $root = 'root', int $status = 200,  array $headers = [])
+    {
+        return $this->withHeader('content-type', 'application/xml; charset=utf-8')
+            ->withHeaders($headers)
+            ->setResponse(new BaseResponse(new Stream(Encode::toXml($context, null, $root)),$status));
+    }
+    /**
+     * Format data to a string and return data with content-type:text/plain header.
+     * @param mixed $context will transfer to a string value
      * @param int $status
      * @param array $headers
      * @return self
      */
-    public function xml(array $content = [], string $root = 'root', int $status = 200, array $headers = [])
+    public function raw($context = '', int $status = 200, array $headers = [])
     {
-        return $this->setResponse(new BaseResponse)
-            ->withStatus($status)
-            ->withHeader('content-type', 'application/xml; charset=utf-8')
+        return $this->withHeader('content-type', 'text/plain; charset=utf-8')
             ->withHeaders($headers)
-            ->withBody(new StreamBase(Encode::toXml($content, null, $root)));
+            ->setResponse(new BaseResponse(new Stream(is_string($context) ? $context : print_r($context, true)),$status));
     }
 
     /**
-     * Format data to JSON and return data with Content-Type:application/json header.
+     * Format data to JSON and return data with Content-Type: application/json header.
      *
-     * @param array|Arrayable|Jsonable $data
+     * @param array|Arrayable|Jsonable $context
      * @param int $status
      * @param array $headers
+     * @param string $callback
+     * @param int $options
      * @return ResponseInterface
      */
-    public function json(array $data = [], int $status = 200, int $options = JSON_UNESCAPED_UNICODE)
+    public function json($context = [], int $status = 200,  array $headers = [], string $callback = null, int $options = JSON_UNESCAPED_UNICODE)
     {
-        return $this->setResponse(new JsonResponse)
-            ->withStatus($status)
-            ->withHeader('content-type', 'application/json; charset=utf-8')
-            ->withBody(new StreamBase(Encode::toJson($data, $options)));
+        $this->withHeader('content-type', 'text/plain; charset=utf-8')
+            ->withHeaders($headers)
+            ->setResponse(new JsonResponse(new Stream(Encode::toJson($context, $options)), $status, [], true));
+        $callback && $this->getResponse()->setCallback($callback);
+        return $this;
     }
 
 
     /**
-     * @param string $html
+     * @param string $context
      * @param array $data
      * @param int $status
      * 
      * @return ResponseInterface
      */
-    public function html(string $html, int $status = 200, array $headers = [])
+    public function html(string $context = '', int $status = 200, array $headers = [])
     {
-        return $this->setResponse(new BaseResponse)
-            ->withStatus($status)
-            ->withHeader('content-type', 'text/html; charset=utf-8')
+        return $this->withHeader('content-type', 'text/html; charset=utf-8')
             ->withHeaders($headers)
-            ->withBody(new StreamBase($html));
+            ->setResponse(new BaseResponse(new Stream($context),$status));
     }
 
 
@@ -125,10 +122,7 @@ class Response implements ResponseInterface
      */
     public function redirect(string $url,  int $status = 302, array $headers = []) 
     {
-        return $this->setResponse(new RedirectResponse($url, $status))
-            ->withStatus($status)
-            ->withHeader('Location', $url)
-            ->withHeaders($headers);
+        return $this->withHeaders($headers)->setResponse(new RedirectResponse($url, $status));
     }
 
 
@@ -138,65 +132,85 @@ class Response implements ResponseInterface
      * @param string $file the file path which want to send to client
      * @param string $name the alias name of the file that client receive
      */
-    public function download(string $file, string $name = '')
+    public function download(string $file, string $name = null)
     {
         $file = new \SplFileInfo($file);
-        $this->response = new BinaryFileResponse($file);
-
         if (! $file->isReadable()) {
-            throw new \RuntimeException('The file Unreadable.');
+            throw new \RuntimeException("The file {$file} Unreadable.");
         }
-
-        $filename = $name ?: $file->getBasename();
         $etag = $this->createEtag($file);
-        $this->response->setEtag($etag);
+        $name = $name ?: $file->getBasename();
         $contentType = value(function () use ($file) {
             return finfo_file(finfo_open(FILEINFO_MIME_TYPE), $file) ?? 'application/octet-stream';
         });
 
         // Determine if ETag the client expects matches calculated ETag
-        $request = new \VM\Http\Request;
-        $ifMatch = $request->header('if-match');
-        $ifNoneMatch = $request->header('if-none-match');
+        $ifMatch = app('request')->header('if-match');
+        $ifNoneMatch = app('request')->header('if-none-match');
         $clientEtags = explode(',', $ifMatch ?: $ifNoneMatch);
         array_walk($clientEtags, 'trim');
         if (in_array($etag, $clientEtags, true)) {
-            return $this->withStatus(304)->withHeader('content-type', $contentType);
+            return $this->withHeader('content-type', $contentType)->setResponse(new BinaryFileResponse($file, 304));
         }
 
-        return $this->withHeader('content-description', 'File Transfer')
-            ->withHeader('content-type', $contentType)
-            ->withHeader('content-disposition', "attachment; filename={$filename}; filename*=UTF-8''" . rawurlencode($filename))
-            ->withHeader('content-transfer-encoding', 'binary')
-            ->withHeader('pragma', 'public')
-            ->withHeader('etag', $etag);
+        return $this->withHeaders([
+                'etag'=>$etag,
+                'pragma'=>'public',
+                'content-type'=>$contentType,
+                'content-description'=>'File Transfer',
+                'content-transfer-encoding'=>'binary',
+                'content-disposition'=>"attachment; filename={$name}; filename*=UTF-8''" . rawurlencode($name)
+            ])->setResponse(new BinaryFileResponse($file, 200));
     }
 
     /**
      * Set the response header 
-     * @param $key string
+     * @param $name string
      * @param $value string
-     * @return self
+     * @return self|string
      */
-    public function header($key, $value = null){
-        if(!$value) return $this->getHeader($key);
-        return $this->withHeader($key, $value);
+    public function header($name, $value = null)
+    {
+        return is_null($value) ? $this->headers->get($name) : $this->withHeader($name, $value);
     }
 
     /**
-     * Set bulk response header 
-     * @param array|string $headers
+     * Response Headers 
+     * @param mixed|null $headers 
+     * @return ResponseHeaderBag
+     */
+    public function headers(...$headers)
+    {
+        return $headers ? $this->withHeaders(...$headers) : $this->headers;
+    }
+    
+    /**
+     * With Cookie alias name
+     * @param string $name
+     * @param string $value
      * @return self
      */
-    public function headers(...$headers){
-        if(!$headers) return $this->getHeaders();
-        return $this->withHeaders(...$headers);
+    public function cookie($name, $value)
+    {
+        return $this->withCookie($name, $value);
+    }
+
+    /**
+     * withCookie
+     * @param $key
+     * @param $value
+     * @return self
+     */
+    public function withCookie($key, $value): self
+    {
+        $this->headers->setCookie(app('cookie')->make($key, $value));
+        return $this;
     }
 
     /**
      * Get the response object from self.
      * 
-     * @return BaseResponse it's an object that , or maybe it's a proxy class
+     * @return BaseResponse|JsonResponse|RedirectResponse|BinaryFileResponse
      */
     protected function getResponse()
     {
@@ -215,30 +229,23 @@ class Response implements ResponseInterface
     }
 
     /**
-     * withCookie
-     */
-    public function withCookie(Cookie $cookie): ResponseInterface
-    {
-        return $this->call(__FUNCTION__, func_get_args());
-    }
-
-    /**
      * Get ETag header according to the checksum of the file.
+     * @param \SplFileInfo $file
+     * @param bool $weak
+     * @return string
      */
     protected function createEtag(\SplFileInfo $file, bool $weak = false): string
     {
-        $etag = '';
         if ($weak) {
             $lastModified = $file->getMTime();
             $filesize = $file->getSize();
             if (! $lastModified || ! $filesize) {
-                return $etag;
+                return '';
             }
-            $etag = sprintf('W/"%x-%x"', $lastModified, $filesize);
+            return sprintf('W/"%x-%x"', $lastModified, $filesize);
         } else {
-            $etag = md5_file($file->getPathname());
+            return md5_file($file->getPathname());
         }
-        return $etag;
     }
 
     /**
@@ -246,22 +253,10 @@ class Response implements ResponseInterface
      */
     public function __call($name, $arguments)
     {
-        $response = $this->getResponse();
-        if (! method_exists($response, $name)) {
+        in_array($name, ['prepare', 'send']) && $this->getResponse()->headers = $this->headers; 
+        if (! method_exists($this->getResponse(), $name)) {
             throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $name));
         }
-        return $response->{$name}(...$arguments);
-    }
-
-    /**
-     * Static call method
-     */
-    public static function __callStatic($name, $arguments)
-    {
-        $response = (new self)->getResponse();
-        if (! method_exists($response, $name)) {
-            throw new \BadMethodCallException(sprintf('Call to undefined static method %s::%s()', self::class, $name));
-        }
-        return $response::{$name}(...$arguments);
+        return $this->getResponse()->{$name}(...$arguments);
     }
 }

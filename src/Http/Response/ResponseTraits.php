@@ -55,7 +55,7 @@ trait ResponseTraits {
      */
     public function getHeaders(): array
     {
-        return $this->getResponse()->getHeaders();
+        return $this->headers->all();
     }
 
     /**
@@ -68,7 +68,7 @@ trait ResponseTraits {
      */
     public function hasHeader($name): bool
     {
-        return $this->getResponse()->header->get($name);
+        return $this->headers->has($name);
     }
 
     /**
@@ -85,7 +85,7 @@ trait ResponseTraits {
      */
     public function getHeader($name): array
     {
-        return $this->getResponse()->getHeader($name);
+        return $this->headers->get($name);
     }
 
     /**
@@ -106,7 +106,7 @@ trait ResponseTraits {
      */
     public function getHeaderLine($name): string
     {
-        return $this->getResponse()->getHeaderLine($name);
+        return $this->headers->getHeaderLine($name);
     }
 
     /**
@@ -124,7 +124,7 @@ trait ResponseTraits {
      */
     public function withHeader($name, $value)
     {
-        $this->getResponse()->headers->set($name, $value);
+        $this->headers->set($name, trim($value));
         return $this;
     }
 
@@ -143,7 +143,7 @@ trait ResponseTraits {
                 $header = explode(':', $header);
                 $this->withHeader($header[0], $header[1]);
             }
-        }, count($headers) == 1 ? array_chunk($headers[0],1, true) : $headers);
+        }, (count($headers) == 1 && is_array($headers[0])) ? array_chunk($headers[0],1, true) : $headers);
         return $this;
     }
 
@@ -163,8 +163,7 @@ trait ResponseTraits {
      */
     public function withAddedHeader($name, $value)
     {
-        $this->getResponse()->headers->set($name, $value);
-        return $this;
+        return $this->withHeader($name, $value);
     }
 
     /**
@@ -179,6 +178,7 @@ trait ResponseTraits {
      */
     public function withoutHeader($name)
     {
+        $this->headers->remove($name);
         return $this;
     }
 
