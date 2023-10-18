@@ -146,7 +146,6 @@ class Upload extends UploadedFile
             $file->getPathname(),
             $file->getClientOriginalName(),
             $file->getClientMimeType(),
-            $file->getClientSize(),
             $file->getError(),
             $test
         );
