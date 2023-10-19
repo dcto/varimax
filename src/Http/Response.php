@@ -251,12 +251,12 @@ class Response implements ResponseInterface
     /**
      * Dynamic call method
      */
-    public function __call($name, $arguments)
+    public function __call($method, $arguments)
     {
-        in_array($name, ['prepare', 'send']) && $this->getResponse()->headers = $this->headers; 
-        if (! method_exists($this->getResponse(), $name)) {
-            throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $name));
+        $method == 'prepare' && $this->getResponse()->headers = $this->headers; 
+        if (! method_exists($this->getResponse(), $method)) {
+            throw new \BadMethodCallException(sprintf('Call to undefined method %s::%s()', get_class($this), $method));
         }
-        return $this->getResponse()->{$name}(...$arguments);
+        return $this->getResponse()->{$method}(...$arguments);
     }
 }
