@@ -11,7 +11,10 @@
 
 namespace VM\I18n;
 
-class Lang
+/**
+ * @package VM\I18n
+ */
+class Lang implements \ArrayAccess
 {
     /**
      * @var string
@@ -56,6 +59,7 @@ class Lang
 
 
     /**
+     * Get lang or set lang
      * @param null $lang
      * @return mixed
      */
@@ -66,14 +70,13 @@ class Lang
 
     /**
      * Set locale
-     *
      * @param $lang
      * @return $this
      */
     public function setLocale($lang)
     {
         $this->i18n = $lang;
-        make('cookie')->set('i18n', $lang);
+        app('cookie')->set('i18n', $lang);
         return $this;
     }
 
@@ -89,7 +92,7 @@ class Lang
         }else{
             if(PHP_SAPI != 'cli' ){
                 $this->i18n = $this->i18n ?: route()->lang();
-                $this->i18n = $this->i18n ?: make('cookie')->get('i18n');
+                $this->i18n = $this->i18n ?: app('cookie')->get('i18n');
                 $this->i18n = $this->i18n ?: $this->detect();
             }
             $this->i18n = config('i18n.'. $this->i18n) ? $this->i18n : config('app.language', key((array) config('i18n')));
@@ -99,13 +102,13 @@ class Lang
 
     /**
      *
-     * Detect language of system
+     * Detect language from browser
      *
      * @return mixed|string
      */
     public function detect()
     {
-        $language = make('request')->language();
+        $language = app('request')->language();
         if($i18ns = config('i18n')){
             foreach ($i18ns as $locale) {
                 if (strstr($language, $locale)) {
@@ -116,30 +119,45 @@ class Lang
         return $language;
     }
 
-        /**
-         * Determine if the given configuration value exists.
-         *
-         * @param  string  $key
-         * @return bool
-         */
+    /**
+     * Determine if the given configuration value exists.
+     * @param  string  $key
+     * @return bool
+     */
     public function has($key)
     {
-        return \Arr::has($this->item, $key);
+        return isset($this->item[$key]);
     }
 
     /**
      * Get the specified configuration value.
      *
-     * @param  array|string  $key
-     * @param  mixed  $default
-     * @return mixed
+     * @param string $key
+     * @param array $args
+     * @return string 
      */
-    public function get(...$args)
+    public function get($key, ...$args)
     {
-        $key = array_shift($args);
         return strstr($key, ',') ? implode('', array_map(function($k)use($args){
            return $this->take($k, $args);
        }, explode(',', $key))) : $this->take($key, $args);
+    }
+
+    /**
+     * add lang onto item value.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return self
+     */
+    public function add($key, $value = null)
+    {
+        if(is_array($key)){
+            $this->set($key);
+        }else{
+            $this->set($key, $value);
+        }
+        return $this;
     }
 
     /**
@@ -147,12 +165,12 @@ class Lang
      *
      * @param  array|string  $key
      * @param  mixed  $value
-     * @return $this
+     * @return self
      */
     public function set($key, $value = null)
     {
         $item = is_array($key) ? $key : [$key => $value];
-        $item =\Arr::dot($item, '', '.');
+        $item = array_dot($item, '', '.');
         $this->item = array_merge($this->item, $item);
         return $this;
     }
@@ -162,7 +180,7 @@ class Lang
      *
      * @return array
      */
-    public function arr($key = null)
+    public function array($key = null)
     {
         $items = array();
         foreach($this->item as $item => $value){
@@ -173,35 +191,6 @@ class Lang
         return \Arr::get($items, $key);
     }
 
-    /**
-     * Prepend a value onto an array configuration value.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return $this
-     */
-    public function prepend($key, $value)
-    {
-        $array = $this->get($key);
-        array_unshift($array, $value);
-        $this->set($key, $array);
-        return $this;
-    }
-
-    /**
-     * Push a value onto an array configuration value.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return $this
-     */
-    public function push($key, $value)
-    {
-        $array = $this->get($key);
-        $array[] = $value;
-        $this->set($key, $array);
-        return $this;
-    }
 
     /**
      * Take lang string
@@ -255,7 +244,7 @@ class Lang
      * @param  string  $key
      * @return bool
      */
-    public function offsetExists($key)
+    public function offsetExists($key) : bool
     {
         return $this->has($key);
     }
@@ -266,6 +255,7 @@ class Lang
      * @param  string  $key
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($key)
     {
         return $this->get($key);
@@ -278,7 +268,7 @@ class Lang
      * @param  mixed  $value
      * @return void
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($key, $value) : void
     {
         $this->set($key, $value);
     }
@@ -289,7 +279,7 @@ class Lang
      * @param  string  $key
      * @return void
      */
-    public function offsetUnset($key)
+    public function offsetUnset($key) : void
     {
         $this->set($key, null);
     }
@@ -303,37 +293,18 @@ class Lang
      */
     public function load($lang, $reload = false)
     {
-        try {
-
-            $cache = runtime('lang',_APP_, $lang.'.php');
-
-            if (!$reload && !config('app.debug', getenv('DEBUG')) && is_file($cache)) {
-
-                $this->item = require($cache);
-
-            } else {
-
-                if (!is_dir($cache_dir = dirname($cache))) {
-                    if (!mkdir($cache_dir, 0755, true)) {
-                        throw new \ErrorException('Can not create i18n dir ' . $cache_dir);
-                    }
+        $cache = runtime('lang',_APP_, $lang.'.php');
+        if (!$reload && !config('app.debug', getenv('DEBUG')) && is_file($cache)) {
+            $this->item = require($cache);
+        } else {
+            if (!is_dir($cache_dir = dirname($cache))) {
+                if (!mkdir($cache_dir, 0755, true)) {
+                    throw new \ErrorException('Can not create i18n directory ' . $cache_dir);
                 }
-
-                if(is_file($file = root('i18n', $lang.'.ini'))) {
-                    $this->set(parse_ini_file($file, true));
-                }
-
-                if(is_file($file = root(_APP_._DS_.'I18n'._DS_.$lang.'.ini'))){
-                    $this->set(parse_ini_file($file, true));
-                }
-
-
-                file_put_contents($cache, '<?php return ' . str_replace(array("\r\n", "\n", "\r", "\t"), '', var_export($this->all(), TRUE)).';');
-
-                return $this;
             }
-        }catch (\Exception $e){
-            throw new \InvalidArgumentException('Unable Load ['.$lang.'] Language Package ');
+            is_file($file = root('i18n', $lang.'.ini')) && $this->set(parse_ini_file($file, true));
+            is_file($file = app_dir('I18n', $lang.'.ini')) && $this->set(parse_ini_file($file, true));
+            file_put_contents($cache, '<?php return '. str_replace([" ", PHP_EOL], '', var_export($this->all(), TRUE)).';');
         }
         return $this;
     }
@@ -355,7 +326,6 @@ class Lang
     {
         array_push($this->keys, $key);
         $this->args = $args;
-
         return $this;
     }
 
