@@ -72,9 +72,10 @@ if(!function_exists('uri')) {
  * @return mixed
  */
 if(!function_exists('lang')) {
-    function lang()
+    function lang(...$args)
     {
-        return call_user_func_array(array(app('lang'), 'get'), func_get_args());
+        return !$args ? app('lang') : app('lang')->get(...$args);
+        //return call_user_func_array(array(app('lang'), 'get'), func_get_args());
     }
 }
 
@@ -451,7 +452,6 @@ if(!function_exists('array_keys_exists')) {
 
 /**
  * Flatten a multi-dimensional associative array with dots.
- *
  * @param  array   $array
  * @param  string  $prepend
  * @return array
@@ -471,10 +471,31 @@ if (!function_exists('array_dot')) {
     }
 }
 
-if(!function_exists('dump')) {
-    function dump()
+/**
+ * array Undot
+ * @param $dotNotationArray
+ * @return array
+ */
+if (!function_exists('array_undot')) {
+    function array_undot($dotNotationArray)
     {
-        $args = func_get_args();
+        $array = [];
+        foreach ($dotNotationArray as $key => $value) {
+            data_set($array, $key, $value);
+        }
+        return $array;
+    }
+}
+
+
+/**
+ * dump mixed
+ * @param mixed $args
+ * @return void
+ */
+if(!function_exists('dump')) {
+    function dump(...$args)
+    {
         $backtrace = debug_backtrace();
         $file = $backtrace[0]['file'];
         $line = $backtrace[0]['line'];
