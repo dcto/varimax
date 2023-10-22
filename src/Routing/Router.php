@@ -501,7 +501,7 @@ class Router
      */
     protected function parseAction($property)
     {
-        if (is_string($property) || is_callable($property)) {
+        if (is_string($property) || is_callable($property) || is_object($property)) {
             // A string or Closure is given as Action.
             return array('call' => $property);
         } else if(is_array($property) && !isset($property['call'])) {
