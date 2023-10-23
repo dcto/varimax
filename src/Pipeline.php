@@ -15,6 +15,7 @@ abstract class Pipeline {
     * The Pipeline handle method
     * @param \VM\Http\Request $request
     * @param \Closure $next
+    * @param array $guards
     */
-    abstract public function handle(\VM\Http\Request $request, \Closure $next, ...$guards);
+    abstract public function handle($request, \Closure $next, ...$guards);
 }
