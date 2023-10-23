@@ -1,15 +1,13 @@
 <?php
 #!/usr/bin/php
 
-/**
- * Get the available container instance.
- *
- * @param  string  $make
- * @param  array   $parameters
- * @return mixed|\VM\Application
- */
-
 if(!function_exists('app')){
+    /**
+     * Get the available container instance.
+     * @param string $make
+     * @param array $parameters
+     * @return mixed|\VM\Application
+     */
     function app($make = null, $parameters = [])
     {
         return is_null($make) 
@@ -18,60 +16,61 @@ if(!function_exists('app')){
     }
 }
 
-/**
- * make alias name for app
- * @param null $make
- * @param array $parameters
- * @return mixed
- */
 if(!function_exists('make')) {
+    /**
+     * make alias name for app
+     * @param null $make
+     * @param array $parameters
+     * @return mixed|\VM\Application
+     */
     function make($make = null, $parameters = [])
     {
         return app($make, $parameters);
     }
 }
 
-/**
- * Lang i18n method
- * @param null $i18n
- * @param array $i18n
- * @return mixed
- */
 if(!function_exists('i18n')) {
+    /**
+     * Get current i18n helper
+     * @param null $i18n
+     * @param array $i18n
+     * @return mixed
+     */
     function i18n($i18n = null)
     {
         return app('lang')->i18n($i18n);
     }
 }
 
-/**
- * request url
- * @return mixed
- */
 if(!function_exists('url')) {
-    function url()
+    /**
+     * request url helper
+     * @return string
+     */
+    function url(...$args)
     {
-        return call_user_func_array(array(app('request'), 'url'), func_get_args());
+        return app('request')->url(...$args);
+        //return call_user_func_array(array(app('request'), 'url'), func_get_args());
     }
 }
 
-/**
- * request uri
- * @return mixed
- */
 if(!function_exists('uri')) {
-    function uri()
+    /**
+     * request uri
+     * @return string
+     */
+    function uri(...$args)
     {
-        return call_user_func_array(array(app('request'), 'uri'), func_get_args());
+        return app('request')->uri(...$args);
+        //return call_user_func_array(array(app('request'), 'uri'), func_get_args());
     }
 }
 
-
-/**
- * get the language
- * @return mixed
- */
 if(!function_exists('lang')) {
+    /**
+     * lang instace helper
+     * @return \VM\I18n\Lang|string
+     */
     function lang(...$args)
     {
         return !$args ? app('lang') : app('lang')->get(...$args);
@@ -79,24 +78,23 @@ if(!function_exists('lang')) {
     }
 }
 
-/**
- * get the route
- * @param string $id 路由ID
- * @return \VM\Routing\Route
- */
 if(!function_exists('route')) {
+    /**
+     * get the route
+     * @param string $id 路由ID
+     * @return \VM\Routing\Route
+     */
     function route($id = null)
     {
         return app('router')->route($id);
     }
 }
 
-/**
- * get config
- * @return string|\VM\Config\Config
- */
 if(!function_exists('config')) {
-
+    /**
+     * get config
+     * @return string|\VM\Config\Config
+     */
     function config($key = null, $default = null)
     {
         if (is_null($key)) {
@@ -109,12 +107,12 @@ if(!function_exists('config')) {
     }
 }
 
-/**
- * get path
- * @param mixed $paths
- * @return string
- */
 if(!function_exists('root')) {
+    /**
+     * Get Root Paths
+     * @param string|array $paths
+     * @return string
+     */
     function root(...$paths)
     {
         return $paths ? _DOC_._DS_.join(_DS_, array_map(function($arg){
@@ -123,37 +121,37 @@ if(!function_exists('root')) {
     }
 }
 
-/**
- * root alias name
- * @param string $paths
- * @return string
- */
 if(!function_exists('app_dir')) {
+    /**
+     * Get app paths
+     * @param string $paths
+     * @return string
+     */
     function app_dir(...$paths)
     {
         return root(_APP_, ...$paths);
     }
 }
 
-/**
- * Get the path to the base of the install.
- *
- * @param  string  $path
- * @return string
- */
 if (! function_exists('base_path')) {
+    /**
+     * The root alias helper
+     *
+     * @param  string  $path
+     * @return string
+     */
     function base_path(...$args)
     {
         return root(...$args);
     }
 }
 
-/**
- * runtime item dir
- * @param string paths
- * @return string
- */
 if(!function_exists('runtime')) {
+    /**
+     * app runtime dir
+     * @param string paths
+     * @return string
+     */
     function runtime(...$paths)
     {
         $path = root(__FUNCTION__, ...$paths);
@@ -162,51 +160,50 @@ if(!function_exists('runtime')) {
     }
 }
 
-/**
- * request object
- * @return \VM\Http\Request
- */
 if(!function_exists('request')) {
+    /**
+     * request instace
+     * @return \VM\Http\Request|string
+     */
     function request($key = null, $default = '')
     {
-        if(is_null($key)) {
-            return make('request');
-        }
-        return make('request')->get($key, $default);
+        return is_null($key) ? app('request')->get($key, $default) : app('request');
     }
 }
-/**
- * response
- * @param $context
- * @param int $code
- * @param array $header
- * @return \VM\Http\Response
- */
+
 if(!function_exists('response')) {
+    /**
+     * response
+     * @param $context
+     * @param int $status
+     * @param array $header
+     * @return \VM\Http\Response
+     */
     function response($context = null, $status = 200, $header = array())
     {
         return is_null($context) ? app('response') : app('response')->make($context, $status, $header);
     }
 }
 
-/**
- * redirect to url
- * @param $url
- * @param int $status
- * @param array $headers
- * @return \VM\Http\Response
- */
 if(!function_exists('redirect')) {
+    /**
+     * redirect to url
+     * @param $url
+     * @param int $status
+     * @param array $headers
+     * @return \VM\Http\Response
+     */
     function redirect($url, $status = 302, $headers = [])
     {
         return app('response')->redirect($url, $status, $headers);
     }
 }
-/**
- * session object
- * @return \VM\Http\Session
- */
+
 if(!function_exists('session')) {
+    /**
+     * session object
+     * @return \VM\Http\Session
+     */
     function session($k = false, $v = false)
     {
         if ($k && $v) {
@@ -218,14 +215,14 @@ if(!function_exists('session')) {
         }
     }
 }
-/**
- * Create a new cookie instance.
- *
- * @param  string  $name
- * @param  string  $value
- * @return \VM\Http\Cookie
- */
+
 if(!function_exists('cookie')) {
+    /**
+     * Cookie instance helper
+     * @param  string  $name
+     * @param  string  $value
+     * @return \VM\Http\Cookie|string
+     */
     function cookie($name = null, $value = null)
     {
         if($name && $value){
@@ -238,12 +235,12 @@ if(!function_exists('cookie')) {
     }
 }
 
+if(!function_exists('domain')){
 /**
  * Get domain with subdomain or null
  * @param mixed $host 
  * @return array|string|int|null|false 
  */
-if(!function_exists('domain')){
 function domain($host = null, $subDomain = true){
     $host = $host ? trim($host, ' /') : $_SERVER['SERVER_NAME'];
     $host = filter_var($host, FILTER_VALIDATE_URL) ? parse_url($host, PHP_URL_HOST) : $host;
@@ -261,64 +258,51 @@ function domain($host = null, $subDomain = true){
     }
 }
 }
-/**
- * \DB::table function
- * @param $table
- * @return \Illuminate\Database\Query\Builder
- */
+
 if(!function_exists('DB')) {
+    /**
+     * \DB::table function
+     * @param $table
+     * @return \Illuminate\Database\Query\Builder
+     */
     function DB($table)
     {
         return \DB::table($table);
     }
 }
 
-/**
- * 执行Javascript
- * @param $script string 脚本
- * @param $status int 状态
- * @param headers array 响应头
- */
 if(!function_exists('javascript')) {
+    /**
+     * javascript output
+     * @param $script string 脚本
+     * @param $status int 状态
+     * @param headers array 响应头
+     */
     function javascript($script, $status = 200, $headers = array())
     {
         return response('<script type="text/javascript">'.$script.'</script>', $status, $headers);
     }
 }
 
-
-/**
- * json response
- * @param array $data
- * @param int $status
- * @param array $headers
- * @return \VM\Http\Response
- */
-if(!function_exists('json')) {
-    function json($data = [], $status = 200, array $headers = [])
-    {
-        return make('response')->json($data, $status, $headers);
-    }
-}
-
-/**
- * input method
- * @param null $key
- * @param null $default
- * @return string
- */
 if(!function_exists('input')) {
+    /**
+     * request input
+     * @param null $key
+     * @param null $default
+     * @return string
+     */
     function input($key = null, $default = '')
     {
         return make('request')->input($key, $default);
     }
 }
-/**
- * @param bool $key
- * @param bool $value
- * @return \VM\Cache\Driver\Driver
- */
+
 if(!function_exists('cache')) {
+    /**
+     * @param bool $key
+     * @param bool $value
+     * @return \VM\Cache\Driver\Driver
+     */
     function cache($key = null, $default = null)
     {
         if (is_null($key)) return make('cache');
@@ -327,12 +311,12 @@ if(!function_exists('cache')) {
     }
 }
 
-/**
- * public directory
- * @param $path
- * @return string
- */
 if(!function_exists('www')) {
+    /**
+     * public resource directory
+     * @param $path
+     * @return string
+     */
     function www($path)
     {
         $url = '/';
@@ -345,25 +329,25 @@ if(!function_exists('www')) {
     }
 }
 
-
-/**
- * redis
- * @param string $server
- * @return \Redis
- */
 if(!function_exists('redis')) {
+    /**
+     * redis
+     * @param string $server
+     * @return \Redis
+     */
     function redis($server = 'default')
     {
         return make('cache')->redis($server);
     }
 }
-/**
- * random string
- * @param int $length
- * @param string $codes
- * @return string
- */
+
 if(!function_exists('random')) {
+    /**
+     * random string
+     * @param int $length
+     * @param string $codes
+     * @return string
+     */
     function random($length = 8, $codes = null)
     {
         $codes = $codes ? (is_array($codes) ? $codes : str_split($codes)) : array_merge(array_merge(range('A', 'Z'),range('a','z'),range(0, 9)));
@@ -372,13 +356,13 @@ if(!function_exists('random')) {
     }
 }
 
-/**
- * 文件大小单位转换
- * @param $bytes
- * @param int $decimals
- * @return string
- */
 if(!function_exists('readable_size')) {
+    /**
+     * 文件大小单位转换
+     * @param $bytes
+     * @param int $decimals
+     * @return string
+     */
     function readable_size($bytes, $decimals = 0)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
@@ -389,13 +373,13 @@ if(!function_exists('readable_size')) {
     }
 }
 
-/**
- * 格式化数字
- * @param int $number 数字
- * @param int $decimals 小数点
- * @return string
- */
 if(!function_exists('readable_number')) {
+    /**
+     * 格式化数字
+     * @param int $number 数字
+     * @param int $decimals 小数点
+     * @return string
+     */
     function readable_number($number, $decimals = 1)
     {
        if ($number >= 100 && $number < 100000) {
@@ -409,26 +393,26 @@ if(!function_exists('readable_number')) {
     }
 }
 
-//截取字符串
-/**
- * @param $string
- * @param int $length
- * @param string $symbol
- * @return array|string
- */
 if(!function_exists('truncate')) {
+    /**
+     * 截取字符串
+     * @param string $string
+     * @param int $length
+     * @param string $symbol
+     * @return string
+     */
     function truncate($string, $length = 255, $symbol = '')
     {
         return mb_strimwidth($string, 0, $length, $symbol);
     }
 }
 
-/**
- * @param $value 值
- * @param int $decimals 保留位数
- * @return string
- */
 if(!function_exists('decimal')){
+    /**
+     * @param mixed $value 值
+     * @param int $decimals 保留位数
+     * @return float
+     */
     function decimal($value, $decimals = 2)
     {
         //$value = number_format($value, $decimals, '.', '');
@@ -437,26 +421,26 @@ if(!function_exists('decimal')){
     }
 }
 
-/**
- * 增强array_key_exists 支持多键名检测
- * @param array $keys
- * @param array $array
- * @return bool
- */
 if(!function_exists('array_keys_exists')) {
+    /**
+     * 增强array_key_exists 支持多键名检测
+     * @param array $keys
+     * @param array $array
+     * @return bool
+     */
     function array_keys_exists(array $keys, array $array)
     {
         return !array_diff_key(array_flip($keys), $array);
     }
 }
 
-/**
- * Flatten a multi-dimensional associative array with dots.
- * @param  array   $array
- * @param  string  $prepend
- * @return array
- */
 if (!function_exists('array_dot')) {
+    /**
+     * Flatten a multi-dimensional associative array with dots.
+     * @param  array   $array
+     * @param  string  $prepend
+     * @return array
+     */
     function array_dot($array, $prepend = '', $trim = null)
     {
         $arr = [];
@@ -471,12 +455,12 @@ if (!function_exists('array_dot')) {
     }
 }
 
-/**
- * array Undot
- * @param $dotNotationArray
- * @return array
- */
 if (!function_exists('array_undot')) {
+    /**
+     * array Undot
+     * @param $dotNotationArray
+     * @return array
+     */
     function array_undot($dotNotationArray)
     {
         $array = [];
@@ -487,13 +471,12 @@ if (!function_exists('array_undot')) {
     }
 }
 
-
-/**
- * dump mixed
- * @param mixed $args
- * @return void
- */
 if(!function_exists('dump')) {
+    /**
+     * dump mixed
+     * @param mixed $args
+     * @return void
+     */
     function dump(...$args)
     {
         $backtrace = debug_backtrace();
@@ -506,15 +489,6 @@ if(!function_exists('dump')) {
         }
         echo "</pre>";
         die;
-    }
-}
-
-/**
- * 终断输出
- */
-if(!function_exists('abort')) {
-    function abort(string $message = '', int $status = 500, array $headers = []){
-        return response($message, $status, $headers);
     }
 }
 
@@ -538,6 +512,7 @@ if(!function_exists('unicode2char')){
         return false;
     }
 }
+
 if(!function_exists('char2unicode')){
     /**
      * 将字符转换成unicode
@@ -562,7 +537,6 @@ if(!function_exists('char2unicode')){
         }
     }
 }
-
 
 if(!function_exists('is_str')) {   
     /**  
@@ -623,13 +597,14 @@ if(!function_exists('is_ip')) {
         return ip2long($ip);
     }
 }
-/**
- * 是否为一个合法的银行账号
- * LUHN算法
- * @param int $number
- * @return boolean
- */
+
 if(!function_exists('is_luhn')){
+    /**
+     * 是否为一个合法的银行账号
+     * LUHN算法
+     * @param int $number
+     * @return boolean
+     */
     function is_luhn($number)
     {
         if(!is_numeric($number)) return false;
@@ -641,12 +616,12 @@ if(!function_exists('is_luhn')){
     }
 }
 
-/**  
- * 是否为整数  
- * @param int $number  
- * @return boolean  
- */
-if(!function_exists('is_intval')) {   
+if(!function_exists('is_intval')) {  
+    /**  
+     * 是否为整数  
+     * @param int $number  
+     * @return boolean  
+     */ 
     function is_intval($number)
     {
       return preg_match('/^[-\+]?\d+$/', $number);
@@ -712,6 +687,7 @@ if(!function_exists('is_chinese')) {
         return preg_match('/^[\x{4e00}-\x{9fa5}]+$/u', $str);
     }
 }
+
 if(!function_exists('is_image')) { 
     /**  
      * 判断是否为图片  
@@ -768,8 +744,6 @@ if(!function_exists('is_safe')) {
         return trim($input);
     }
 }
-
-
 
 if(!function_exists('symbol')){
     /**
