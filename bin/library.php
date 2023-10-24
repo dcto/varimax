@@ -293,7 +293,7 @@ if(!function_exists('input')) {
      */
     function input($key = null, $default = '')
     {
-        return make('request')->input($key, $default);
+        return is_null($key) ? app('request')->all() : app('request')->input($key, $default);
     }
 }
 
