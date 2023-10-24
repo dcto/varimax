@@ -167,7 +167,7 @@ if(!function_exists('request')) {
      */
     function request($key = null, $default = '')
     {
-        return is_null($key) ? app('request')->get($key, $default) : app('request');
+        return is_null($key) ? app('request') : app('request')->get($key, $default);
     }
 }
 
