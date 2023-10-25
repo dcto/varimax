@@ -171,7 +171,7 @@ class Application extends \Illuminate\Container\Container
     protected function run()
     {
         return $this->router->through(app_dir('routes'),  function($route){
-            (new \Illuminate\Pipeline\Pipeline($this))
+            (new \VM\Pipeline($this))
             ->send($this->request)->through(array_merge($this['config']['pipeline'], $route->pipeline))
             ->then(function($next) use($route){
                 return $next instanceof \VM\Http\Request ? $route->fire() : $next;

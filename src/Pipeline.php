@@ -1,7 +1,4 @@
 <?php
-
-namespace VM;
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -10,12 +7,35 @@ namespace VM;
  * Time: 2023-09-10
  */
 
-abstract class Pipeline {
+namespace VM;
+
+/**
+ * @package Pipeline
+ */
+class Pipeline extends \Illuminate\Pipeline\Pipeline
+{
     /**
-    * The Pipeline handle method
-    * @param \VM\Http\Request $request
-    * @param \Closure $next
-    * @param array $guards
-    */
-    abstract public function handle($request, \Closure $next, ...$guards);
+     * Handles the value returned from each pipe before passing it to the next.
+     *
+     * @param  mixed  $carry
+     * @return mixed
+     */
+    protected function handleCarry($carry)
+    {
+        return $carry;
+    }
+
+    /**
+     * Handle the given exception.
+     *
+     * @param  mixed  $passable
+     * @param  \Throwable  $e
+     * @return mixed
+     *
+     * @throws \Throwable
+     */
+    protected function handleException($passable, \Throwable $e)
+    {
+        throw $e;
+    }
 }
