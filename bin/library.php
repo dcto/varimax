@@ -289,7 +289,7 @@ if(!function_exists('input')) {
      * request input
      * @param null $key
      * @param null $default
-     * @return string
+     * @return array|string
      */
     function input($key = null, $default = '')
     {
