@@ -224,15 +224,10 @@ class Route implements \ArrayAccess
         if($this->callable instanceof \VM\Http\Response){
             return $this->callable;
 
-        }else if($this->callable instanceof \Closure) {
-            return call_user_func_array($this->callable, $this->parameters);
-
-        }else if(is_string($this->callable) && strpos($this->callable, '@')){
-            return app()->call($this->calling(), $this->parameters);
-
         }else{
-            return $this->callable;
+            return app()->call($this->calling(), $this->parameters);
         }
+        
     }
 
     /**
