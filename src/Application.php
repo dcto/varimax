@@ -163,19 +163,15 @@ class Application extends \Illuminate\Container\Container
     }
 
     /**
-     * Router HTTP Request 
-     *
+     * Dispatch Request To Response 
      * @return \VM\Http\Response
-     * @throws \VM\Exception\Exception
      */
     protected function run()
     {
         return $this->router->through(app_dir('routes'),  function($route){
             (new \VM\Pipeline($this))
-            ->send($this->request)->through(array_merge($this['config']['pipeline'], $route->pipeline))
-            ->then(function($next) use($route){
-                return $next instanceof \VM\Http\Request ? $route->fire() : $next;
-            })->prepare($this->request)->send();
+            ->send($this->request)->through(...$this['config']['pipeline'], ...$route->pipeline)
+            ->then(fn()=>$route->fire())->prepare($this->request)->send();
         });
     }
 }
