@@ -13,14 +13,12 @@ namespace VM\Services;
 
 use Illuminate\Pagination\Paginator;
 
-class PaginationServiceProvider extends \Illuminate\Support\ServiceProvider
+class PaginationServiceProvider extends ServiceProvider
 {
     /**
-     * Register the service provider.
-     *
-     * @return void
+     * @return mixed
      */
-    public function register()
+    public function boot()
     {
         Paginator::viewFactoryResolver(function () {
             return $this->app['view'];
@@ -38,6 +36,18 @@ class PaginationServiceProvider extends \Illuminate\Support\ServiceProvider
             }
 
             return 1;
+        });
+    }
+
+    /**
+     * Register the service provider.
+     *
+     * @return void
+     */
+    public function register()
+    {
+        $this->app->singleton('page', function(...$args){
+            return new Paginator(...$args);
         });
     }
 

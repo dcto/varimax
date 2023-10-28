@@ -13,7 +13,7 @@ namespace VM\Services;
 
 use Hashids\Hashids;
 
-class HashIdsServiceProvider extends \Illuminate\Support\ServiceProvider
+class HashIdsServiceProvider extends ServiceProvider
 {
     /**
      * Register the service provider.

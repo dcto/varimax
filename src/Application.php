@@ -107,13 +107,10 @@ class Application extends \Illuminate\Container\Container
      */
     protected function registerServiceProviders()
     {
-        $this->register(\Illuminate\Events\EventServiceProvider::class);
-
-        if(is_array($this->config['service'])){
-            foreach($this->config['service'] as $service){
-                $this->register($service);
-            }
-        }
+        array_map([$this, 'register'], $this->config['service']+[
+            \VM\Services\MacroableServiceProvider::class,
+            \Illuminate\Events\EventServiceProvider::class,
+        ]);
     }
 
     /**
