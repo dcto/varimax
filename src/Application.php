@@ -73,7 +73,7 @@ class Application extends \Illuminate\Container\Container
      * @return void
      */
     public function register($service){
-       
+
         if($this->resolved($service)) return true;
         
         $service = new $service($this);
@@ -105,12 +105,12 @@ class Application extends \Illuminate\Container\Container
      *
      * @return void
      */
-    protected function registerServiceProviders()
+    private function registerServiceProviders()
     {
-        array_map([$this, 'register'], $this->config['service']+[
-            \VM\Services\MacroableServiceProvider::class,
+        array_map([$this, 'register'], array_replace([
             \Illuminate\Events\EventServiceProvider::class,
-        ]);
+            \VM\Services\MacroableServiceProvider::class,
+        ], (array) $this->config['service']));
     }
 
     /**
@@ -167,7 +167,7 @@ class Application extends \Illuminate\Container\Container
     {
         return $this->router->through(app_dir('routes'),  function($route){
             (new \VM\Pipeline($this))->send($this->request)
-            ->through(array_merge($this['config']['pipeline'], $route->pipeline))
+            ->through(array_replace($this['config']['pipeline'], $route->pipeline))
             ->then(fn()=>$route->fire())->prepare($this->request)->send();
         });
     }
