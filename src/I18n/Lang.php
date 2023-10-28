@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax.cn
@@ -29,13 +28,13 @@ class Lang implements \ArrayAccess
     protected $item = array();
 
     /**
-     * 临时语言选择器
+     * Temp load keys
      * @var array
      */
     protected $keys = array();
 
     /**
-     * 当前临时调用参数
+     * Temp with args
      * @var array
      */
     protected $args = array();
@@ -144,23 +143,6 @@ class Lang implements \ArrayAccess
     }
 
     /**
-     * add lang onto item value.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return self
-     */
-    public function add($key, $value = null)
-    {
-        if(is_array($key)){
-            $this->set($key);
-        }else{
-            $this->set($key, $value);
-        }
-        return $this;
-    }
-
-    /**
      * Set a given configuration value.
      *
      * @param  array|string  $key
@@ -176,38 +158,19 @@ class Lang implements \ArrayAccess
     }
 
     /**
-     * restore lang to array
+     * add lang onto item value.
      *
-     * @return array
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return self
      */
-    public function array($key = null)
+    public function add($key, $value = null)
     {
-        $items = array();
-        foreach($this->item as $item => $value){
-            if(strpos($item, $key.'.') !== false){
-                \Arr::set($items, $item, $value);
-            }
-        }
-        return \Arr::get($items, $key);
-    }
-
-
-    /**
-     * Take lang string
-     * @param $key
-     * @param $args
-     * @return mixed|string
-     */
-    public function take($key, $args = null)
-    {
-        if(isset($this->item[$key])){
-            return $args ? $this->replacements($this->item[$key], (array) $args) : str_replace('%s', '', $this->item[$key]);
-        }
-        return $key;
+        return $this->set($key, $value);
     }
 
     /**
-     * Get all of the configuration item for the application.
+     * get raw of $this->item;
      *
      * @return array
      */
@@ -215,75 +178,7 @@ class Lang implements \ArrayAccess
     {
         return $this->item;
     }
-
-    /**
-     * To json
-     * @return string
-     */
-    public function json($key = null)
-    {
-        return $key ? json_encode(\Arr::get($this->item, $key)): json_encode($this->all());
-    }
-
-    /**
-     * Make the place-holder replacements on a line.
-     *
-     * @param  string  $line
-     * @param  array   $replaces
-     * @return string
-     */
-    private function replacements($lang, array $args)
-    {
-        $args = array_pad($args, substr_count($lang,'%s'), '');
-        return vsprintf($lang, $args);
-    }
-
-    /**
-     * Determine if the given configuration option exists.
-     *
-     * @param  string  $key
-     * @return bool
-     */
-    public function offsetExists($key) : bool
-    {
-        return $this->has($key);
-    }
-
-    /**
-     * Get a configuration option.
-     *
-     * @param  string  $key
-     * @return mixed
-     */
-    #[\ReturnTypeWillChange]
-    public function offsetGet($key)
-    {
-        return $this->get($key);
-    }
-
-    /**
-     * Set a configuration option.
-     *
-     * @param  string  $key
-     * @param  mixed  $value
-     * @return void
-     */
-    public function offsetSet($key, $value) : void
-    {
-        $this->set($key, $value);
-    }
-
-    /**
-     * Unset a configuration option.
-     *
-     * @param  string  $key
-     * @return void
-     */
-    public function offsetUnset($key) : void
-    {
-        $this->set($key, null);
-    }
-
+    
     /**
      * load language
      *
@@ -316,8 +211,84 @@ class Lang implements \ArrayAccess
     {
         return make('file')->cleanDirectory(runtime('lang'));
     }
+
+    
     /**
-     * 动态方法调用语言包 (lang->alert()->id())
+     * Take lang string
+     * @param $key
+     * @param $args
+     * @return string
+     */
+    protected function take($key, $args = [])
+    {
+        $this->keys = $this->args = [];
+        if(isset($this->item[$key])){
+            return $args ? $this->replacements($this->item[$key], $args) : str_replace('%s', '', $this->item[$key]);
+        }
+        return $key;
+    }
+
+    /**
+     * Make the place-holder replacements on a line.
+     *
+     * @param  string  $line
+     * @param  array   $replaces
+     * @return string
+     */
+    protected function replacements($lang, array $args)
+    {
+        return vsprintf($lang, array_pad($args, substr_count($lang,'%s'), ''));
+    }
+
+    /**
+     * Determine if the given configuration option exists.
+     *
+     * @param  string  $key
+     * @return bool
+     */
+    public function offsetExists($key) : bool
+    {
+        return $this->has($key);
+    }
+
+    /**
+     * Get a configuration option.
+     *
+     * @param  string  $key
+     * @return mixed
+     */
+    #[\ReturnTypeWillChange]
+    public function offsetGet($key)
+    {
+        array_push($this->keys, $key);
+        return $this;
+    }
+
+    /**
+     * Set a configuration option.
+     *
+     * @param  string  $key
+     * @param  mixed  $value
+     * @return void
+     */
+    public function offsetSet($key, $value) : void
+    {
+        $this->set($key, $value);
+    }
+
+    /**
+     * Unset a configuration option.
+     *
+     * @param  string  $key
+     * @return void
+     */
+    public function offsetUnset($key) : void
+    {
+        unset($this->item[$key]);
+    }
+
+    /**
+     * 动态调用 (lang->alert()->id())
      * @param $name
      * @param $arguments
      * @return mixed|string
@@ -334,8 +305,6 @@ class Lang implements \ArrayAccess
      */
     public function __toString()
     {
-        $lang = $this->take(implode('.', $this->keys), $this->args);
-        $this->keys = $this->args = array();
-        return (string) $lang;
+        return $this->take(implode('.', $this->keys), $this->args);
     }
 }
