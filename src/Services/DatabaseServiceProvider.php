@@ -13,7 +13,6 @@ namespace VM\Services;
 use VM\Model;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Queue\EntityResolver;
 use Illuminate\Database\Eloquent\QueueEntityResolver;
 use Illuminate\Database\Connectors\ConnectionFactory;
@@ -41,11 +40,9 @@ class DatabaseServiceProvider extends ServiceProvider
     public function register()
     {
         Model::clearBootedModels();
-
         $this->registerConnectionServices();
         $this->registerQueueableEntityResolver();
         $this->registerQueryEvents();
-        $this->registerNestCollect();
         $this->registerDbQueryLogs();
     }
 
@@ -91,44 +88,7 @@ class DatabaseServiceProvider extends ServiceProvider
         });
     }
 
-    /**
-     * Register Nest Collection Into Illuminate Builder 
-     * @return void
-     */
-    protected function registerNestCollect(){
-        Collection::macro('top', function($id, $col = 'id'){return $this->where($col, $id);});
-        Collection::macro('sub', function($id, $col = 'pid'){return $this->where($col, $id);});
-        Collection::macro('tops', function($id, $col = 'pid'){
-            $parents = collect([]);
-            $parent = $this->where('id', $id)->first();
-            while(!is_null($parent)) {
-                $parents->push($parent);
-                $parent = $this->where('id', $parent[$col])->first();
-            }
-            return $parents;
-        });
-        Collection::macro('subs', function($id = 0, $col = 'pid'){
-            $childs = collect([]);
-            $child = $this->where($col, $id);
-            while($child->count()){
-                $childs->push(...$child);
-                $child = $this->whereIn($col, $child->pluck('id'));
-            }
-            return $childs;
-        });
-        Collection::macro('tree', function($name = 'sub', $col = 'pid'){
-            $trees = [];
-            $items = $this->keyBy('id')->toArray();
-            foreach($items as $k => $item){
-                if(isset($items[$item[$col]])){
-                    $items[$item[$col]][$name][] = &$items[$k];
-                }else{
-                    $trees[] = &$items[$k];
-                }
-            }
-            return $trees;
-        });
-    }
+
 
     /**
      * Register Query Extend
