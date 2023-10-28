@@ -169,8 +169,8 @@ class Application extends \Illuminate\Container\Container
     protected function run()
     {
         return $this->router->through(app_dir('routes'),  function($route){
-            (new \VM\Pipeline($this))
-            ->send($this->request)->through(...$this['config']['pipeline'], ...$route->pipeline)
+            (new \VM\Pipeline($this))->send($this->request)
+            ->through(array_merge($this['config']['pipeline'], $route->pipeline))
             ->then(fn()=>$route->fire())->prepare($this->request)->send();
         });
     }
