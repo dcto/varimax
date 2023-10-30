@@ -170,6 +170,17 @@ class Lang implements \ArrayAccess
     }
 
     /**
+     * raw the language array
+     * @param string $key
+     * @param mixed $default
+     * @return array
+     */
+    public function raw($key, $default = '')
+    {
+        return $key ? data_get(array_undot($this->item), $key, $default) : array_undot($this->item);
+    }
+    
+    /**
      * get raw of $this->item;
      *
      * @return array
