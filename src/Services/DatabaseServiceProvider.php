@@ -87,9 +87,7 @@ class DatabaseServiceProvider extends ServiceProvider
             return new QueueEntityResolver;
         });
     }
-
-
-
+    
     /**
      * Register Query Extend
      */
