@@ -175,7 +175,7 @@ class Lang implements \ArrayAccess
      * @param mixed $default
      * @return array
      */
-    public function raw($key, $default = '')
+    public function raw($key, $default = [])
     {
         return $key ? data_get(array_undot($this->item), $key, $default) : array_undot($this->item);
     }
