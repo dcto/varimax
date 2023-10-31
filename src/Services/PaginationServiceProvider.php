@@ -12,43 +12,70 @@ namespace VM\Services;
  */
 
 use Illuminate\Pagination\Paginator;
+use Illuminate\Pagination\CursorPaginator;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class PaginationServiceProvider extends ServiceProvider
 {
+
+    protected $defer = true;
+
     /**
-     * @return mixed
+     * PageType
+     * @var string
+     */
+    static $PAGE = Paginator::class; 
+
+    /**
+     * Boot Service
+     * @return void
      */
     public function boot()
     {
         Paginator::viewFactoryResolver(function () {
             return $this->app['view'];
         });
-
         Paginator::currentPathResolver(function () {
             return $this->app['request']->url();
         });
-
         Paginator::currentPageResolver(function ($pageName = 'page') {
             $page = $this->app['request']->input($pageName);
-
             if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
                 return (int) $page;
             }
-
             return 1;
         });
     }
 
     /**
-     * Register the service provider.
+     * Register the Paginator service.
      *
      * @return void
      */
     public function register()
     {
-        $this->app->singleton('page', function(...$args){
-            return new Paginator(...$args);
-        });
+        $this->app->singleton('page', static::$PAGE);
     }
 
+    /**
+     * Register the CursorPaginator service.
+     *
+     * @return void
+     */
+    static public function Cursor()
+    {
+        static::$PAGE = CursorPaginator::class;
+        return static::class;
+    }
+
+
+    /**
+     * Register the LengthAwarePaginator service.
+     *
+     * @return void
+     */
+    static public function LengthAware()
+    {
+        static::$PAGE = LengthAwarePaginator::class;
+    }
 }
