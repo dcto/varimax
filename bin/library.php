@@ -4,28 +4,29 @@
 if(!function_exists('app')){
     /**
      * Get the available container instance.
-     * @param string $make
+     * @param string|null $make
      * @param array $parameters
-     * @return mixed|\VM\Application
+     * @return object|\VM\Application
      */
-    function app($make = null, $parameters = [])
+    function app($make = null, $parameters = [], $events = false)
     {
         return is_null($make) 
         ? \VM\Application::getInstance() 
-        : \VM\Application::getInstance()->make($make, $parameters);
+        : \VM\Application::getInstance()->make($make, $parameters, $events);
     }
 }
 
 if(!function_exists('make')) {
     /**
      * make alias name for app
-     * @param null $make
+     * @param string|null $make
      * @param array $parameters
-     * @return mixed|\VM\Application
+     * @param bool $events
+     * @return object|\VM\Application
      */
-    function make($make = null, $parameters = [])
+    function make(...$args)
     {
-        return app($make, $parameters);
+        return app(...$args);
     }
 }
 

@@ -1,5 +1,4 @@
 <?php
-namespace VM;
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -8,7 +7,7 @@ namespace VM;
  * Time: 2020-08-11 21:49
  * SITE: https://www.varimax.cn/
  */
-
+namespace VM;
 /**
  * Class Application
  *
@@ -18,6 +17,7 @@ class Application extends \Illuminate\Container\Container
 {    
     /**
      * Application aliases items
+     * @var array
      */
     protected $aliases = [
         'app'       => \VM\Application::class,
@@ -58,36 +58,55 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Make an instance of the applicationr
-     * @return mixed
+     * @param string $abstract
+     * @param array $parameters
+     * @param bool $events 
+     * @return object
      */
-    public function make($abstract, $parameters = []){
-        if(!$this->bound($abstract = $this->getAlias($abstract))){
-            $this->singleton($abstract);
-        }
-        return parent::make($abstract, $parameters);
+    public function make($abstract, $parameters = [], $events = false){
+        /**
+         * bind abstract
+         */
+        $this->singletonIf($abstract = $this->getAlias($abstract));
+        /**
+         * resolve $abstract with parameters
+         */
+        return $this->resolve($abstract, $parameters, $events || !$this->resolved($abstract)); 
     }
 
     /**
-     * Register a service provider with the application
-     * @param $service 
+     * Register service provider with the application
+     * @param string $service 
+     * @param bool $reboot
      * @return void
      */
-    public function register($service){
-
-        if($this->resolved($service)) return true;
-        
+    public function register($service, $reboot = false){
+        if($this->bound($service) && !$reboot) return true;
+        /**
+         * @var \VM\Services\ServiceProvider
+         */
         $service = new $service($this);
 
         method_exists($service, 'register') && $service->register();
-
-        if (!$service->isDeferred() && method_exists($service, 'boot')) {
-
-            $service->callBootingCallbacks();
-
-            $this->call([$service, 'boot']);
-
-            $service->callBootedCallbacks();
+        
+        if($service->isDeferred()){
+            $this->resolving(array_key_last($this->bindings), 
+            fn()=>$this->bootServiceProvider($service));
+        }else{
+           $this->bootServiceProvider($service);
         }
+    }
+
+    /**
+     * Bootstrap service provider
+     * @param \VM\Services\ServiceProvider
+     * @return void
+     */
+    protected function bootServiceProvider($provider)
+    {
+        $provider->callBootingCallbacks();
+        method_exists($provider, 'boot') && $this->call([$provider, 'boot']);
+        $provider->callBootedCallbacks();
     }
 
     /**
@@ -107,9 +126,10 @@ class Application extends \Illuminate\Container\Container
      */
     private function registerServiceProviders()
     {
-        array_map([$this, 'register'], array_replace([
-            \Illuminate\Events\EventServiceProvider::class,
+        array_map([$this, 'register'], array_merge([
             \VM\Services\MacroableServiceProvider::class,
+            \VM\Services\PaginationServiceProvider::class,
+            \Illuminate\Events\EventServiceProvider::class,
         ], (array) $this->config['service']));
     }
 
