@@ -27,35 +27,31 @@ class PaginationServiceProvider extends ServiceProvider
     static private $paginator = Paginator::class; 
 
     /**
-     * Boot Service
-     * @return void
-     */
-    public function boot()
-    {echo 'ddd';
-        Paginator::viewFactoryResolver(function () {
-            return $this->app['view'];
-        });
-        Paginator::currentPathResolver(function () {
-            return $this->app['request']->url();
-        });
-        Paginator::currentPageResolver(function ($pageName = 'page') {
-            $page = $this->app['request']->input($pageName);
-            if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
-                return (int) $page;
-            }
-            return 1;
-        });
-    }
-
-    /**
      * Register the Paginator service.
      *
      * @return void
      */
     public function register()
     {
+        $this->booting(fn()=>static::paginator());
         $this->app->singleton('page', static::$paginator);
-        // $this->app->alias(static::$paginator, 'page');
+    }
+
+    /**
+     * Register Paginator Factory.
+     * 
+     * @return void
+     */
+    static public function paginator($pageName = 'page')
+    {
+        Paginator::viewFactoryResolver(fn() => app('view'));
+        Paginator::currentPathResolver(fn() => app('request')->url());
+        Paginator::currentPageResolver(fn() => input($pageName, function($page){
+            if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
+                return (int) $page;
+            }
+            return 1;
+        }));
     }
 
     /**
@@ -78,5 +74,6 @@ class PaginationServiceProvider extends ServiceProvider
     static public function lengthAware()
     {
         static::$paginator = LengthAwarePaginator::class;
+        return static::class;
     }
 }
