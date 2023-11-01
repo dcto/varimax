@@ -69,24 +69,23 @@ class Application extends \Illuminate\Container\Container
         method_exists($service, 'register') && $service->register();
         
         if($service->isDeferred()){
-            $this->resolving(array_key_last($this->bindings), 
-            fn()=>$this->bootServiceProvider($service));
+            $abstract = array_key_last($this->bindings);
+            array_map(function($callback)use($abstract){
+                $this->beforeResolving($abstract, $callback);
+            }, $service->getBootingCallbacks());            
+
+            method_exists($service, 'boot') && $this->resolving($abstract,fn()=>$service->boot());
+
+            array_map(function($callback)use($abstract){
+                $this->afterResolving($abstract, $callback);
+            }, $service->getBootedCallbacks());   
         }else{
-           $this->bootServiceProvider($service);
+            $service->callBootingCallbacks();
+            method_exists($service, 'boot') && $this->call([$service, 'boot']);
+            $service->callBootedCallbacks();
         }
     }
 
-    /**
-     * Bootstrap service provider
-     * @param \VM\Services\ServiceProvider
-     * @return void
-     */
-    protected function bootServiceProvider($provider)
-    {
-        $provider->callBootingCallbacks();
-        method_exists($provider, 'boot') && $this->call([$provider, 'boot']);
-        $provider->callBootedCallbacks();
-    }
 
     /**
     * Register all of aliases
