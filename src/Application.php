@@ -25,14 +25,13 @@ class Application extends \Illuminate\Container\Container
         'router'    => \VM\Routing\Router::class,
         'request'   => \VM\Http\Request::class,
         'response'  => \VM\Http\Response::class,
-        'redirect'  => \VM\Http\Redirect::class,
         'cookie'    => \VM\Http\Cookie::class,
         'session'   => \VM\Http\Session::class,
         'cache'     => \VM\Cache\Cache::class,
         'crypt'     => \VM\Crypt\Crypt::class,
         'lang'      => \VM\I18n\Lang::class,
         'curl'      => \VM\Http\Curl\Curl::class,
-        'file'      => \VM\FileSystem\FileSystem::class,
+        'file'      => \VM\FileSystem\File::class,
         'log'       => \VM\Logger\Logger::class
     ];
 
