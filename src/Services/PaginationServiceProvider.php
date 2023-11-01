@@ -21,6 +21,11 @@ class PaginationServiceProvider extends ServiceProvider
     protected $defer = true;
 
     /**
+     * pageName
+     */
+    static private $pageName = 'page';
+
+    /**
      * PageType
      * @var string
      */
@@ -42,11 +47,11 @@ class PaginationServiceProvider extends ServiceProvider
      * 
      * @return void
      */
-    static public function paginator($pageName = 'page')
+    static public function paginator()
     {
         Paginator::viewFactoryResolver(fn() => app('view'));
         Paginator::currentPathResolver(fn() => app('request')->url());
-        Paginator::currentPageResolver(fn() => input($pageName, function($page){
+        Paginator::currentPageResolver(fn() => input(static::$pageName, function($page){
             if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
                 return (int) $page;
             }
@@ -59,8 +64,9 @@ class PaginationServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    static public function cursor()
+    static public function cursor($pageName = 'page')
     {
+        static::$pageName = $pageName;
         static::$paginator = CursorPaginator::class;
         return static::class;
     }
@@ -71,8 +77,9 @@ class PaginationServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    static public function lengthAware()
+    static public function lengthAware($pageName = 'page')
     {
+        static::$pageName = $pageName;
         static::$paginator = LengthAwarePaginator::class;
         return static::class;
     }
