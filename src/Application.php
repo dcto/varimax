@@ -16,26 +16,6 @@ namespace VM;
 class Application extends \Illuminate\Container\Container
 {    
     /**
-     * Application aliases items
-     * @var array
-     */
-    protected $aliases = [
-        'app'       => \VM\Application::class,
-        'config'    => \VM\Config\Config::class,
-        'router'    => \VM\Routing\Router::class,
-        'request'   => \VM\Http\Request::class,
-        'response'  => \VM\Http\Response::class,
-        'cookie'    => \VM\Http\Cookie::class,
-        'session'   => \VM\Http\Session::class,
-        'cache'     => \VM\Cache\Cache::class,
-        'crypt'     => \VM\Crypt\Crypt::class,
-        'lang'      => \VM\I18n\Lang::class,
-        'curl'      => \VM\Http\Curl\Curl::class,
-        'file'      => \VM\FileSystem\File::class,
-        'log'       => \VM\Logger\Logger::class
-    ];
-
-    /**
      * Bootstrap The Application
      */
     static public function boostrap()
@@ -113,9 +93,11 @@ class Application extends \Illuminate\Container\Container
     * @return void 
     */
     private function regiseterAbstractAliases(){
-        foreach($this->aliases as $alias => $abstract){
-            $this->alias($abstract, $alias);
-        }
+        array_map(function($abstract){
+            $this->alias(__NAMESPACE__.'\\'.$abstract, strtolower(class_basename($abstract)));
+        },['Config\Config','Cache\Cache','Crypt\Crypt','Routing\Router',
+            'Http\Request','Http\Response','Http\Session','Http\Cookie','Http\Curl\Curl',
+            'I18n\Lang','Logger\Log','FileSystem\File']);
     }
 
     /**
