@@ -50,6 +50,7 @@ class DatabaseServiceProvider extends ServiceProvider
 
         Model::setEventDispatcher($this->app['events']);
         
+        PaginationServiceProvider::paginator();
     }
 
     /**
