@@ -207,7 +207,7 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         if(getenv('ENV') || getenv('DEBUG') || $this->app['config']['app.log'] > 0){
             $this->app['db']->listen(function($query) {
-                $sql = vsprintf(str_replace('?', '%s', $query->sql), $query->bindings);                
+                $sql = vsprintf(str_replace("?", "'%s'", $query->sql), $query->bindings);                
                 if($query->time > 500){
                     $this->app['log']->dir('db.'. $query->connectionName, 'slow')->warning('['.$query->time.' ms] '.$sql);
                 }
