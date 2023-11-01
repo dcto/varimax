@@ -127,9 +127,8 @@ class Application extends \Illuminate\Container\Container
     private function registerServiceProviders()
     {
         array_map([$this, 'register'], array_merge([
-            \VM\Services\MacroableServiceProvider::class,
             \VM\Services\PaginationServiceProvider::class,
-            \Illuminate\Events\EventServiceProvider::class,
+            \VM\Services\DatabaseServiceProvider::class,
         ], (array) $this->config['service']));
     }
 

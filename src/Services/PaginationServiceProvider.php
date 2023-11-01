@@ -24,14 +24,14 @@ class PaginationServiceProvider extends ServiceProvider
      * PageType
      * @var string
      */
-    static $PAGE = Paginator::class; 
+    static private $paginator = Paginator::class; 
 
     /**
      * Boot Service
      * @return void
      */
     public function boot()
-    {
+    {echo 'ddd';
         Paginator::viewFactoryResolver(function () {
             return $this->app['view'];
         });
@@ -54,7 +54,8 @@ class PaginationServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->app->singleton('page', static::$PAGE);
+        $this->app->singleton('page', static::$paginator);
+        // $this->app->alias(static::$paginator, 'page');
     }
 
     /**
@@ -62,9 +63,9 @@ class PaginationServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    static public function Cursor()
+    static public function cursor()
     {
-        static::$PAGE = CursorPaginator::class;
+        static::$paginator = CursorPaginator::class;
         return static::class;
     }
 
@@ -74,8 +75,8 @@ class PaginationServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    static public function LengthAware()
+    static public function lengthAware()
     {
-        static::$PAGE = LengthAwarePaginator::class;
+        static::$paginator = LengthAwarePaginator::class;
     }
 }

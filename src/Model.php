@@ -343,14 +343,13 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * [bootstrap]
      */
     protected static function boot()
-    {
-        //Register Database Service
-        app()->register(\VM\Services\DatabaseServiceProvider::class);
-    
+    {   
+        app('db');
+
         //加载Traits
         static::bootTraits();
 
-
+        //回收事件
         static::retrieved(function($model){
             method_exists($model, 'model') && $model->model($model);
         });
