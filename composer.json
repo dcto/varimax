@@ -44,13 +44,11 @@
     "illuminate/database": "8.*",
     "illuminate/events": "8.*",
     "illuminate/filesystem": "8.*",
-    "illuminate/http": "8.*",
     "illuminate/support": "8.*",  
     "illuminate/pipeline": "8.*",          
     "illuminate/pagination": "8.*"
   },
   "suggest": {
-    "hashids/hashids": "Suggest hashids with the data Id",
     "nesbot/carbon": "Suggest Carbon DateTime Formating",
     "varimax/view":"Suggest varimax template engine"
   }
