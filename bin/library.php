@@ -314,19 +314,13 @@ if(!function_exists('cache')) {
 
 if(!function_exists('www')) {
     /**
-     * public resource directory
-     * @param $path
+     * www path
+     * @param string ...$paths
      * @return string
      */
-    function www($path)
+    function www(...$paths)
     {
-        $url = '/';
-        if(\Str::startsWith($path, '/')){
-            $url = $url.str_replace('//','/', trim($path, '/'));
-        }else{
-            $url = $url.str_replace('//', '/', trim(strtolower(_APP_).'/'.$path, '/'));
-        }
-        return $url;
+        return str_replace('//', '/', '/'. (count($paths) == 1 ? trim($paths[0], '/') : join('/', $paths)));
     }
 }
 
