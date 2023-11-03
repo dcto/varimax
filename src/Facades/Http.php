@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Http\Client\Factory;
+use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \GuzzleHttp\Promise\PromiseInterface response($body = null, $status = 200, $headers = [])

@@ -20,10 +20,16 @@ class PaginationServiceProvider extends ServiceProvider
 
     protected $defer = true;
 
+
     /**
      * pageName
      */
     static private $pageName = 'page';
+
+    /**
+     * The Page links style 
+     */
+    static private $pageTheme = null;
 
     /**
      * PageType
@@ -49,24 +55,25 @@ class PaginationServiceProvider extends ServiceProvider
      */
     static public function paginator()
     {
-        Paginator::viewFactoryResolver(fn() => app('view'));
+        app()->has('view') && Paginator::viewFactoryResolver(fn() => app('view'));
         Paginator::currentPathResolver(fn() => app('request')->url());
-        Paginator::currentPageResolver(fn() => input(static::$pageName, function($page){
-            if (filter_var($page, FILTER_VALIDATE_INT) !== false && (int) $page >= 1) {
-                return (int) $page;
-            }
-            return 1;
-        }));
+        Paginator::currentPageResolver(fn() => input(static::$pageName, fn($p)=>(int) $p));
+        if(static::$pageTheme){
+            $theme = 'use'.ucfirst(static::$pageTheme);
+            method_exists('Paginator', $theme) && Paginator::$theme();
+        }
     }
 
     /**
      * Register the CursorPaginator service.
-     *
+     * @param string $pageName
+     * @param string $pageTheme Tailwind|Bootstrap|BootstrapThree
      * @return void
      */
-    static public function cursor($pageName = 'page')
+    static public function cursor($pageName = 'page', $pageTheme = null)
     {
         static::$pageName = $pageName;
+        static::$pageTheme = $pageTheme;
         static::$paginator = CursorPaginator::class;
         return static::class;
     }
@@ -74,12 +81,14 @@ class PaginationServiceProvider extends ServiceProvider
 
     /**
      * Register the LengthAwarePaginator service.
-     *
+     * @param string $pageName
+     * @param string $theme Tailwind|Bootstrap|BootstrapThree
      * @return void
      */
-    static public function lengthAware($pageName = 'page')
+    static public function lengthAware($pageName = 'page', $pageTheme = null)
     {
         static::$pageName = $pageName;
+        static::$pageTheme = $pageTheme;
         static::$paginator = LengthAwarePaginator::class;
         return static::class;
     }
