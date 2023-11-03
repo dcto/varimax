@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax
@@ -11,16 +10,26 @@
 
 namespace VM\Config;
 
-use Illuminate\Contracts\Config\Repository as ConfigContract;
-
-class Config implements \ArrayAccess, ConfigContract
+/**
+ * @package Config
+ */
+class Config implements \ArrayAccess
 {
     /**
      * All of the configuration item.
      *
      * @var array
      */
-    protected $item = [];
+    protected $item = [
+        'app'=>['key'=>'VM','log'=>0, 'charset'=>'utf-8', 'language'=>'zh_CN', 'timezone'=>'PRC'],
+        'dir'=>['app'=>_DIR_, 'www'=>_WWW_],
+        'database'=>[],'cache'=>[],'cookie'=>[],'session'=>[],'service'=>[],'pipeline'=>[]
+    ];
+
+    /**
+     * Temp get keys
+     */
+    protected $keys = '*';
 
     /**
      * Create a new configuration repository.
@@ -30,17 +39,9 @@ class Config implements \ArrayAccess, ConfigContract
      */
     public function __construct()
     {
-        if (is_file($config = root('config', 'config.php'))) {
-            $this->item = (array) require($config);
-        }
-        if (is_file($config = app_dir('config.php'))) {
-            $this->set((array) require($config));
-        }
-        if(getenv('ENV')){
-            if(is_file($config_env = root('config', getenv('ENV').'.php'))){
-                $this->set((array) require($config_env));
-            }
-        }
+        $this->item = array_replace_recursive($this->item, ...array_map(function($config){
+                return is_file($config) ? require $config : [];
+        }, [root('config', 'config.php'), app_dir('config.php'),  root('config', getenv('ENV').'.php')] ));
     }
 
     /**
@@ -51,7 +52,7 @@ class Config implements \ArrayAccess, ConfigContract
      */
     public function has($key)
     {
-        // return array_has($this->item, $key);
+        return isset($this->item[$key]);
     }
 
     /**
@@ -63,9 +64,6 @@ class Config implements \ArrayAccess, ConfigContract
      */
     public function get($key, $default = null)
     {
-        if(!isset($this->item[$item = explode('.', $key)[0]])){
-            $this->add($item);
-        }
         return data_get($this->item, $key, $default);
     }
 
@@ -94,8 +92,9 @@ class Config implements \ArrayAccess, ConfigContract
     public function add($key,  $value = null)
     {
         if (is_null($value) && !isset($this->item[$key])) {
-            is_file($config = root('config',$key.'.php')) && $this->set($key, require($config));
-            is_file($config = app_dir('config',$key.'.php')) && $this->set($key, require($config));
+            array_map(fn($config)=>is_file($config) && $this->set($key, require($config)), 
+            [root('config',$key.'.php'), app_dir('config',$key.'.php')]);
+            return $this;
         } else if(is_string($value) && is_file($value)){
             return $this->set($key, require($value));
         }else{
@@ -131,11 +130,8 @@ class Config implements \ArrayAccess, ConfigContract
     public function push($key, $value)
     {
         $array = $this->get($key);
-
         $array[] = $value;
-
         $this->set($key, $array);
-
         return $this;
     }
 
