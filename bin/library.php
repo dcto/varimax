@@ -320,7 +320,7 @@ if(!function_exists('www')) {
      */
     function www(...$paths)
     {
-        return str_replace('//', '/', '/'. (count($paths) == 1 ? trim($paths[0], '/') : join('/', $paths)));
+        return substr($paths[0],0, 1) == '/' ? ltrim(join('/', $paths),'/') : _APP_.'/'.join('/', $paths);
     }
 }
 
