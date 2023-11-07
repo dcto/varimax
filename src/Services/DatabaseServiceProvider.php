@@ -172,14 +172,39 @@ class DatabaseServiceProvider extends ServiceProvider
             }
             return $childs;
         });
-        Collection::macro('tree', function($name = 'sub', $col = 'pid'){
+
+
+        Collection::macro('toTree', function(string $child = 'subs', string $level = 'deep', string $parent = 'pid', string $keyBy = 'id'){
             $trees = [];
-            $items = $this->keyBy('id')->toArray();
-            foreach($items as $k => $item){
-                if(isset($items[$item[$col]])){
-                    $items[$item[$col]][$name][] = &$items[$k];
+            /**
+             * 迭代算法
+             */
+            // $this->filter(fn($item)=>$item->pid == $pid)->each(function($item, $id) use(&$pid, &$trees, $child, $parent, $level, $keyBy){
+            //     $pid = $item['id'];
+            //     $item['deep'] = $level;
+            //     $item[$child] = $this->toTree($child, $parent, $level+1, $keyBy);
+            //     $this->forget($id);
+            //     if($keyBy){
+            //         $trees[$item[$keyBy]] = $item->toArray();
+            //     }else{
+            //         $trees[] = $item->toArray();
+            //     }
+            // });
+
+            /**
+            * 引用方法分类算法
+            * 鸣谢 @kid
+            * @author  dc.To
+            * @version 20231107
+            */
+            $items = $this->keyBy($keyBy)->toArray();
+            foreach($items as $item){
+                if(isset($items[$item[$parent]])){
+                    $items[$item[$keyBy]][$level] = $items[$item[$parent]][$level]+1; //鸣谢 @kid
+                    $items[$item[$parent]][$child][$item[$keyBy]] = &$items[$item[$keyBy]];
                 }else{
-                    $trees[] = &$items[$k];
+                    $items[$item[$keyBy]][$level] = 0; //鸣谢 @kid
+                    $trees[$item[$keyBy]] = &$items[$item[$keyBy]];
                 }
             }
             return $trees;
