@@ -192,21 +192,34 @@ class DatabaseServiceProvider extends ServiceProvider
             // });
 
             /**
-            * 引用方法分类算法
-            * 鸣谢 @kid
+            * 无限级树结构
+            * 鸣谢@kid 解决层级level问题。
             * @author  dc.To
             * @version 20231107
             */
             $items = $this->keyBy($keyBy)->toArray();
             foreach($items as $item){
                 if(isset($items[$item[$parent]])){
-                    $items[$item[$keyBy]][$level] = $items[$item[$parent]][$level]+1; //鸣谢 @kid
-                    $items[$item[$parent]][$child][$item[$keyBy]] = &$items[$item[$keyBy]];
+                    $items[$item[$keyBy]][$level] = $items[$item[$parent]][$level]+1; //@kid
+                    $items[$item[$parent]][$child][] = &$items[$item[$keyBy]];
+                    // $items[$item[$parent]][$child][$item[$keyBy]] = &$items[$item[$keyBy]];
                 }else{
-                    $items[$item[$keyBy]][$level] = 0; //鸣谢 @kid
-                    $trees[$item[$keyBy]] = &$items[$item[$keyBy]];
+                    $items[$item[$keyBy]][$level] = 0; //@kid
+                    $trees[] = &$items[$item[$keyBy]];
+                    // $trees[$item[$keyBy]] = &$items[$item[$keyBy]];
                 }
             }
+       
+            // $this->keyBy($keyBy)->each(function($item) use(&$trees, $parent, $child, $keyBy, $level){
+            //     if( isset($items[$item[$parent]]) ){
+            //         $this[$item[$parent]][$child][$item[$keyBy]] = &$this[$item[$keyBy]];
+
+            //     }else{
+            //         $trees[$item[$keyBy]] = &$this[$item[$keyBy]];
+            //     }
+            // });
+
+
             return $trees;
         });
     }
