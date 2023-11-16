@@ -203,9 +203,9 @@ if(!function_exists('redirect')) {
 if(!function_exists('session')) {
     /**
      * session object
-     * @return \VM\Http\Session
+     * @return \VM\Http\Session|mixed
      */
-    function session($k = false, $v = false)
+    function session($k = null, $v = null)
     {
         if ($k && $v) {
             return app('session')->set($k, $v);
@@ -302,7 +302,7 @@ if(!function_exists('cache')) {
     /**
      * @param bool $key
      * @param bool $value
-     * @return \VM\Cache\Driver\Driver
+     * @return \VM\Cache\Driver\Driver|mixed
      */
     function cache($key = null, $default = null)
     {
@@ -343,11 +343,9 @@ if(!function_exists('random')) {
      * @param string $codes
      * @return string
      */
-    function random($length = 8, $codes = null)
+    function random($length = 8)
     {
-        $codes = $codes ? (is_array($codes) ? $codes : str_split($codes)) : array_merge(array_merge(range('A', 'Z'),range('a','z'),range(0, 9)));
-        shuffle($codes);
-        return implode(array_slice($codes, 0, $length));
+        return substr(str_shuffle("abcdefghijklmnopqrstuvwxyz1234567890"), 0, $length);
     }
 }
 
