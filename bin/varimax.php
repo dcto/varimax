@@ -1,13 +1,14 @@
 <?php
 #!/usr/bin/php
+
 //define _VM_ of constants
-define('_VM_',dirname(__DIR__, 1));
+defined('_VM_') || define('_VM_',dirname(__DIR__, 1));
 
 //define _DS of constants
-define('_DS_', DIRECTORY_SEPARATOR);
+defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 
 //define _DOC_ constants to document root
-define('_DOC_', PHP_SAPI == 'cli' ? dirname(__DIR__, 4) : dirname($_SERVER['DOCUMENT_ROOT']));
+defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? dirname(__DIR__, 4) : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
 defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? 'app' : $app);
@@ -19,10 +20,10 @@ defined('_DIR_') || define('_DIR_', _DOC_._DS_._APP_);
 defined('_WWW_') || define('_WWW_', _DOC_._DS_.'www');
 
 //define _ROOT_ constants of root
-define('_ROOT_', _DOC_);
+defined('_ROOT_') || define('_ROOT_', _DOC_);
 
 //define _RUNTIME_ constants of runtime path
-define('_RUNTIME_', _ROOT_._DS_.'runtime');
+defined('_RUNTIME_') || define('_RUNTIME_', _ROOT_._DS_.'runtime');
 
 /**
  * Autoloader
