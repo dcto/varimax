@@ -8,7 +8,6 @@
 */
 namespace VM\Console;
 
-use Illuminate\Database\QueryException;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -28,11 +27,10 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
-        $name =  "\App\\Model\\". ucfirst($input->getArgument('name'));
         /**
-         * @var $model \VM\Model
+         * @var \VM\Model
          */
-        $model =  new $name();
+        $model = sprintf("App\\Model\\%s", \Str::studly($input->getArgument('name')))::getModel();
         $table = \DB::getTablePrefix().$model->table();
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$table.'] table dataset?(Y/n) ', false);
@@ -41,25 +39,26 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
             try{
                 if(\Schema::hasTable($model->table())){
                     $dataset = $model->all();
-                    try{
                         config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
                         \Schema::dropIfExists($model->table());
                         \Schema::create($model->table(),fn($table)=>$model->schema($table));
-                        $model->insert($dataset->toArray());
-                    }catch(\Exception $e){
-                        $sqlStatement = '';
-                        $dataset->each(function($item) use (&$sqlStatement){
-                         $item = $item->toArray();
-                            $sqlStatement .= sprintf('INSERT INTO `'.$table.'` (`%s`) VALUES (\'%s\');', join('`,`', array_keys($item)), join('\',\'', array_values($item)) );
-                        });
-                        file_put_contents(runtime($table.time().'.sql'), $sqlStatement);
-                    }
+                        try{
+                            $model->insert($dataset->toArray());
+                        }catch(\Exception $e){
+                            $sqlStatements = null;
+                            $dataset->each(function($item) use (&$sqlStatements, $table){
+                                $sqlStatements .= sprintf('INSERT INTO `'.$table.'` (`%s`) VALUES (\'%s\');', join('`,`', array_keys($item)), join('\',\'', $item->collapse()) );
+                            });
+                            $sqlStatements && file_put_contents($cacheFile = runtime('schema', $table, time().'.sql'), $sqlStatements);
+                            $output->writeln(sprintf('<fg=yellow>%s</>',  $e->getMessage()));
+                            $output->writeln(sprintf("<fg=yellow>The `$table` dataset cache to `$cacheFile`</fg>",  $e->getMessage()));
+                        }
                 }else{
                     \Schema::create($model->table(),fn($table)=>$model->schema($table));
                 }
                 $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$table.'] success!'));
             }catch(\Exception $e){
-                $output->writeln(sprintf('<fg=red>%s</>',  $e->getMessage()));
+                $output->writeln(sprintf('<fg=red>%s</fg>',  $e->getMessage()));
                 return 1;
             }
 
