@@ -66,61 +66,24 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * [获取当前 URL]
      * @param null [构建 URL 参数 非=当前URL, 空=根URL, /=根URL+'/',  ?=构建URL,  @=获得路由URL,]
-     * @example url() uri()
-     * @example url('') baseUrl
-     * @example url('/') baseUrl + '/'
+     * @example url() baseUrl
      * @example url('/abc', 'a','b');
-     * @example url('?', array('a'=>'b','c'=>'d'), 'c=d');
-     * @example url('@index'),  url('@', 'index'), url('@', 'index', ...$pattern) ;
+     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e');
+     * @example url('@index');  url('@index', ...$args); url('@', 'index', ...$args) ;
      * @return string
      */
-    public function url()
+    public function url(...$args)
     {
-        $args = func_get_args();
         $tags = array_shift($args);
-        if (func_num_args() == 0) return preg_replace('/\?.*/', '', $this->getUri());
-        $baseUrl = $this->baseUrl();
-        if (!$tags) return $baseUrl;
-
-        switch ($tags[0]) {
-            case '/':
-                return $tags == '/' ? $baseUrl . '/' : $baseUrl . $tags . ($args ? '/' . join('/', $args) : '');
-                break;
-
-            case '?':
-                $url = $tags == '?' ? $tags : rtrim($tags, '&') . '&';
-                foreach ($args as $arg) {
-                    $url .= (is_array($arg) ?  http_build_query($arg) : $arg) . '&';
-                }
-                return $baseUrl . rtrim($url, '&');
-                break;
-
-            case '@':
-                /*
-                    * @var $router \VM\Routing\Route
-                    */
-                $router = make('router');
-                /*
-                    * @var $route \VM\Routing\Route
-                    */
-                $route = $tags == '@' ? array_shift($args) : ltrim($tags, '@');
-                if (!$route = $router->router($route)) throw new NotFoundException("Unable route: $tags");
-                
-                return $baseUrl . '/' . trim($route->url($args), '/');
-
-                /*
-                if (!strpos($route->url(), ':')) return $baseUrl . '/' . trim($route->url(), '/');
-                $url = preg_replace("/\([^)]+\)/", '%s', $route->url());
-                return $baseUrl . '/' . trim(vsprintf($url, $args));
-                */
-                break;
-
-            default:
-                foreach ($args as $arg) {
-                    $tags .= '&' . (is_array($arg) ?  http_build_query($arg) : $arg);
-                }
-                return $baseUrl . $tags;
+        if($tags) {
+            switch ($tags[0]) {
+                case '/': return $tags.($tags=='/'?'':'/').join('/', array_map(fn($arg)=>is_array($arg) ? join('/', $arg) : $arg ,$args));
+                case '?': return $tags.($tags=='?'?'':'&').join('&', array_map(fn($arg)=>is_array($arg) ? http_build_query($arg) : $arg, $args));
+                case '@': return app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@')).url(...$args);
+                default: return join('', $args);
+            }
         }
+        return $this->baseUrl();
     }
 
     /**
