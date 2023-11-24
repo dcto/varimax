@@ -12,7 +12,6 @@
 namespace VM\Http;
 
 use VM\Http\Request\Upload;
-use VM\Exception\NotFoundException;
 use Symfony\Component\HttpFoundation;
 use Illuminate\Contracts\Support\Arrayable;
 use Symfony\Component\HttpFoundation\ParameterBag;
@@ -64,8 +63,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [获取当前 URL]
-     * @param null [构建 URL 参数 非=当前URL, 空=根URL, /=根URL+'/',  ?=构建URL,  @=获得路由URL,]
+     * 构建URL参数
+     * 符号说明: / 构建path路径
+     * 符号说明: ？添加query参数
+     * 符号说明: @ 获取指定路由url
+     * @param mixed ...$args 
      * @example url() baseUrl
      * @example url('/abc', 'a','b');
      * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e');
@@ -87,80 +89,49 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [uri 获取当前url包含所有参数]
+     * [构建URI参数]
      * 
-     * 符号说明: & 附加URL参数
-     * 符号说明: ! 去除指定参数
-     * 符号说明: @ 保留URL参数
      * 符号说明: ? 重构URL参数
-     * 符号说明: ~ 清空URL参数值
-     * 
-     * @example uri('&', 'page')
-     * @example uri('!', 'page')
-     * @example uri('@', 'page')
-     * @example uri('?', 'page=1&pagesize=2', 'a=b&1=2')
-     * @example uri('~', 'page')
-     *
+     * 符号说明: & 附加URL参数
+     * 符号说明: ! 去除指定URL参数
+     * 符号说明: ~ 保留指定URL参数
+     * @param mixed ...$args
+     * @example uri('?id=1', ['page'=>1], 'pageSize=2')
+     * @example uri('&id=1', ['page'=>1], 'pageSize=2')
+     * @example uri('!id', 'page', ['pageSize'])
+     * @example uri('~id', 'page', ['pageSize'])
+     * @return string
      */
     public function uri(...$args)
     {
-        $input = $this->all();
-        if($args){
+        $tags = array_shift($args);
+        if($tags) {
+            switch ($tags[0]) {
+                case '&': $args = $this->query->all()+array_reduce($args, function($q, $arg) {
+                    return is_array($arg) ? $q+=$arg : (parse_str($arg, $v) ?? $q+=$v);
+                }, parse_str(trim($tags,'?&'), $tag) ?? $tag);
+                break;
 
-            switch($args[0]){
-
-                case '&':
-                    array_shift($args);
-                    array_map(function($arg) use(&$input){
-                        if(is_array($arg)) {
-                            $input = array_merge($input, $arg);
-                        }else{
-                            $param = array();
-                            parse_str(trim($arg, '&'), $param);
-                            $input = array_merge($input, $param);
-                        }
-                    }, $args);
+                case '?': $args = array_reduce($args, function($q, $arg) {
+                    return is_array($arg)? $q+=$arg : (parse_str($arg, $v)?? $q+=$v);
+                }, parse_str(trim($tags,'?&'), $tag)?? $tag);
                 break;
 
                 case '!':
-                    array_shift($args);
-                    $input = \Arr::except($input, \Arr::flatten($args));    
+                    $args = array_diff_key($this->query->all(), array_flip(array_merge($args, [ltrim($tags, '!')])));
                 break;
 
-                case '@':
-                    array_shift($args);
-                    $input = \Arr::only($input, \Arr::flatten($args));    
-                break; 
-
-                case '?':
-                    array_shift($args);
-                    $input = array();
-                    array_map(function($arg) use(&$input){
-                        if(is_array($arg)) {
-                            $input = array_merge($input, $arg);
-                        }else{
-                            $param = array();
-                            parse_str(trim($arg, '&'), $param);
-                            $input = array_merge($input, $param);
-                        }
-                    }, $args);
-
+                case '~': 
+                    $args = array_intersect_key($this->query->all(), array_flip( array_merge($args, [ltrim($tags, '~')]) ));
                 break;
 
                 default:
-                array_map(function($arg) use(&$input){
-                    if(is_array($arg)) {
-                        $input = array_merge($input, $arg);
-                    }else{
-                        $param = array();
-                        parse_str(trim($arg, '&'), $param);
-                        $input = array_merge($input, $param);
-                    }
-                }, $args);
+                    $args = [];
             }
+            return $this->baseUrl().'?'.http_build_query($args);
         }
-
-        return  $input ? $this->url().'?' . http_build_query($input) : $this->url();
+        
+        return $this->baseUrl();
     }
 
     /**
@@ -514,7 +485,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function getOS()
     {
-        
         $oses = array(
             'Windows 10'       => '(Windows NT 10)|(Windows 10)',
             'Windows 8.1'       => '(Windows NT 6.3)|(Windows 8)',
