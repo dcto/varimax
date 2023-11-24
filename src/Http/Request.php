@@ -79,11 +79,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $tags = array_shift($args);
         if($tags) {
             switch ($tags[0]) {
-                case '/': return $tags.($tags=='/'?'':'/').join('/', array_map(fn($arg)=>is_array($arg) ? join('/', $arg) : $arg ,$args));
-                case '?': return $tags.($tags=='?'?'':'&').join('&', array_map(fn($arg)=>is_array($arg) ? http_build_query($arg) : $arg, $args));
-                case '@': return app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@')).url(...$args);
-                default: return join('', $args);
+                case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_array($v) ? join('/',$v) : $v), $tags);break;
+                case '?': $args = array_reduce($args, fn($arg, $v)=> $arg.'&'.(is_array($v) ? http_build_query($v) : $v), $tags);break;
+                case '@': $args = app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@'))->url(...$args);break;
             }
+            return $this->baseUrl().$args;
         }
         return $this->baseUrl();
     }
