@@ -91,22 +91,14 @@ class Router
      * Defines a route with or without Callback and Method.
      *
      * @param string $method
-     * @param array @params
+     * @param array @args
      */
-    public function __call($method, $params)
+    public function __call($method, $args)
     {
-        if (($method == 'any') || in_array(strtoupper($method), static::$methods)) {
-            // Get the Route.
-            $route = array_shift($params);
-            if (!$route || !$params) {
-               // throw new SystemException('Invalid Parameter Of The Router');
-            }
-            $property = array_shift($params);
-
-            //Register Route.
-            return $this->register($method, $route, $property);
+        if (($method == 'any') || in_array($method = strtoupper($method), static::$methods)) {
+            return $this->register($method, array_shift($args), array_shift($args));
         }else{
-            throw new NotFoundException('Invalid router of the method Router::'.$method);
+            throw new \InvalidArgumentException('Invalid Router::'.$method);
         }
     }
 
@@ -192,19 +184,14 @@ class Router
     {
         if($route){
             if(isset($this->alias[$key])){
-
                 throw new NotFoundException('Cannot redeclare route id '. $key);
             }
-
             $this->alias[$key] = $route;
-
             return $this;
         }else{
-
             if (!isset($this->alias[$key])) {
                 return $key;
             }
-
             return $this->alias($this->alias[$key]);
         }
     }
@@ -325,16 +312,12 @@ class Router
      */
     protected function register($method, $path, $properties)
     {
-        //Merge the property
-        //Prepare the route Methods.
         if (is_string($method) && (strtoupper($method) == 'ANY')) {
             $methods = static::$methods;
         } else {
-            $methods = array_map('strtoupper', (array) $method);
             // Ensure the requested Methods are valid ones.
-            $methods = array_intersect($methods, static::$methods);
+            $methods = array_intersect(array_map('strtoupper', (array) $method), static::$methods);
         }
-
         // Pre-process the Action information.
         $properties = $this->parseAction($properties);
 
@@ -350,7 +333,6 @@ class Router
             $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $path);
             $properties['regex'] = str_replace(['(', ':'], ['(?P<', '>'], $properties['regex']);
         }
-
         return new Route($methods, $path, $properties);
     }
 
@@ -381,40 +363,6 @@ class Router
         if(!in_array($method, $this->router->methods())) throw new NotFoundException();
         
         return $this->router;
-        
-            // if($route->group()) {
-               
-                // if (!$group = data_get($this->group, $route->group())) {
-                //     throw new NotFoundException('Does not define ' . $route->group() . ' of router group');
-                // }
-                /**
-                 * construct callback
-                 */
-            //     if ($callable = data_get($group, 'call')) {
-             
-            //         if (is_array($callable)) {
-            //             $callable = $this->Fire(array_shift($callable), array_shift($callable));
-            //         } else {
-            //             $callable = $this->Fire($callable);
-            //         }
-                    
-            //         if ($callable instanceof Response) {
-                        
-            //             return $callable;
-            //         }
-            //     }
-            // }
-        
-            /**
-             * construct instance and include hook
-             */
-            // return $this->Fire($route->calling(), $route->args());
-            // if(is_string($instance)){
-            
-            //     return $response->make($instance);
-            // }else{
-            //   return $instance;
-            // }
     }
 
     /**
@@ -467,7 +415,6 @@ class Router
                 $this->alias($route->id, $route->url);
                 $this->routes[$url] = $route;
             }
-
         }else{
             $this->routes[$route->id] = $route;
         }
@@ -475,7 +422,6 @@ class Router
         if($route->group){
             $this->group[$route->group]['routes'][$route->id] = $route;
         }
-
         return $this;
     }
 
