@@ -36,7 +36,7 @@ class Router
     /**
      * Matched Route, the current found Route, if any.
      *
-     * @var $router Route
+     * @var Route
      */
     private $router = null;
 
@@ -434,7 +434,7 @@ class Router
      */
     protected function parseRoute($route, $property)
     {
-        $prefix = data_get($property,'prefix') ?: data_get(data_get($property,'group'),'prefix');
+        $prefix = data_get($property,'prefix') ?? data_get('group.prefix');
         $route = '/'.trim(trim($prefix,'/').'/'.trim($route, '/'),'/');
         return $route;
     }
