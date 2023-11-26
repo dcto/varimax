@@ -19,11 +19,6 @@ use VM\Exception\NotFoundException;
 class Router
 {
     /**
-     * @var string
-     */
-    private $url = null;
-
-    /**
      * @var array
      */
     private $alias = array();
@@ -34,18 +29,16 @@ class Router
     private $group = array();
 
     /**
-     * Matched Route, the current found Route, if any.
-     *
+     * the current found Route
      * @var Route
      */
     private $router = null;
 
     /**
      * Array of routes
-     *
-     * @var $routes array
+     * @var array
      */
-    private $routes = array();
+    private $routes = [];
 
     /**
      * @var \VM\Http\Request
@@ -54,10 +47,9 @@ class Router
 
     /**
      * An array of HTTP request Methods.
-     *
      * @var array $methods
      */
-    private static $methods = ['GET', 'POST', 'PUT', 'HEAD', 'PATCH', 'DELETE', 'OPTIONS'];
+    private $methods = ['GET', 'POST', 'PUT', 'HEAD', 'PATCH', 'DELETE', 'OPTIONS'];
 
     /**
      * @var array
@@ -76,10 +68,9 @@ class Router
 
     /**
      * Array of Route Groups
-     *
      * @var array $groupStack
      */
-    private $groupStack = array();
+    private $groupStack = [];
 
 
     public function __construct(\VM\Http\Request $request)
@@ -95,7 +86,7 @@ class Router
      */
     public function __call($method, $args)
     {
-        if (($method == 'any') || in_array($method = strtoupper($method), static::$methods)) {
+        if (($method == 'any') || in_array($method = strtoupper($method), $this->methods)) {
             return $this->register($method, array_shift($args), array_shift($args));
         }else{
             throw new \InvalidArgumentException('Invalid Router::'.$method);
@@ -219,7 +210,7 @@ class Router
                 if (isset($this->routes[$route])) {
                     return $this->routes[$route];
                 }
-                throw new NotFoundException('Unknown route [' . $route . ']');
+                throw new NotFoundException('Unknown router  [' . $route . ']');
             }
 
         }else{
@@ -229,17 +220,12 @@ class Router
 
     /**
      * return routes array access current params route name
+     * @param array ...$ids
      * @return array
      */
-    public function routes()
+    public function routes(...$ids)
     {
-        $ids = func_get_args();
-        $routes = array();
-        foreach ($this->routes as $id => $route) {
-            if($ids && !in_array($id, $ids, true)) continue;
-                $routes[$id] = $route;
-        }
-        return $routes;
+        return $ids ? array_intersect_key($this->routes, array_flip($ids)) : $this->routes;
     }
 
     /**
@@ -288,18 +274,6 @@ class Router
     }
 
     /**
-     * Test the route match
-     * @todo 未完善
-     */
-    public function test(Route $route)
-    {
-        //验证匹配
-        if(!preg_match('#^'.$this->regex.'$#', $this->url)){
-            throw new NotFoundException('Invalid url: '. $route->url());
-        }
-    }
-
-    /**
      * Maps a Method and URL pattern to a Callback.
      *
      * @param string $method HTTP method(s) to match
@@ -310,10 +284,10 @@ class Router
     protected function register($method, $path, $properties)
     {
         if (is_string($method) && (strtoupper($method) == 'ANY')) {
-            $methods = static::$methods;
+            $methods = $this->methods;
         } else {
             // Ensure the requested Methods are valid ones.
-            $methods = array_intersect(array_map('strtoupper', (array) $method), static::$methods);
+            $methods = array_intersect(array_map('strtoupper', (array) $method), $this->methods);
         }
         // Pre-process the Action information.
         $properties = $this->parseAction($properties);
@@ -324,9 +298,7 @@ class Router
 
         $path = $this->parseRoute($path, $properties);
 
-        if(strpos($path, '(') !== false){
-            // $properties['regex'] = preg_replace_callback("/\(([^()]+)\)/", function($matches) {
-            // }, $path);
+        if(strpos($path, ':') !== false){
             $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $path);
             $properties['regex'] = str_replace(['(', ':'], ['(?P<', '>'], $properties['regex']);
         }
@@ -343,41 +315,38 @@ class Router
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
         //Disable Request when xss or sql inject
-        $path == $request->path() || die(header("HTTP/1.0 404 Not Found"));
-
-        // Get Http Request Method
-        $method = $request->method();
+        if($path !== $request->path()) throw new \InvalidArgumentException('403 Bad Request');
 
         // Get Route in the Routes stack
-       $this->router = $this->callRouter($path, $method);
+        $this->router = $this->callRouter($path);
 
         // Found a valid Route; process it.
-        if(!$this->router) throw new NotFoundException();
+        if(!$this->router) throw new NotFoundException('Unknown route ['.$path.']');
+
+        // Check request method
+        if(!in_array($method = $request->method(), $this->router->methods())) throw new NotFoundException('Invalid Request Method');
 
         // Set Route method;
         $this->router->method($method);
-
-        if(!in_array($method, $this->router->methods())) throw new NotFoundException();
         
         return $this->router;
     }
 
     /**
      * find router
-     *
      * @param $path
      * @param $method
      * @return Route
      * @throws NotFoundException
      */
-    protected function callRouter($path, $method)
+    protected function callRouter($path)
     {
         if(isset($this->routes[$path])) {
             return $this->routes[$path];
         }else{
             foreach ($this->routes as $key => $route) {
                 if(strpos($key, '/(') === false) continue;
-                if($this->Matching($path, $route, $method)) return $route;
+                if($this->matchRouter($path, $route)) return $route;
             }
         }
     }
@@ -388,7 +357,7 @@ class Router
      * @param $method
      * @return bool
      */
-    protected function Matching($path, &$route, $method)
+    protected function matchRouter($path, &$route)
     {
         if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
             $route->url = array_shift($matches);
@@ -431,7 +400,7 @@ class Router
      */
     protected function parseRoute($route, $property)
     {
-        $prefix = data_get($property,'prefix') ?? data_get('group.prefix');
+        $prefix = data_get($property,'prefix', );
         $route = '/'.trim(trim($prefix,'/').'/'.trim($route, '/'),'/');
         return $route;
     }
@@ -587,9 +556,8 @@ class Router
      */
     private function getLastGroupPrefix()
     {
-        if (! empty($this->groupStack)) {
-            $last = end($this->groupStack);
-            return isset($last['prefix']) ? $last['prefix'] : '';
+        if (!empty($this->groupStack)) {
+            return end($this->groupStack)['prefix'] ?? '';
         }
         return '';
     } 

@@ -119,7 +119,10 @@ class Route implements \ArrayAccess
      */
     public function __construct($methods, $path, array $args = [])
     {
-        $this->id        = $args['id'] ??  str_replace('/', '.',  trim(($i = strpos($path, '(')>0)  ? substr($path, 1, $i - 1)  : $path,'/'));
+        $this->id  = $args['id'] ?? $path == '/' ? '.' : join('.',array_map(function($p){
+            return ($i = strpos($p, ':')) ? ltrim(substr($p, 0 ,$i), '(') : $p;
+        },explode('/', trim($path, '/'))));
+
         $this->url       = $path;
         $this->name      = $args['name'] ?? $this->id;
         $this->hash      = hash('crc32b', $this->id);
@@ -140,9 +143,7 @@ class Route implements \ArrayAccess
      */
     public function id($id = null)
     {
-        if(!$id){
-            return $this->id;
-        }
+        if(!$id) return $this->id;
         $this->id = $id;
         $this->name ??= $id;
         return $this;
@@ -266,7 +267,7 @@ class Route implements \ArrayAccess
      * Push to router
      */
     public function __destruct()
-    {       
+    {
         make('router')->addPushToRoutes($this);
     }
 }
