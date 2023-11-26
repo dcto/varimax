@@ -167,7 +167,7 @@ class Application extends \Illuminate\Container\Container
         return $this->router->through(app_dir('routes'),  function($route){
             (new \VM\Pipeline($this))->send($this->request)
             ->through(array_replace((array) $this['config']['pipeline'], $route->pipeline))
-            ->then(fn()=>$this->call($route->callable()))->prepare($this->request)->send();
+            ->then(fn()=>$this->call($route->callable(), $route->args()))->prepare($this->request)->send();
         });
     }
 }
