@@ -274,7 +274,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function only(...$keys)
     {
-        return array_intersect_key($this->all(), array_flip(...$keys));
+        return array_intersect_key($this->all(), array_flip($keys));
     }
 
     /**
@@ -310,7 +310,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function except(...$keys)
     {
-        return array_diff_key($this->all(), array_flip(...$keys));
+        return array_diff_key($this->all(), array_flip($keys));
     }
 
     /**
