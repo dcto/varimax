@@ -46,21 +46,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $this->getRequestSource();
     }
 
-    /**
-     * [is 判断当前路径是否匹配]
-     *
-     * @return bool
-     */
-    public function is(...$args)
-    {
-        foreach ($args as $arg) {
-            if (\Str::is($arg, urldecode($this->path()))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     /**
      * 构建URL参数
@@ -175,22 +160,10 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 
      * @return array
      */
-    public function all($item = null)
+    public function all()
     {
-        if($item){
-            array_replace(...array_map(function($item){
-                if(!in_array($item, ['query', 'files', 'request', 'attributes'])) throw new \InvalidArgumentException('Error Args of item :', $item);
-                    return $this->$item->all();
-                }, is_array($item) ? $item : func_get_args())
-            );
-        }else{
-            return array_replace(
-                $this->query->all(),
-                $this->files->all(),
-                $this->request->all(),
-                $this->attributes->all()
-            );
-        }
+        return array_replace($this->query->all(), $this->request->all(), $this->attributes->all());
+        
     }
 
     /**
@@ -217,18 +190,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 
      * @return $this 
      */
-    public function del($key)
+    public function del(...$keys)
     {
-        return $this->delete(is_array($key) ? $key : func_get_args());
+        return $this->delete(...$keys);
     }
 
     /**
      * [not 排除返回]
      * @return array
      */
-    public function not($key)
+    public function not(...$keys)
     {
-        return $this->except(is_array($key) ? $key : func_get_args());
+        return $this->except(...$keys);
     }
 
     /**
@@ -268,9 +241,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param $key
      * @return array|mixed
      */
-    public function take($key = null)
+    public function take(...$keys)
     {
-        return $key ? \Arr::only($this->all(), is_array($key) ? $key : func_get_args()) : $this->all();
+        return $keys ? $this->only(...$keys) : $this->all();
     }
 
     /**
@@ -296,40 +269,28 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * 指定提取
-     * @param array $key
+     * @param array $keys
+     * @return array
      */
-    public function only($key)
+    public function only(...$keys)
     {
-        return \Arr::only($this->all(), is_array($key) ? $key : func_get_args());
+        return array_intersect_key($this->all(), array_flip(...$keys));
     }
 
     /**
      * [Input Method]
      *
-     * @param $key
+     * @param mixed $key
      * @param null|\Closure $default
      * @return mixed
      */
     public function input($key = null, $default = null)
     {
-        $input = $this->all();
-        if($key){
-            if(is_array($key)) {
-                $input = \Arr::only($input, $key);
-            }else{
-                $input = isset($input[$key]) ? $input[$key] : null;
-            }
-        }
-
+        $value = is_array($key) ? $this->only($key) : $this->get($key);
         if($default instanceof \Closure){
-            return $default($input);
-        }else{
-            if(is_string($input)){
-                return strlen($input) == 0 ? $default : $input;
-            }else{
-                return $input ? $input : $default;
-            }
+            return $default($value);
         }
+         return is_scalar($value) && strlen($value) ? $value : $default;
     }
 
     /**
@@ -347,9 +308,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param null $key
      * @return array
      */
-    public function except($key)
+    public function except(...$keys)
     {
-        return $key ? \Arr::except($this->all(), is_array($key) ? $key : func_get_args() ) : $this->all();
+        return array_diff_key($this->all(), array_flip(...$keys));
     }
 
     /**
@@ -361,7 +322,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function merge($key)
     {
         $this->getInputSource()->add(is_array($key) ? $key : func_get_args());
-
         return $this;
     }
 
@@ -382,12 +342,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param mixed $args 
      * @return $this 
      */
-    public function delete($key)
+    public function delete(...$keys)
     {
        array_map(function($item){
            $this->query->remove($item);
            $this->getInputSource()->remove($item);
-       }, is_array($key) ? $key : func_get_args() );
+       }, ...$keys);
         return $this;
     }
 
@@ -434,11 +394,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * Replace the input for the current request.
      *
      * @param  array  $key
-     * @return $this
+     * @return self
      */
-    public function replace($key)
+    public function replace(...$keys)
     {
-        $this->getInputSource()->replace(is_array($key) ? $key : func_get_args() );
+        $this->getInputSource()->replace(...$keys);
 
         return $this;
     }
@@ -623,20 +583,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function bearer()
     {
-        $bearer = $this->header('Authorization');
-        if (\Str::startsWith($bearer, 'Bearer ')) {
-            return \Str::substr($bearer, 7);
-        }
-        return $bearer;
+        return str_replace('Bearer ', '', $this->token());
     }
 
     /**
      * Get Request bearer Token
      * @return mixed 
      */
-    public function token()
+    public function token($header = 'Authorization')
     {
-        return $this->header('Authorization');
+        return $this->header($header);
     }
 
     /**
@@ -662,7 +618,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function cookie($key = null, $default = null)
     {
         if($key){
-            return is_array($key) ? \Arr::get($this->cookies->all(), $key) : $this->cookies->get($key, $default);
+            return is_array($key) ? data_get($this->cookies->all(), $key) : $this->cookies->get($key, $default);
         }else{
             return $this->cookies->all();
         } 
@@ -677,7 +633,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function session($key = null, $default = null)
     {
         if($key){
-            return is_array($key) ? \Arr::get(make('session')->all(), $key) : make('session')->get($key, $default);
+            return is_array($key) ? data_get(make('session')->all(), $key) : make('session')->get($key, $default);
         }else{
             return make('session')->all();
         }
@@ -724,7 +680,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function file($key = null, $default = null)
     {
-        return $key ? \Arr::get($this->files(), $key, $default) : \Arr::first($this->files());
+        return $key ? with($this->files()[$key],  $default) : current($this->files());
     }
 
 
