@@ -464,6 +464,17 @@ if (!function_exists('array_undot')) {
     }
 }
 
+if (!function_exists('array_flatten')) {
+    /**
+     * array_flatten
+     * @param array $array
+     * @return array
+     */
+    function array_flatten(array $array) {
+        return iterator_to_array(new RecursiveIteratorIterator(new RecursiveArrayIterator($array)), false);
+    }
+}
+
 if(!function_exists('dump')) {
     /**
      * dump mixed
