@@ -166,11 +166,8 @@ class Router
      */
     public function regex($key, $regex = null)
     {
-        if($regex){
-            $this->regex[$key] = $regex;
-        }
-
-        return isset($this->regex[$key]) ? $this->regex[$key] : null;
+        $regex && $this->regex[$key] = $regex;
+        return $this->regex[$key];
     }
 
     /**
