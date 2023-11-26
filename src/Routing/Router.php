@@ -395,7 +395,7 @@ class Router
     {
         if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
             $route->url = array_shift($matches);
-            $route->parameters += array_filter($matches, "is_string", ARRAY_FILTER_USE_KEY);
+            $route->args += array_filter($matches, "is_string", ARRAY_FILTER_USE_KEY);
             return true;
         }
         return false;
