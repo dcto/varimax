@@ -12,11 +12,11 @@ namespace VM\Routing;
 
 /**
  * The Route class is responsible for routing an HTTP request to an assigned Callback function.
- * @method \VM\Routing\Route|string url(string $url = null)
- * @method \VM\Routing\Route|string hash(string $hash = null)
+ * @method \VM\Routing\Route|string url(array ...$args)
+ * @method string hash()
  * @method \VM\Routing\Route|string name(string $name = null)
  * @method \VM\Routing\Route|string call(string $class)
- * @method \VM\Routing\Route|array args(mixed $args = [])
+ * @method \VM\Routing\Route|array args(array $args = [])
  * @method \VM\Routing\Route|string menu(mixed $flag = null)
  * @method \VM\Routing\Route|string lang(string $lang = null)
  * @method \VM\Routing\Route|string icon(string $icon = null)
@@ -25,8 +25,8 @@ namespace VM\Routing;
  * @method \VM\Routing\Route|string method(string $method = null)
  * @method \VM\Routing\Route|string callable(string $callable = null)
  * @method \VM\Routing\Route|string namespace(string $namespace = null)
- * @method \VM\Routing\Route|string controller()
- * @method \VM\Routing\Route|string action()
+ * @method \VM\Routing\Route|string controller(string $class = null)
+ * @method \VM\Routing\Route|string action(string $method = null)
  */
 class Route implements \ArrayAccess
 {
@@ -113,9 +113,9 @@ class Route implements \ArrayAccess
 
     /**
      * Constructor.
-     * @param string|array $method HTTP method(s)
-     * @param string $url URL pattern
-     * @param string|array $args Callback function or options
+     * @param array $method HTTP method(s)
+     * @param string $path URL pattern
+     * @param array $args options
      */
     public function __construct($methods, $path, array $args = [])
     {
@@ -149,30 +149,27 @@ class Route implements \ArrayAccess
     }
 
     /**
-     * 替换URL
+     * 替换URL参数返回URL
+     * @param array ...$args
+     * @return self|string
      */
     public function url(...$args)
     {
-        isset($args[0]) && is_array($args[0]) && $args = $args[0];
         if($args){
-                if($this->regex){
-                    $this->url = preg_replace_array('/\(.*?\)/', $args, $this->regex);
-                }else{
-                    $this->url = array_shift($args);
-                }
-                $this->args(...$args);
-                return $this;
-        }else{
-                return $this->url;
+            if($this->regex){
+                $this->url = preg_replace_array('/\(.*?\)/', $args, $this->url);
+            }else{
+                $this->url = array_shift($args);
+            }
         }
+        return $this->url;
     }
-
 
     /**
      * set property
-     * @param $property
-     * @param $value
-     * @return $this
+     * @param string $property
+     * @param string|array $value
+     * @return self
      */
     public function set($property, $value)
     {
@@ -204,9 +201,9 @@ class Route implements \ArrayAccess
     }
 
     /**
-     * @param $property
-     * @param $arguments
-     * @return $this
+     * @param string $property
+     * @param mixed $arguments
+     * @return mixed
      * @throws \InvalidArgumentException
      */
     public function __call($item, $arguments)
@@ -231,6 +228,12 @@ class Route implements \ArrayAccess
     public function __get($property) 
     {
         return $this->$property;
+    }
+
+    public function __set($property, $value)
+    {
+        $this->$property = $value;
+        return $this;
     }
 
     /**
