@@ -755,8 +755,8 @@ if(!function_exists('symbol')){
     * @param  string $currency
     * @return string 
     */
-    function symbol($currency, $locale = null) {
-        return (new NumberFormatter($locale ?? 'zh'."@currency=$currency", NumberFormatter::CURRENCY ))->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
+    function symbol($currency, $locale = 'en_US') {
+        return (new NumberFormatter($locale."@currency=$currency", NumberFormatter::CURRENCY ))->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
     }
 
 }
