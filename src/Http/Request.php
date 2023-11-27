@@ -63,6 +63,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         $tags = array_shift(array_flat($args));
         if($tags) {
+            $args = array_flat($args);
             switch ($tags[0]) {
                 case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_array($v) ? join('/',$v) : $v), $tags);break;
                 case '?': $args = array_reduce($args, fn($arg, $v)=> $arg.'&'.(is_array($v) ? http_build_query($v) : $v), $tags);break;
@@ -91,6 +92,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     {
         $tags = array_shift(array_flat($args));
         if($tags) {
+            $args = array_flat($args);
             switch ($tags[0]) {
                 case '&': $args = $this->query->all()+array_reduce($args, function($q, $arg) {
                     return is_array($arg) ? $q+=$arg : (parse_str($arg, $v) ?? $q+=$v);
