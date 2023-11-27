@@ -585,7 +585,7 @@ if(!function_exists('is_json')){
      */
     function is_json($string)
     {
-        return !empty($string) && is_string($string) && is_array(json_decode($string, true)) && json_last_error() == 0;
+        return !empty($string) && is_string($string) && json_decode($string);
     }
 }
 
@@ -723,11 +723,7 @@ if(!function_exists('is_image')) {
      */
     function is_image($file)
     {
-        if (file_exists($file) && getimagesize($file === false)) {
-            return false;
-        } else {
-            return true;
-        }
+        return is_file($file) && getimagesize($file);
     }
 }
 
@@ -781,5 +777,5 @@ if(!function_exists('symbol')){
     function symbol($currency, $locale = 'en_US') {
         return (new NumberFormatter($locale."@currency=$currency", NumberFormatter::CURRENCY ))->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
     }
-
+}
 }
