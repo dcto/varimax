@@ -274,7 +274,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function only(...$keys)
     {
-        return array_include($this->all(), array_flat($keys));
+        return array_include($this->all(), $keys);
     }
 
     /**
@@ -310,7 +310,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function except(...$keys)
     {
-        return array_exclude($this->all(), array_flat($keys));
+        return array_exclude($this->all(), $keys);
     }
 
     /**
@@ -347,7 +347,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
        array_map(function($item){
            $this->query->remove($item);
            $this->getInputSource()->remove($item);
-       }, ...array_flat($keys));
+       }, array_flat($keys));
         return $this;
     }
 
