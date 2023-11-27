@@ -90,7 +90,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function uri(...$args)
     {
-        $tags = array_shift(array_flat($args));
+        $tags = array_shift($args);
         if($tags) {
             $args = array_flat($args);
             switch ($tags[0]) {
