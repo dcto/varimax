@@ -75,7 +75,6 @@ if(!function_exists('lang')) {
     function lang(...$args)
     {
         return !$args ? app('lang') : app('lang')->get(...$args);
-        //return call_user_func_array(array(app('lang'), 'get'), func_get_args());
     }
 }
 
@@ -434,8 +433,10 @@ if (!function_exists('array_include')) {
      * @param array $keys
      * @return array
      */
-    function array_include(array $array, ...$keys) {
+    function array_include(array $array, ...$keys) 
+    {
         return array_intersect_key($array, array_flip(...$keys));
+    }
 }
 
 if (!function_exists('array_exclude')) {
@@ -445,7 +446,8 @@ if (!function_exists('array_exclude')) {
      * @param array $keys
      * @return array
      */
-    function array_exclude(array $array, ...$keys) {
+    function array_exclude(array $array, ...$keys) 
+    {
         return array_diff_key($array, array_flip($keys));
     }
 }
@@ -746,8 +748,7 @@ if(!function_exists('is_date')) {
      * @param string $format  
      * @return boolean  
      */
-    function is_date($date, $format = 'Y-m-d')
-    {
+    function is_date($date, $format = 'Y-m-d') {
         return !date_parse_from_format($format, $date)['errors'];
     }   
 }
@@ -759,7 +760,7 @@ if(!function_exists('is_safe')) {
      * @param mixed $callback  
      * @return string
      */
-    function is_safe($input, ...$filters)
+    function is_safe($input, ...$filters) 
     {   
         array_map(function($f) use(&$input){
             $input = $f($input);
@@ -768,14 +769,14 @@ if(!function_exists('is_safe')) {
     }
 }
 
-if(!function_exists('symbol')){
+if(!function_exists('symbol')) {
     /**
     * 货币符号
     * @param  string $currency
     * @return string 
     */
-    function symbol($currency, $locale = 'en_US') {
+    function symbol($currency, $locale = 'en_US') 
+    {
         return (new NumberFormatter($locale."@currency=$currency", NumberFormatter::CURRENCY ))->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
     }
-}
 }
