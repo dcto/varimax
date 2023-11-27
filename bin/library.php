@@ -435,7 +435,7 @@ if (!function_exists('array_include')) {
      */
     function array_include(array $array, ...$keys) 
     {
-        return array_intersect_key($array, array_flip(...$keys));
+        return array_intersect_key($array, array_flip(array_flat($keys)));
     }
 }
 
@@ -448,7 +448,7 @@ if (!function_exists('array_exclude')) {
      */
     function array_exclude(array $array, ...$keys) 
     {
-        return array_diff_key($array, array_flip($keys));
+        return array_diff_key($array, array_flip(array_flat($keys)));
     }
 }
 
