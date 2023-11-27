@@ -61,7 +61,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function url(...$args)
     {
-        $tags = array_shift($args);
+        $tags = array_shift(array_flat($args));
         if($tags) {
             switch ($tags[0]) {
                 case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_array($v) ? join('/',$v) : $v), $tags);break;
@@ -89,7 +89,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function uri(...$args)
     {
-        $tags = array_shift($args);
+        $tags = array_shift(array_flat($args));
         if($tags) {
             switch ($tags[0]) {
                 case '&': $args = $this->query->all()+array_reduce($args, function($q, $arg) {
@@ -274,7 +274,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function only(...$keys)
     {
-        return array_intersect_key($this->all(), array_flip($keys));
+        return array_include($this->all(), array_flat($keys));
     }
 
     /**
@@ -310,7 +310,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function except(...$keys)
     {
-        return array_diff_key($this->all(), array_flip($keys));
+        return array_exclude($this->all(), array_flat($keys));
     }
 
     /**
@@ -347,7 +347,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
        array_map(function($item){
            $this->query->remove($item);
            $this->getInputSource()->remove($item);
-       }, ...$keys);
+       }, ...array_flat($keys));
         return $this;
     }
 
@@ -374,20 +374,19 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param array|string $key
      * @return bool
      */
-    public function include($key)
+    public function include(...$keys)
     {
-        return $this->contain($key);
+        return $this->contain($keys);
     }
 
     /**
      * check input must contain by the keys
-     * @param array|string $key
+     * @param mixed ...$keys
      * @return bool
      */
-    public function contain($key)
+    public function contain(...$keys)
     {
-        $key = is_array($key) ? $key : func_get_args();
-        return !array_diff_key(array_flip($key), $this->filter());
+        return !array_diff_key(array_flip(array_flat($keys)), $this->filter());
     }
 
     /**
@@ -398,7 +397,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function replace(...$keys)
     {
-        $this->getInputSource()->replace(...$keys);
+        $this->getInputSource()->replace(...array_flat($keys));
 
         return $this;
     }

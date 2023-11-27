@@ -487,13 +487,13 @@ if (!function_exists('array_undot')) {
     }
 }
 
-if (!function_exists('array_flatten')) {
+if (!function_exists('array_flat')) {
     /**
-     * array_flatten
+     * array_flat
      * @param array $array
      * @return array
      */
-    function array_flatten(array $array) {
+    function array_flat(array $array) {
         return iterator_to_array(new RecursiveIteratorIterator(new RecursiveArrayIterator($array)), false);
     }
 }
