@@ -326,15 +326,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
-     * [filter take方法加强版，整理返回过滤数组空值,多参数获取]
-     * @param array|string $type filter input type [query, request, attribute, files]
+     * [filter empty]
      * @return array
      */
-    public function filter($type = null)
+    public function filter()
     {
-        return array_filter($this->all(is_array($type) ? $type : func_get_args()), function($value){
-            return is_array($value) ? count($value) : strlen($value) ;
-        });
+        return array_filter($this->all(), fn($value)=>strlen($value));
     }
 
     /**
