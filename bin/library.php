@@ -427,6 +427,29 @@ if(!function_exists('array_keys_exists')) {
     }
 }
 
+if (!function_exists('array_include')) {
+    /**
+     * 提取数组中指定键名的值
+     * @param array $array
+     * @param array $keys
+     * @return array
+     */
+    function array_include(array $array, ...$keys) {
+        return array_intersect_key($array, array_flip(...$keys));
+}
+
+if (!function_exists('array_exclude')) {
+    /**
+     * 提取排除数组中指定键名的值
+     * @param array $array
+     * @param array $keys
+     * @return array
+     */
+    function array_exclude(array $array, ...$keys) {
+        return array_diff_key($array, array_flip($keys));
+    }
+}
+
 if (!function_exists('array_dot')) {
     /**
      * Flatten a multi-dimensional associative array with dots.
