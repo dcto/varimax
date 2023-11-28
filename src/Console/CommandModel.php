@@ -43,7 +43,6 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
                         \Schema::dropIfExists($model->table());
                         \Schema::create($model->table(),fn($table)=>$model->schema($table));
                         try{
-                            throw new \ErrorException("error dddd");
                             $model->insert($dataset->toArray());
                         }catch(\Exception $e){
                             $sqlStatements = null;
