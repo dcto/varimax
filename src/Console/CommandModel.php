@@ -43,22 +43,27 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
                         \Schema::dropIfExists($model->table());
                         \Schema::create($model->table(),fn($table)=>$model->schema($table));
                         try{
+                            throw new \ErrorException("error dddd");
                             $model->insert($dataset->toArray());
                         }catch(\Exception $e){
                             $sqlStatements = null;
                             $dataset->each(function($item) use (&$sqlStatements, $table){
-                                $sqlStatements .= sprintf('INSERT INTO `'.$table.'` (`%s`) VALUES (\'%s\');', join('`,`', array_keys($item)), join('\',\'', $item->collapse()) );
+                                $item = $item->toArray();
+                                $sqlStatements .= sprintf('INSERT INTO `'.$table.'` (`%s`) VALUES (\'%s\');'.PHP_EOL, join('`,`', array_keys($item)), join('\',\'', array_values($item)) );
                             });
-                            $sqlStatements && file_put_contents($cacheFile = runtime('schema', $table, time().'.sql'), $sqlStatements);
-                            $output->writeln(sprintf('<fg=yellow>%s</>',  $e->getMessage()));
-                            $output->writeln(sprintf("<fg=yellow>The `$table` dataset cache to `$cacheFile`</fg>",  $e->getMessage()));
+
+                            if($sqlStatements){
+                                file_put_contents($cacheFile = runtime('schema', $table, time().'.sql'), $sqlStatements);
+                                $output->writeln(sprintf("<comment>The `$table` dataset cache to `$cacheFile`</comment>",  $e->getMessage()));
+                            }
+                            throw $e;
                         }
                 }else{
                     \Schema::create($model->table(),fn($table)=>$model->schema($table));
                 }
                 $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$table.'] success!'));
             }catch(\Exception $e){
-                $output->writeln(sprintf('<fg=red>%s</fg>',  $e->getMessage()));
+                $output->writeln(sprintf('<error>%s</error>',  $e->getMessage()));
                 return 1;
             }
 
