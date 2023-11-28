@@ -124,7 +124,7 @@ class Route implements \ArrayAccess
         },explode('/', trim($path, '/'))));
 
         $this->url       = $path;
-        $this->name      = $args['name'] ?? $this->id;
+        $this->name      = $args['name'] ?? null;
         $this->hash      = hash('crc32b', $this->id);
         $this->call      = $args['call'] ?? null;
         $this->lang      = $args['lang'] ?? $args['group']['lang'] ?? null;
