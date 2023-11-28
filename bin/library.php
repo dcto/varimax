@@ -358,9 +358,7 @@ if(!function_exists('readable_size')) {
     function readable_size($bytes, $decimals = 0)
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
-
         $floor = floor((strlen($bytes) - 1) / 3);
-
         return sprintf("%.{$decimals}f", $bytes / pow(1024, $floor)) . $units[$floor];
     }
 }
@@ -410,6 +408,28 @@ if(!function_exists('decimal')){
         //$value = number_format($value, $decimals, '.', '');
         //return strpos($value, '.') ? rtrim(rtrim($value, '0'), '.') : $value;
         return number_format($value, $decimals, '.', '');
+    }
+}
+
+
+if(!function_exists('dump')) {
+    /**
+     * dump mixed
+     * @param mixed $args
+     * @return void
+     */
+    function dump(...$args)
+    {
+        $backtrace = debug_backtrace();
+        $file = $backtrace[0]['file'];
+        $line = $backtrace[0]['line'];
+        echo "<b>$file: $line</b><hr />";
+        echo "<pre>";
+        foreach ($args as $arg) {
+            var_dump($arg);
+        }
+        echo "</pre>";
+        die;
     }
 }
 
@@ -500,82 +520,15 @@ if (!function_exists('array_flat')) {
     }
 }
 
-if(!function_exists('dump')) {
-    /**
-     * dump mixed
-     * @param mixed $args
-     * @return void
-     */
-    function dump(...$args)
-    {
-        $backtrace = debug_backtrace();
-        $file = $backtrace[0]['file'];
-        $line = $backtrace[0]['line'];
-        echo "<b>$file: $line</b><hr />";
-        echo "<pre>";
-        foreach ($args as $arg) {
-            var_dump($arg);
-        }
-        echo "</pre>";
-        die;
-    }
-}
-
-if(!function_exists('unicode2char')){
-    /**
-     * 将unicode转换成字符
-     * @param int $unicode
-     * @return string UTF-8字符
-     **/
-    function unicode2char($unicode){
-        if($unicode < 128)     return chr($unicode);
-        if($unicode < 2048)    return chr(($unicode >> 6) + 192) .
-                                      chr(($unicode & 63) + 128);
-        if($unicode < 65536)   return chr(($unicode >> 12) + 224) .
-                                      chr((($unicode >> 6) & 63) + 128) .
-                                      chr(($unicode & 63) + 128);
-        if($unicode < 2097152) return chr(($unicode >> 18) + 240) .
-                                      chr((($unicode >> 12) & 63) + 128) .
-                                      chr((($unicode >> 6) & 63) + 128) .
-                                      chr(($unicode & 63) + 128);
-        return false;
-    }
-}
-
-if(!function_exists('char2unicode')){
-    /**
-     * 将字符转换成unicode
-     * @param string $char 必须是UTF-8字符
-     * @return int
-     **/
-    function char2unicode($char){
-        switch (strlen($char)){
-            case 1 : return ord($char);
-            case 2 : return (ord($char[1]) & 63) |
-                            ((ord($char[0]) & 31) << 6);
-            case 3 : return (ord($char[2]) & 63) |
-                            ((ord($char[1]) & 63) << 6) |
-                            ((ord($char[0]) & 15) << 12);
-            case 4 : return (ord($char[3]) & 63) |
-                            ((ord($char[2]) & 63) << 6) |
-                            ((ord($char[1]) & 63) << 12) |
-                            ((ord($char[0]) & 7)  << 18);
-            default :
-                trigger_error('Character is not UTF-8!', E_USER_WARNING);
-                return false;
-        }
-    }
-}
-
 if(!function_exists('is_str')) {   
     /**  
      * 验证字符串是否为数字,字母,中文和下划线构成  
      * @param string $username  
      * @return bool  
      */
-    function is_str($str)
+    function is_str(string $string)
     {
-        return preg_match('/^[\x{4e00}-\x{9fa5}\w_]+$/u', $str);
+        return ctype_alnum(str_replace('_', '', $string));
     }
 }
 
@@ -645,54 +598,6 @@ if(!function_exists('is_luhn')){
     }
 }
 
-if(!function_exists('is_intval')) {  
-    /**  
-     * 是否为整数  
-     * @param int $number  
-     * @return boolean  
-     */ 
-    function is_intval($number)
-    {
-      return preg_match('/^[-\+]?\d+$/', $number);
-    }
-}
-
-if(!function_exists('is_positive_number')) {   
-    /**  
-     * 是否为正整数  
-     * @param int $number  
-     * @return boolean  
-     */
-    function is_positive_number($number)
-    {
-        return ctype_digit($number);
-    }
-}
-
-if(!function_exists('is_decimal')) { 
-    /**  
-     * 是否为小数  
-     * @param float $number  
-     * @return boolean  
-     */
-    function is_decimal($number)
-    {
-        return preg_match('/^[-\+]?\d+(\.\d+)?$/', $number);
-    }
-}
-
-if(!function_exists('is_positive_decimal')) { 
-    /**  
-     * 是否为正小数  
-     * @param float $number  
-     * @return boolean  
-     */
-    function is_positive_decimal($number)
-    {
-       return preg_match('/^\d+(\.\d+)?$/', $number);
-    }
-}
-
 if(!function_exists('is_english')) { 
     /**  
      * 是否为英文  
@@ -708,12 +613,12 @@ if(!function_exists('is_english')) {
 if(!function_exists('is_chinese')) { 
     /**  
      * 是否为中文  
-     * @param string $str  
+     * @param string $string  
      * @return boolean  
      */
-    function is_chinese($str)
+    function is_chinese(string $string)
     {
-        return preg_match('/^[\x{4e00}-\x{9fa5}]+$/u', $str);
+        return preg_match("/\p{Han}+/u", $string);
     }
 }
 
@@ -771,12 +676,58 @@ if(!function_exists('is_safe')) {
 
 if(!function_exists('symbol')) {
     /**
-    * 货币符号
+    * Get currency symbol
     * @param  string $currency
     * @return string 
     */
     function symbol($currency, $locale = 'en_US') 
     {
         return (new NumberFormatter($locale."@currency=$currency", NumberFormatter::CURRENCY ))->getSymbol(NumberFormatter::CURRENCY_SYMBOL);
+    }
+}
+
+if(!function_exists('unicode2char')){
+    /**
+     * 将unicode转换成字符
+     * @param int $unicode
+     * @return string UTF-8字符
+     **/
+    function unicode2char($unicode){
+        if($unicode < 128)     return chr($unicode);
+        if($unicode < 2048)    return chr(($unicode >> 6) + 192) .
+                                      chr(($unicode & 63) + 128);
+        if($unicode < 65536)   return chr(($unicode >> 12) + 224) .
+                                      chr((($unicode >> 6) & 63) + 128) .
+                                      chr(($unicode & 63) + 128);
+        if($unicode < 2097152) return chr(($unicode >> 18) + 240) .
+                                      chr((($unicode >> 12) & 63) + 128) .
+                                      chr((($unicode >> 6) & 63) + 128) .
+                                      chr(($unicode & 63) + 128);
+        return false;
+    }
+}
+
+if(!function_exists('char2unicode')){
+    /**
+     * 将字符转换成unicode
+     * @param string $char 必须是UTF-8字符
+     * @return int
+     **/
+    function char2unicode($char){
+        switch (strlen($char)){
+            case 1 : return ord($char);
+            case 2 : return (ord($char[1]) & 63) |
+                            ((ord($char[0]) & 31) << 6);
+            case 3 : return (ord($char[2]) & 63) |
+                            ((ord($char[1]) & 63) << 6) |
+                            ((ord($char[0]) & 15) << 12);
+            case 4 : return (ord($char[3]) & 63) |
+                            ((ord($char[2]) & 63) << 6) |
+                            ((ord($char[1]) & 63) << 12) |
+                            ((ord($char[0]) & 7)  << 18);
+            default :
+                trigger_error('Character is not UTF-8!', E_USER_WARNING);
+                return false;
+        }
     }
 }
