@@ -293,10 +293,12 @@ class Router
         $properties = $this->parseAction($properties);
 
         if ($this->groupStack) {
-            $properties['group'] = end($this->groupStack);
+            $properties['group'] = $this->getLastGroup();
         }
 
-        $path = $this->parseRoute($path, $properties);
+        $path = $this->parsePath($path, $properties);
+
+        $path = $path == '' ? '/' : $path;
 
         if(strpos($path, ':') !== false){
             $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $path);
@@ -393,16 +395,17 @@ class Router
 
 
     /**
-     * parse pattern of the route path
+     * Parse url pattern of the route
      * @param $pattern
      * @param $property
      * @return string
      */
-    protected function parseRoute($route, $property)
+    protected function parsePath($route, $property)
     {
-        $prefix = data_get($property,'prefix', );
-        $route = '/'.trim(trim($prefix,'/').'/'.trim($route, '/'),'/');
-        return $route;
+        if(isset($property['group']['prefix'])){
+            return $property['group']['prefix'].rtrim($route, '/');
+        }
+        return rtrim($route, '/');
     }
 
     /**
@@ -432,16 +435,9 @@ class Router
     protected function findClosure(array $action)
     {
         foreach ($action as $value) {
-            if (is_callable($value)) {
-                return $value;
-            }
+            if (is_callable($value))  return $value;
         }
         return null;
-        /*
-        return Arr::first($action, function($key, $value){
-            return is_callable($value);
-        });
-        */
     }
 
     /**
@@ -475,35 +471,29 @@ class Router
      * @return void 
      * @throws InvalidArgumentException 
      */
-    protected function updateGroupStack(array $attributes)
+    private function updateGroupStack(array $attributes)
     {
         $attributes['id'] =  data_get($attributes, 'id', crc32(serialize($attributes)));
         $attributes['name'] = data_get($attributes, 'name', $attributes['id']);
-        $attributes = $this->mergeGroup($attributes, end($this->groupStack));
+        $attributes = $this->mergeGroup($attributes,  $this->getLastGroup());
         
-        if($this->group && isset($this->group[$attributes['id']])){
-            throw new \InvalidArgumentException('The Route Group exist');
-        }
-
+        if(isset($this->group[$attributes['id']]))  throw new \InvalidArgumentException('The Router Group Exist');
+        
         $this->group[$attributes['id']] =  $this->groupStack[] = $attributes;
     }
 
 
     /**
      * Merge the given group attributes.
-     *
      * @param  array  $new
      * @param  array  $old
      * @return array
      */
-    private function mergeGroup($new, $old)
+    private function mergeGroup(array $new, $old)
     {
-        $new['pid'] = isset($old['id']) ? $old['id'] : 0;
-
-        $new['namespace'] = $this->formatNameSpace($new, $old);
-
+        $new['pid'] = $old['id'] ?? null;
         $new['prefix'] = $this->formatGroupPrefix($new);
-
+        $new['namespace'] = $this->formatNameSpace($new, $old);
         return $old ? array_replace_recursive(array_diff_assoc($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
     }
 
@@ -514,20 +504,20 @@ class Router
      * @param  array  $old
      * @return string|null
      */
-    private function formatNameSpace($new, $old)
+    private function formatNameSpace(array $new, $old)
     {
         if (isset($new['namespace'])) {
             if(isset($old['namespace'])){
-                if($new['namespace'][0] == '\\'){
-                    return trim($new['namespace'], '\\');
-                }else{
-                    return trim($old['namespace'], '\\').'\\'.trim($new['namespace'], '\\');
-                }
+                return $new['namespace'][0] == '\\' 
+                //当以\开头表示重写命名空间前缀
+                ? trim($new['namespace'], '\\')
+                //否则默认继承上级分组空间前缀
+                : trim($old['namespace'], '\\').'\\'.trim($new['namespace'], '\\');
             }else{
                 return $new['namespace'];
             }
         }
-        return isset($old['namespace']) ? $old['namespace'] : null;
+        return $old['namespace'] ?? null;
     }
 
     /**
@@ -540,26 +530,23 @@ class Router
     private function formatGroupPrefix(array $group)
     {
         if(isset($group['prefix'])){
-            if($group['prefix'][0] == '/'){
-                return $group['prefix'];
-            }else{
-                return rtrim($this->getLastGroupPrefix(),'/').'/'.trim($group['prefix'], '/') ;
-            }
+            //当以/开头表示重写组前缀
+            return $group['prefix'][0] == '/' ? rtrim($group['prefix'], '/') 
+            //否则默认继承上级分组前缀
+            : $this->getLastGroup('prefix').'/'.trim($group['prefix'], '/');
         }
-        return $this->getLastGroupPrefix().'/';
+        return rtrim($this->getLastGroup('prefix'), '/');
     }
 
+
     /**
-     * Get the prefix from the last group on the stack.
-     *
-     * @return string
+     * Get last group stack or with key
+     * @param string|null $key 
+     * @return mixed 
      */
-    private function getLastGroupPrefix()
+    private function getLastGroup(string $key = null)
     {
-        if (!empty($this->groupStack)) {
-            return end($this->groupStack)['prefix'] ?? '';
-        }
-        return '';
-    } 
-    
+        if($key) return end($this->groupStack)[$key] ?? null;
+        return end($this->groupStack);
+    }
 }
