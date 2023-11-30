@@ -121,7 +121,7 @@ class Route implements \ArrayAccess
     {
         $this->id  = $args['id'] ?? $path == '/' ? '.' : join('.',array_map(function($p){
             return ($i = strpos($p, ':')) ? ltrim(substr($p, 0 ,$i), '(') : $p;
-        },explode('/', trim($path, '/'))));
+        }, explode('/', trim($path, '/'))));
 
         $this->url       = $path;
         $this->name      = $args['name'] ?? null;
