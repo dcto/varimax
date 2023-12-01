@@ -292,9 +292,8 @@ class Router
         // Pre-process the Action information.
         $properties = $this->parseAction($properties);
 
-        if ($this->groupStack) {
-            $properties['group'] = $this->getLastGroup();
-        }
+        
+        $properties['group'] = $this->getLastGroup();
 
         $path = $this->parsePath($path, $properties);
 
@@ -489,22 +488,36 @@ class Router
      * @param  array  $old
      * @return array
      */
-    private function mergeGroup(array $new, $old)
+    private function mergeGroup(array $new, array $old)
     {
         $new['pid'] = $old['id'] ?? null;
         $new['prefix'] = $this->formatGroupPrefix($new);
+        $new['pipeline'] = $this->formatPipeline($new, $old);
         $new['namespace'] = $this->formatNameSpace($new, $old);
         return $old ? array_replace_recursive(array_diff_assoc($old, ['id', 'pid', 'name', 'prefix']), $new) : $new;
     }
 
     /**
-     * Format the uses prefix for the new group attributes.
-     *
+     * Format group pipeline.
+     * @param  array  $new
+     * @param  array  $old
+     * @return array
+     */
+    private function formatPipeline($new, $old)
+    {
+        $pipeline = [];
+        isset($old['pipeline']) && $pipeline = array_merge($pipeline, (array) $old['pipeline']);
+        isset($new['pipeline']) && $pipeline = array_merge($pipeline, (array) $new['pipeline']);
+        return $pipeline;
+    }
+
+    /**
+     * Format group namespace.
      * @param  array  $new
      * @param  array  $old
      * @return string|null
      */
-    private function formatNameSpace(array $new, $old)
+    private function formatNameSpace(array $new, array $old)
     {
         if (isset($new['namespace'])) {
             if(isset($old['namespace'])){
@@ -521,11 +534,10 @@ class Router
     }
 
     /**
-     * Format the prefix for the new group attributes.
-     *
+     * Format group prefix
      * @param  array  $new
      * @param  array  $old
-     * @return string|null
+     * @return string
      */
     private function formatGroupPrefix(array $group)
     {
@@ -546,7 +558,9 @@ class Router
      */
     private function getLastGroup(string $key = null)
     {
-        if($key) return end($this->groupStack)[$key] ?? null;
-        return end($this->groupStack);
+        if($group = end($this->groupStack)){
+            return $key ? $group[$key] ?? null : $group;
+        }
+        return [];
     }
 }
