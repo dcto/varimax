@@ -46,7 +46,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $this->getRequestSource();
     }
 
-
     /**
      * 构建URL参数
      * 符号说明: / 构建path路径
@@ -68,10 +67,11 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_array($v) ? join('/',$v) : $v), $tags);break;
                 case '?': $args = array_reduce($args, fn($arg, $v)=> $arg.'&'.(is_array($v) ? http_build_query($v) : $v), $tags);break;
                 case '@': $args = app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@'))->url(...$args);break;
+                default: $args = join('', $args);
             }
             return $this->baseUrl().$args;
         }
-        return $this->baseUrl();
+        return rtrim($this->baseUrl().$this->getPathInfo(), '/');
     }
 
     /**
@@ -94,9 +94,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         if($tags) {
             $args = array_flat($args);
             switch ($tags[0]) {
-                case '&': $args = $this->query->all()+array_reduce($args, function($q, $arg) {
+                case '&': $args = array_replace($this->query->all(), array_reduce($args, function($q, $arg) {
                     return is_array($arg) ? $q+=$arg : (parse_str($arg, $v) ?? $q+=$v);
-                }, parse_str(trim($tags,'?&'), $tag) ?? $tag);
+                }, parse_str(trim($tags,'?&'), $tag) ?? $tag) );
                 break;
 
                 case '?': $args = array_reduce($args, function($q, $arg) {
@@ -115,10 +115,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 default:
                     $args = [];
             }
-            return $this->baseUrl().'?'.http_build_query($args);
+            return $this->url().'?'.http_build_query($args);
         }
-        
-        return $this->baseUrl();
+        return $this->getUri();
     }
 
     /**
