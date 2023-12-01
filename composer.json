@@ -50,6 +50,7 @@
     "illuminate/pagination": "8.*"
   },
   "suggest": {
+    "guzzlehttp/guzzle": "Suggest Http client of 6.*",
     "nesbot/carbon": "Suggest Carbon DateTime Formating",
     "varimax/view":"Suggest varimax template engine"
   }
