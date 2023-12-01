@@ -166,6 +166,22 @@ class Route implements \ArrayAccess
         return $this->url;
     }
 
+
+    /**
+     * Get Set args;
+     * @param array|string $key
+     * @param string|null $value
+     * @return self|array
+     */
+    public function args($key = null, $value = null)
+    {
+        if($key) {
+           is_array($key) ? $this->args = $key : $this->args[$key] = $value;
+           return $this;
+        }
+        return $this->args;
+    }
+
     /**
      * set property
      * @param string $property
