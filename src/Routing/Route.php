@@ -28,7 +28,7 @@ namespace VM\Routing;
  * @method \VM\Routing\Route|string controller(string $class = null)
  * @method \VM\Routing\Route|string action(string $method = null)
  */
-class Route implements \ArrayAccess
+class Route implements \ArrayAccess, \JsonSerializable 
 {
     /**
      * @var int id
@@ -105,10 +105,14 @@ class Route implements \ArrayAccess
      */
     protected $namespace;
 
-    /** @var string */
+    /** 
+     * @var string 
+     * */
     protected $controller;
 
-    /** @var string */
+    /**
+     *  @var string 
+    */
     protected $action;
 
     /**
@@ -165,7 +169,6 @@ class Route implements \ArrayAccess
         }
         return $this->url;
     }
-
 
     /**
      * Get Set args;
@@ -237,11 +240,6 @@ class Route implements \ArrayAccess
         return $this;
     }
 
-    /**
-     * mixed property
-     * @param mixed $name 
-     * @return mixed 
-     */
     public function __get($property) 
     {
         return $this->$property;
@@ -253,14 +251,16 @@ class Route implements \ArrayAccess
         return $this;
     }
 
-    /**
-     * toString url
-     */
     public function __toString()
     {
         return $this->url;
     }
     
+    public function toArray()
+    {
+        return get_object_vars($this);
+    }
+
     public function offsetExists($property): bool{
         return isset($this->$property);
     } 
@@ -271,17 +271,21 @@ class Route implements \ArrayAccess
         return $this->$property;
     }
     
-    public function offsetSet($property, $value):void{
+    public function offsetSet($property, $value) :void 
+    {
         $this->$property = $value;
     }
 
-    public function offsetUnset($property):void{
+    public function offsetUnset($property) :void
+    {
         unset($this->$property);
     }
+
+    public function jsonSerialize()
+    {
+        return $this->toArray();
+    }
     
-    /**
-     * Push to router
-     */
     public function __destruct()
     {
         make('router')->addPushToRoutes($this);
