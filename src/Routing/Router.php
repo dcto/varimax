@@ -23,10 +23,10 @@ class Router
      */
     private $alias = array();
 
-    /*
-     * @var $group
+    /** 
+     * @var array 
      */
-    private $group = array();
+    private $groups = array();
 
     /**
      * the current found Route
@@ -86,10 +86,10 @@ class Router
      */
     public function __call($method, $args)
     {
-        if (($method == 'any') || in_array($method = strtoupper($method), $this->methods)) {
+        if (in_array($method = strtoupper($method), array_merge($this->methods, ['ANY']))) {
             return $this->register($method, array_shift($args), array_shift($args));
         }else{
-            throw new \InvalidArgumentException('Invalid Router::'.$method);
+            throw new \InvalidArgumentException('Invalid Call Router::'.$method);
         }
     }
 
@@ -229,35 +229,39 @@ class Router
     }
 
     /**
-     * format the route item list
-     * @param null $node
+     * Get groups with routes
+     * @param string $routes with the routes
+     * @param  callable $where filter the groups
      * @return array
      */
-    public function groups($node = null, $recursion = true)
+    public function groups($routes = 'routes', $where = null)
     {
-        $groups = $recursion ? $this->tree() : $this->group;
-        
-        return $node ? data_get($groups, $node, array()) : $groups;
+        $groups = $where ? array_filter($this->groups, $where, ARRAY_FILTER_USE_BOTH) : $this->groups;
+        array_walk($groups, fn(&$g)=>$g[$routes] = array_filter($this->routes, fn($r)=>$r['group'] == $g['id']));
+        return $groups;
     }
 
     /**
-     * Get the groups by pid
+     * Get the nested by group
      * 
-     * @param bool 
+     * @param string $children
+     * @param array $routes; 
      * @return array 
      */
-    public function tree()
+    public function tree($node = null, $children = 'group')
     {
-        $groups = array();
-        foreach($this->group as $key => $group){
-            if(isset($this->group[$group['pid']])){
-                $this->group[$group['pid']]['group'][$group['id']] = &$this->group[$key];
+        list($trees, $groups) = [null, $this->groups()];
+        foreach($groups as $key => $group){
+            if(isset($groups[$group['pid']])){
+                $groups[$group['pid']][$children][$group['id']] = &$groups[$key];
             }else{
-                $groups[$key] = &$this->group[$key];
+                $trees[$key] = &$groups[$key];
             }
         }
-        return $groups;
+        return data_get($trees, $node, []);
     }
+
+    
 
     /**
      * Load routes from file
@@ -283,16 +287,11 @@ class Router
      */
     protected function register($method, $path, $properties)
     {
-        if (is_string($method) && (strtoupper($method) == 'ANY')) {
-            $methods = $this->methods;
-        } else {
-            // Ensure the requested Methods are valid ones.
-            $methods = array_intersect(array_map('strtoupper', (array) $method), $this->methods);
-        }
+        $methods = $method == 'ANY' ? $this->methods : array_intersect(array_map('strtoupper', (array) $method), $this->methods);
+        
         // Pre-process the Action information.
         $properties = $this->parseAction($properties);
 
-        
         $properties['group'] = $this->getLastGroup();
 
         $path = $this->parsePath($path, $properties);
@@ -377,17 +376,13 @@ class Router
     {
         if($url = $route->url){
             if(isset($this->routes[$url])){
-                $this->routes[$url]->methods = array_unique(array_merge( $this->routes[$url]->methods , $route->methods));
+                $this->routes[$url]->methods = array_unique(array_merge($this->routes[$url]->methods , $route->methods));
             }else{
                 $this->alias($route->id, $route->url);
                 $this->routes[$url] = $route;
             }
         }else{
             $this->routes[$route->id] = $route;
-        }
-
-        if($route->group){
-            $this->group[$route->group]['routes'][$route->id] = $route;
         }
         return $this;
     }
@@ -475,10 +470,7 @@ class Router
         $attributes['id'] =  data_get($attributes, 'id', crc32(serialize($attributes)));
         $attributes['name'] = data_get($attributes, 'name', $attributes['id']);
         $attributes = $this->mergeGroup($attributes,  $this->getLastGroup());
-        
-        if(isset($this->group[$attributes['id']]))  throw new \InvalidArgumentException('The Router Group Exist');
-        
-        $this->group[$attributes['id']] =  $this->groupStack[] = $attributes;
+        $this->groupStack[] = $this->groups[$attributes['id']] =  $attributes;
     }
 
 
