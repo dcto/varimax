@@ -129,7 +129,7 @@ class Route implements \ArrayAccess, \JsonSerializable
 
         $this->url       = $path;
         $this->name      = $args['name'] ?? null;
-        $this->hash      = hash('crc32b', $this->id);
+        $this->hash      = crc32($this->id);
         $this->call      = $args['call'] ?? null;
         $this->lang      = $args['lang'] ?? $args['group']['lang'] ?? null;
         $this->menu      = $args['menu'] ?? $args['group']['menu'] ?? null;

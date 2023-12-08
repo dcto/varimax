@@ -237,7 +237,7 @@ class Router
     public function groups($routes = 'routes', $where = null)
     {
         $groups = $where ? array_filter($this->groups, $where, ARRAY_FILTER_USE_BOTH) : $this->groups;
-        array_walk($groups, fn(&$g)=>$g[$routes] = array_filter($this->routes, fn($r)=>$r['group'] == $g['id']));
+        array_walk($groups, fn(&$g)=>$g[$routes] = array_values(array_filter($this->routes, fn($r)=>$r['group'] == $g['id'])));
         return $groups;
     }
 
@@ -248,12 +248,12 @@ class Router
      * @param array $routes; 
      * @return array 
      */
-    public function tree($node = null, $children = 'group')
+    public function tree($node = null, $children = 'children')
     {
-        list($trees, $groups) = [null, $this->groups()];
+        list($trees, $groups) = [null, $this->groups($children)];
         foreach($groups as $key => $group){
-            if(isset($groups[$group['pid']])){
-                $groups[$group['pid']][$children][$group['id']] = &$groups[$key];
+            if(isset($groups[$group['group']])){
+                $groups[$group['group']][$children][$group['id']] = &$groups[$key];
             }else{
                 $trees[$key] = &$groups[$key];
             }
@@ -482,7 +482,7 @@ class Router
      */
     private function mergeGroup(array $new, array $old)
     {
-        $new['pid'] = $old['id'] ?? null;
+        $new['group'] = $old['id'] ?? null;
         $new['prefix'] = $this->formatGroupPrefix($new);
         $new['pipeline'] = $this->formatPipeline($new, $old);
         $new['namespace'] = $this->formatNameSpace($new, $old);
