@@ -229,39 +229,41 @@ class Router
     }
 
     /**
-     * Get groups with routes
+     * Get groups
      * @param string $routes with the routes
-     * @param  callable $where filter the groups
+     * @param mixed $nodes filter the groups by key in nodes
      * @return array
      */
-    public function groups($routes = 'routes', $where = null)
+    public function groups($routes = 'routes', ...$nodes)
     {
-        $groups = $where ? array_filter($this->groups, $where, ARRAY_FILTER_USE_BOTH) : $this->groups;
-        array_walk($groups, fn(&$g)=>$g[$routes] = array_values(array_filter($this->routes, fn($r)=>$r['group'] == $g['id'])));
+        $nodes = $this->parseNode($nodes);
+        $groups = $nodes ? array_filter($this->groups, function($g, $k) use(&$nodes){
+            $k && in_array($g['group'], $nodes) && $nodes = array_merge($nodes, [$k]);
+            return in_array($k, $nodes);
+        }, ARRAY_FILTER_USE_BOTH) : $this->groups;
+
+        $routes && array_walk($groups, fn(&$g)=>$g[$routes] = array_values(array_filter($this->routes, fn($r)=>$r['group'] == $g['id'])));
         return $groups;
     }
 
     /**
-     * Get the nested by group
-     * 
-     * @param string $children
-     * @param array $routes; 
+     * Get the nested groups
+     * @param string|array $nodes
+     * @param string $child
      * @return array 
      */
-    public function tree($node = null, $children = 'children')
+    public function tree($nodes = '*', $child = 'children')
     {
-        list($trees, $groups) = [null, $this->groups($children)];
+        list($trees, $groups) = [null, $this->groups($child, $nodes)];
         foreach($groups as $key => $group){
             if(isset($groups[$group['group']])){
-                $groups[$group['group']][$children][$group['id']] = &$groups[$key];
+                $groups[$group['group']][$child][] = &$groups[$key];
             }else{
-                $trees[$key] = &$groups[$key];
+                $trees[] = &$groups[$key];
             }
         }
-        return data_get($trees, $node, []);
+        return $trees;
     }
-
-    
 
     /**
      * Load routes from file
@@ -387,6 +389,15 @@ class Router
         return $this;
     }
 
+    /**
+     * Parse group node character
+     * @param array $nodes
+     * @return array
+     */
+    protected function parseNode($nodes) : array
+    {
+        return count($nodes) == 1 ? [basename(str_replace(['.', ',', '*'], '/', array_shift($nodes)))] : $nodes;
+    }
 
     /**
      * Parse url pattern of the route

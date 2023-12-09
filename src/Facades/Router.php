@@ -30,8 +30,9 @@ use Illuminate\Support\Facades\Facade;
  * @method static \VM\Routing\Router restful(string $url, string $controller)
  * @method static \VM\Routing\Router regex(string $key, string $regex)
  * @method static \VM\Routing\Router alias(string $key, string $route = null)
- * @method static router(string $id = null)
- * @method static \VM\Routing\Router groups($id = null) Get Group by $id Routes Struct
+ * @method static \VM\Routing\Route  router(string $id = null) Current Route
+ * @method static array tree($nodes = '*', $child = 'children')
+ * @method static array groups($routes = 'routes', ...$nodes) Get Group by $id Routes Struct
  * @method static \VM\Routing\Router dispatch()
  */
 class Router extends Facade
