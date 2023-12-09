@@ -262,7 +262,7 @@ class Router
                 $trees[] = &$groups[$key];
             }
         }
-        return $trees;
+        return count($trees)==1 ? array_shift($trees) : $trees;
     }
 
     /**

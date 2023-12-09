@@ -74,7 +74,7 @@ if(!function_exists('lang')) {
      */
     function lang(...$args)
     {
-        return !$args ? app('lang') : app('lang')->get(...$args);
+        return $args ? app('lang')->get(...$args) : app('lang');
     }
 }
 
