@@ -478,8 +478,8 @@ class Router
      */
     private function updateGroupStack(array $attributes)
     {
-        $attributes['id'] =  data_get($attributes, 'id', crc32(serialize($attributes)));
-        $attributes['name'] = data_get($attributes, 'name', $attributes['id']);
+        $attributes['id'] ??= crc32(serialize($attributes));
+        $attributes['name'] ??= $attributes['id'];
         $attributes = $this->mergeGroup($attributes,  $this->getLastGroup());
         $this->groupStack[] = $this->groups[$attributes['id']] =  $attributes;
     }
