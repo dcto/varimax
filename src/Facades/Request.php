@@ -43,7 +43,6 @@ use Illuminate\Support\Facades\Facade;
  * @method static string cookie(string $key = null)
  * @method static string server(string $key = null, mixed $default = null)
  * @method static string browser(string $type = null)
- * @method static string|array file(string $key)
  * @method static bool accept($contains)
  * @method static bool isJson()
  * @method static bool|string method(string $type = null)
