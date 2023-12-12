@@ -16,29 +16,27 @@ namespace VM\Http;
  */
 class Session implements \IteratorAggregate, \Countable
 {
-    
     /**
      * @see http://php.net/session.configuration
      * @var array
      */
-    private $options = [];
+    private $options = ['use_trans_sid'=>1, 'use_cookies'=>1, 'use_only_cookies'=>0];
 
-    public function __construct($options = [])
+    public function __construct()
     {
-        $this->options = $options + config('session') + ['use_trans_sid'=>1, 'use_cookies'=>1, 'use_only_cookies'=>0];
+        $this->options += config('session', []);
+        ini_set('session.auto_start', 0);
         if(isset($this->options['auto_start'])){
-           ini_set('session.auto_start', $this->options['auto_start']);
-           if($this->options['auto_start']) {
-                unset($this->options['auto_start']);
+            if(strtolower($this->options['auto_start']) != 'off' && boolval($this->options['auto_start'])){
                 $this->start();
-           }        
+            }
         }
     }
 
     /**
      * {@inheritdoc}
      */
-    public function start($options = [])
+    public function start(array $options = [])
     {        
         if ($this->status()) {
             throw new \RuntimeException('Failed to start the session: already started.');
@@ -47,51 +45,31 @@ class Session implements \IteratorAggregate, \Countable
         if (ini_get('session.use_cookies') && headers_sent($file, $line)) {
             throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
-        
-        session_start($options + $this->options);
+
+        $this->options += $options;
+        unset($this->options['auto_start']);
+        session_start($this->options);
         return $this;
     }
 
-    /**
-     * [sessionHandler]
-     *
-     * @param string $handler
-     * @param array $options
-     * @return mixed
-     */
-    // protected function sessionHandler($handler)
-    // {
-    //     if($this->handler instanceof \SessionHandlerInterface){
-    //        return $this->handler;
-    //     }
-    //     if(!in_array($handler, $handlers = array('null', 'files', 'redis', 'memcache', 'memcached'))){
-    //         throw new \InvalidArgumentException('Invalid '.$handler.' session handler, only supports  '. implode(',', $handlers));
-    //     }
-    //     app()->alias(__NAMESPACE__.'\\Session\\'.ucfirst($handler).'SessionHandler','session.'.$handler);
-    //     session_set_save_handler($this->handler = app('session.'. $handler), false);
-    //     return $this->handler;
-    // }
 
     /**
      * Get or regenerate current session ID.
-     *
      * @param bool $newId
-     *
      * @return string|self
      */
     public function id($id = null)
     {
-        return  $id && session_id($id) === '' ? $this : session_id();
+        return $id && session_id($id) === '' ? $this : session_id();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function has($key)
+    public function has($keys)
     {
-        $keys = is_array($key) ? $key : func_get_args();
-
-        return \Arr::exists($_SESSION, $keys);
+        $keys = is_array($keys) ? $keys : func_get_args();
+        return count(array_intersect($keys,array_keys($_SESSION)));
     }
 
     /**
@@ -140,7 +118,7 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function all()
     {
-        return isset($_SESSION) ? $_SESSION : array();
+        return $_SESSION ?? array();
     }
 
     /**
@@ -219,8 +197,10 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function remove($key)
     {
-        $key = is_array($key) ? $key : func_get_args();
-        return \Arr::forget($_SESSION, $key);
+        $keys = is_array($key) ? $key : func_get_args();
+        foreach($keys as $key){
+            unset($_SESSION[$key]);
+        }
     }
 
     /**
@@ -296,7 +276,7 @@ class Session implements \IteratorAggregate, \Countable
      * @param bool $delete 是否删除关联会话文件
      * @return bool
      */
-    public function regenerate($delete = false)
+    public function regenerate($delete = true)
     {
        return session_regenerate_id($delete);
     }
