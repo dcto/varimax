@@ -10,11 +10,10 @@
 
 namespace VM\Http;
 
-
 /**
  * @package Session
  */
-class Session implements \IteratorAggregate, \Countable
+class Session implements \Countable, \JsonSerializable, \IteratorAggregate
 {
     /**
      * @see http://php.net/session.configuration
@@ -24,7 +23,7 @@ class Session implements \IteratorAggregate, \Countable
 
     public function __construct()
     {
-        $this->options += config('session', []);
+        $this->options = array_replace($this->options, config('session', []));
         ini_set('session.auto_start', 0);
         if(isset($this->options['auto_start'])){
             if(strtolower($this->options['auto_start']) != 'off' && boolval($this->options['auto_start'])){
@@ -46,7 +45,7 @@ class Session implements \IteratorAggregate, \Countable
             throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
 
-        $this->options += $options;
+        $this->options = array_replace($this->options, $options);
         unset($this->options['auto_start']);
         session_start($this->options);
         return $this;
@@ -60,7 +59,7 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function id($id = null)
     {
-        return $id && session_id($id) === '' ? $this : session_id();
+        return $id && session_id($id)=='' ? $this : session_id();
     }
 
     /**
@@ -233,7 +232,7 @@ class Session implements \IteratorAggregate, \Countable
      */
     public function count() : int
     {
-        return count($_SESSION);
+        return count($this->all());
     }
 
     /**
@@ -290,13 +289,21 @@ class Session implements \IteratorAggregate, \Countable
     }
 
     /**
+     * @return string
+     */
+    public function jsonSerialize()
+    {
+        return json_encode($this->all(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
      * Returns an iterator for attributes.
      *
      * @return \ArrayIterator An \ArrayIterator instance
      */
     public function getIterator() : \ArrayIterator
     {
-        return new \ArrayIterator($_SESSION);
+        return new \ArrayIterator($this->all());
     }
 
     /**
