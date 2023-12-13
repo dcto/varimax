@@ -37,17 +37,18 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
      */
     public function start(array $options = [])
     {        
-        if ($this->status()) {
-            throw new \RuntimeException('Failed to start the session: already started.');
-        }
+        if ($this->status()) throw new \RuntimeException('Failed to start the session: already started.');
 
-        if (ini_get('session.use_cookies') && headers_sent($file, $line)) {
+        $this->options = array_replace($this->options, $options);
+
+        unset($this->options['auto_start']);
+
+        if ($this->config('use_cookies') && headers_sent($file, $line)) {
             throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
 
-        $this->options = array_replace($this->options, $options);
-        unset($this->options['auto_start']);
         session_start($this->options);
+
         return $this;
     }
 
@@ -63,7 +64,8 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * {@inheritdoc}
+     * @param string|array $keys
+     * @return int
      */
     public function has($keys)
     {
@@ -72,7 +74,9 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * {@inheritdoc}
+     * @param string|array|int|null $key
+     * @param mixed $default
+     * @return string|array|null
      */
     public function get($key, $default = null)
     {
@@ -83,7 +87,9 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * {@inheritdoc}
+     * @param string $key
+     * @param string $value
+     * @return self
      */
     public function set($key, $value)
     {
@@ -113,7 +119,7 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * {@inheritdoc}
+     * @return array
      */
     public function all()
     {
@@ -180,9 +186,9 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
         $this->flash('_old_input', $value);
     }
     /**
-     * delete alias
+     * remove alias
      * @param $key
-     * @return mixed
+     * @return self
      */
     public function delete($key)
     {
@@ -191,8 +197,8 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
 
     /**
      * remove session
-     *
      * @param string $key
+     * @return self
      */
     public function remove($key)
     {
@@ -200,15 +206,18 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
         foreach($keys as $key){
             unset($_SESSION[$key]);
         }
+        return $this;
     }
 
     /**
-     * @param array $attribute
+     * @param array|string $key
+     * @param null|mixed $value
      * @return bool
      */
-    public function replace(array $attribute)
+    public function replace($key, $value = null)
     {
-        foreach($attribute as $k=>$v) {
+        $key = is_array($key) ? $key : [$key=>$value];
+        foreach($key as $k=>$v) {
             $this->set($k, $v);
         }
         return $this;
@@ -216,7 +225,8 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
 
 
     /**
-     * 迁移Session
+     * migrate session
+     * @todo how to do it's
      * @param bool $destroy
      * @param null $lifetime
      */
@@ -226,8 +236,17 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
+     * Get config
+     * @param mixed $key 
+     * @return mixed 
+     */
+    public function config($key = null)
+    {
+        return $key ? $this->options[$key] ?? null : $this->options;
+    }
+
+    /**
      * Returns the number of attributes.
-     *
      * @return int The number of attributes
      */
     public function count() : int
@@ -257,13 +276,13 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
      */
     public function destroy()
     {
-        if($this->status()){
-            session_unset();
-            session_destroy();
-            session_write_close();
-            session_abort();
-        }
-        if (ini_get('session.use_cookies')) {
+        if(!$this->status()) throw new \RuntimeException('Failed destroy session: has not started');
+        session_unset();
+        session_destroy();
+        session_write_close();
+        session_abort();
+        
+        if ($this->config('use_cookies')) {
             $params = session_get_cookie_params();
             setcookie(session_name(), '',time() - 4200, $params['path'],$params['domain'],$params['secure'],$params['httponly']);
         }
@@ -271,7 +290,7 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * 重新生成session_id
+     * regenerate session_id
      * @param bool $delete 是否删除关联会话文件
      * @return bool
      */
@@ -281,7 +300,7 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     }
 
     /**
-     * {@inheritdoc}
+     * @return int
      */
     public function status()
     {
