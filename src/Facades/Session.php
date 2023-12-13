@@ -5,25 +5,24 @@ use Illuminate\Support\Facades\Facade;
 /**
  * Class Session
  *
- * @method static \VM\Http\Session start($handler = null)
- * @method static \VM\Http\Session id($session_id = null)
- * @method static \VM\Http\Session setId($session_id)
- * @method static \VM\Http\Session getId($session_id)
- * @method static \VM\Http\Session has(string $name)
- * @method static \VM\Http\Session get(string $name, mixed $default = null)
- * @method static \VM\Http\Session set(string $name, mixed $value)
- * @method static \VM\Http\Session del(string $name)
- * @method static \VM\Http\Session all()
+ * @method static \VM\Http\Session start(array $options = [])
+ * @method static \VM\Http\Session id($session_id = null) Get and Set Session id
+ * @method static int has(string|array ...$keys)
+ * @method static string|array|null get(string $key, mixed $default = null)
+ * @method static \VM\Http\Session set(string $key, mixed $value)
+ * @method static \VM\Http\Session del(string $key)
+ * @method static array all()
  * @method static \VM\Http\Session decode(string $session_data)
- * @method static \VM\Http\Session delete(string $name)
- * @method static \VM\Http\Session remove(string $name)
+ * @method static \VM\Http\Session delete(string $key)
+ * @method static \VM\Http\Session remove(string $key)
  * @method static \VM\Http\Session replace(array $attributes)
- * @method static \VM\Http\Session clear()
- * @method static \VM\Http\Session count()
- * @method static \VM\Http\Session flush()
- * @method static \VM\Http\Session destroy()
- * @method static \VM\Http\Session regenerate($delete = false)
- * @method static \VM\Http\Session isStarted()
+ * @method static array|string config($key = null) get session options
+ * @method static int count() count session
+ * @method static \VM\Http\Session flush() flush the all session
+ * @method static bool clear() clear the all session
+ * @method static bool destroy() destory the all session
+ * @method static bool regenerate($delete = false)
+ * @method static bool status() 
  */
 class Session extends Facade
 {
