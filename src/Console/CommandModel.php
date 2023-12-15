@@ -60,6 +60,7 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
                 }else{
                     \Schema::create($model->table(),fn($table)=>$model->schema($table));
                 }
+                $model->isDirty() && $model->save();
                 $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$table.'] success!'));
             }catch(\Exception $e){
                 $output->writeln(sprintf('<error>%s</error>',  $e->getMessage()));
