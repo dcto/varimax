@@ -34,14 +34,15 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
         $table = \DB::getTablePrefix().$model->table();
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$table.'] table dataset?(Y/n) ', false);
+        
 
         if ($helper->ask($input, $output, $question)) {
             try{
                 if(\Schema::hasTable($model->table())){
                     $dataset = $model->all();
-                        config('database.default') == 'mysql' && \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+                        \Schema::disableForeignKeyConstraints();
                         \Schema::dropIfExists($model->table());
-                        \Schema::create($model->table(),fn($table)=>$model->schema($table));
+                        \Schema::create($model->table(),fn($blueprint)=>$model->schema($blueprint));
                         try{
                             $model->insert($dataset->toArray());
                         }catch(\Exception $e){
@@ -58,7 +59,7 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
                             throw $e;
                         }
                 }else{
-                    \Schema::create($model->table(),fn($table)=>$model->schema($table));
+                    \Schema::create($model->table(),fn($blueprint)=>$model->schema($blueprint));
                 }
                 $model->isDirty() && $model->save();
                 $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$table.'] success!'));
