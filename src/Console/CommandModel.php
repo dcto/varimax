@@ -31,40 +31,42 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
          * @var \VM\Model
          */
         $model = sprintf("App\\Model\\%s", \Str::studly($input->getArgument('name')))::getModel();
-        $table = \DB::getTablePrefix().$model->table();
         $helper = $this->getHelper('question');
-        $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$table.'] table dataset?(Y/n) ', false);
+        $question = new ConfirmationQuestion('Continue with this action?, that\'s will to erase the ['.$model->table().'] table dataset?(Y/n) ', false);
         
-
+        /**
+         * @var \Illuminate\Database\Schema\Builder
+         */
+        $schema = \Schema::getFacadeRoot();
+        $schema->disableForeignKeyConstraints();
+        $schema->blueprintResolver(function($table, \Closure $callback = null){
+            return make(\Blueprint::class, compact('table', 'callback'));
+        });
+        
+        $dataset = null;
         if ($helper->ask($input, $output, $question)) {
             try{
-                if(\Schema::hasTable($model->table())){
+                if($schema->hasTable($model->table())){
                     $dataset = $model->all();
-                        \Schema::disableForeignKeyConstraints();
-                        \Schema::dropIfExists($model->table());
-                        \Schema::create($model->table(),fn($blueprint)=>$model->schema($blueprint));
-                        try{
-                            $model->insert($dataset->toArray());
-                        }catch(\Exception $e){
-                            $sqlStatements = null;
-                            $dataset->each(function($item) use (&$sqlStatements, $table){
-                                $item = $item->toArray();
-                                $sqlStatements .= sprintf('INSERT INTO `'.$table.'` (`%s`) VALUES (\'%s\');'.PHP_EOL, join('`,`', array_keys($item)), join('\',\'', array_values($item)) );
-                            });
-
-                            if($sqlStatements){
-                                file_put_contents($cacheFile = runtime('schema', $table, time().'.sql'), $sqlStatements);
-                                $output->writeln(sprintf("<comment>The `$table` dataset cache to `$cacheFile`</comment>",  $e->getMessage()));
-                            }
-                            throw $e;
-                        }
-                }else{
-                    \Schema::create($model->table(),fn($blueprint)=>$model->schema($blueprint));
+                    $schema->dropIfExists($model->table());
                 }
+                $schema->create($model->table(), fn($blueprint)=>$model->schema($blueprint)) ;
+            
+                $dataset && $model->insert($dataset->toArray());
                 $model->isDirty() && $model->save();
-                $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$table.'] success!'));
+                $output->writeln(sprintf('<info>%s</info>', 'up to table ['.$model->table().'] success!'));
             }catch(\Exception $e){
-                $output->writeln(sprintf('<error>%s</error>',  $e->getMessage()));
+                if($dataset){
+                    $datafile = runtime('schema', $model->table(), time().'.sql');
+                    $dataset->each(function($item) use ($model, $datafile){
+                        $item = $item->toArray();
+                        $sql = sprintf('INSERT INTO `'.$model->table().'` (`%s`) VALUES (\'%s\');'.PHP_EOL, join('`,`', array_keys($item)), join('\',\'', array_values($item)) );
+                        file_put_contents($datafile, $sql, FILE_APPEND);
+                    });
+                    $output->writeln(sprintf("<comment>The `$model->table()` dataset cache to `$datafile `</comment>",  $e->getMessage()));
+                }
+                $output->writeln(sprintf('<error>%s</error>',  $e));
+
                 return 1;
             }
 
