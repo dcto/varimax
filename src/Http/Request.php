@@ -18,10 +18,17 @@ use Symfony\Component\HttpFoundation\ParameterBag;
 
 class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 {
+
     /**
-     * Create Global Form
+     * @param array|null                $query      The GET parameters
+     * @param array|null                $request    The POST parameters
+     * @param array|null                $attributes The request attributes (parameters parsed from the PATH_INFO, ...)
+     * @param array|null                $cookies    The COOKIE parameters
+     * @param array|null                $files      The FILES parameters
+     * @param array|null                $server     The SERVER parameters
+     * @param string|resource|null $content    The raw body data
      */
-    public function __construct()
+    public function __construct(array $query = null, array $request = null, array $attributes = null, array $cookies = null, array $files = null, array $server = null, $content = null)
     {
         /**
          * Dectect The PHP_SAPI Runing Mode
@@ -34,14 +41,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 $_SERVER['CONTENT_TYPE'] = $_SERVER['HTTP_CONTENT_TYPE'];
             }
         }
-
         /**
-         * Initialize The Request Global Form
+         * Initialize Request
          */
-        parent::__construct($_GET, $_POST, [], $_COOKIE, $_FILES, $_SERVER);
+        $this->initialize($query ?? $_GET, $request ?? $_POST, $attributes ?? [], $cookies ?? $_COOKIE, $files ?? $_FILES, $server ?? $_SERVER, $content);
 
         /**
-         * Plan To Catch Request Source With From Content Type
+         * Format Request Source
          */
         $this->getRequestSource();
     }
