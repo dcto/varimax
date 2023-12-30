@@ -23,7 +23,8 @@
     "psr-4": {"VM\\": "src"}
   },
   "bin": [
-    "bin/varimax.php"
+    "bin/varimax.php",
+    "bin/server.php"
   ],
   "config": {
     "preferred-install": "dist"
