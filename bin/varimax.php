@@ -8,7 +8,7 @@ defined('_VM_') || define('_VM_',dirname(__DIR__, 1));
 defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 
 //define _DOC_ constants to document root
-defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? dirname(__DIR__, 4) : dirname($_SERVER['DOCUMENT_ROOT']));
+defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? getcwd() : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
 defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? 'app' : $app);
@@ -28,7 +28,7 @@ defined('_RUNTIME_') || define('_RUNTIME_', _ROOT_._DS_.'runtime');
 /**
  * Autoloader
  */
-$loader = require('./vendor/autoload.php');
+$loader = require(_DOC_._DS_.'vendor'._DS_.'autoload.php');
 
 //Set App Psr
 $loader->setPsr4("App\\", _DIR_);
