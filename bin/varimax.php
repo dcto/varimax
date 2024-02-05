@@ -28,7 +28,7 @@ defined('_RUNTIME_') || define('_RUNTIME_', _ROOT_._DS_.'runtime');
 /**
  * Autoloader
  */
-$loader = require(_ROOT_._DS_.'vendor'._DS_.'autoload.php');
+$loader = require('./vendor/autoload.php');
 
 //Set App Psr
 $loader->setPsr4("App\\", _DIR_);
