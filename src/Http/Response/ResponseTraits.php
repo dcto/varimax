@@ -259,6 +259,6 @@ trait ResponseTraits {
      */
     public function getReasonPhrase(): string
     {
-        return $this->getResponse()->getReasonPhrase();
+        return $this->getResponse()::$statusTexts[$this->getStatusCode()];
     }
 }

@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
-
+// use Symfony\Bridge\PsrHttpMessage\Factory\HttpFoundationFactory;
 /**
  * Class Response
  * @package VM\Http
@@ -35,6 +35,7 @@ class Response implements ResponseInterface
      */
     public function __construct()
     {
+        // $this->response = (new HttpFoundationFactory())->createResponse($psrResponse);
         $this->headers = new ResponseHeaderBag();
     }
 
