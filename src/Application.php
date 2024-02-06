@@ -31,7 +31,7 @@ class Application extends \Illuminate\Container\Container
         static::$instance->registerServiceProviders();
 
         \App::setFacadeApplication(static::$instance);
-    
+
         PHP_SAPI == 'cli' ? static::$instance->cli() : static::$instance->run();
     }
 
@@ -162,12 +162,12 @@ class Application extends \Illuminate\Container\Container
      * Dispatch Request To Response 
      * @return \VM\Http\Response
      */
-    protected function run()
+    public function run()
     {
-        return $this->router->through(app_dir('routes'),  function($route){
+        $this->router->through(app_dir('routes'),  function($route){
             (new \VM\Pipeline($this))->send($this->request)
             ->through(array_replace((array) $this['config']['pipeline'], $route->pipeline))
-            ->then(fn()=>$this->call($route->callable(), $route->args()))->prepare($this->request)->send();
+            ->then(fn()=>$this->call($route->callable(), $route->args()))->prepare($this->request);
         });
     }
 }
