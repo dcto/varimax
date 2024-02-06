@@ -151,7 +151,20 @@ class Application extends \Illuminate\Container\Container
     }
 
     /**
-     * Dispatch Cli Mode Request
+     * Dispatch Request To Response 
+     * @return \VM\Http\Response
+     */
+    public function dispatch()
+    {
+        return $this->router->through(app_dir('routes'),  function($route){
+            return (new \VM\Pipeline($this))->send($this->request)
+            ->through(array_replace((array) $this['config']['pipeline'], $route->pipeline))
+            ->then(fn()=>$this->call($route->callable(), $route->args()));
+        });
+    }
+
+    /**
+     * Dispatch To Cli Mode 
      */
     protected function cli()
     {
@@ -159,15 +172,11 @@ class Application extends \Illuminate\Container\Container
     }
 
     /**
-     * Dispatch Request To Response 
-     * @return \VM\Http\Response
+     * Dispatch To Cli Mode 
      */
-    public function run()
+    protected function run()
     {
-        $this->router->through(app_dir('routes'),  function($route){
-            (new \VM\Pipeline($this))->send($this->request)
-            ->through(array_replace((array) $this['config']['pipeline'], $route->pipeline))
-            ->then(fn()=>$this->call($route->callable(), $route->args()))->prepare($this->request);
-        });
+        $this->dispatch()->prepare($this->request)->send();
     }
+    
 }
