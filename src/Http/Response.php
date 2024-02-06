@@ -213,7 +213,7 @@ class Response implements ResponseInterface
      * 
      * @return BaseResponse|JsonResponse|RedirectResponse|BinaryFileResponse
      */
-    protected function getResponse()
+    public function getResponse()
     {
         return $this->response;
     }
@@ -223,7 +223,7 @@ class Response implements ResponseInterface
      * 
      * @return self it's an object that , or maybe it's a proxy class
      */
-    protected function setResponse(BaseResponse $response)
+    public function setResponse(BaseResponse $response)
     {
         $this->response = $response;
         return $this;
