@@ -904,6 +904,18 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+    * Set Pathinfo
+    * @param  string $path 
+    * @return self 
+    * @version 20240206
+    */
+    public function setPathinfo($path)
+    {
+        $this->pathInfo = $path;
+        return $this;
+    }
+
+    /**
      * Convert the given array
      *
      * @param  array  $files

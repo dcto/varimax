@@ -58,6 +58,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string segment()
  * @method static mixed segments()
  * @method static bool secure()
+ * @method static \VM\Http\Request setPathinfo(string $path)
  * @method static \VM\Http\Request\Upload file(string $key = null, mixed $default = null)
  * @method static \VM\Http\Request\Upload files(string|array $name = null)
  *
