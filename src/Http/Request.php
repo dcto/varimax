@@ -47,9 +47,9 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $this->initialize($query ?? $_GET, $request ?? $_POST, $attributes ?? [], $cookies ?? $_COOKIE, $files ?? $_FILES, $server ?? $_SERVER, $content);
 
         /**
-         * Format Request Source
+         * Format Request Content Source
          */
-        $this->getRequestSource();
+        $this->setContent();
     }
 
     /**
@@ -916,6 +916,24 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * Get Request Source With From Content Type
+     * @return void 
+     */
+    public function setContent($data = [])
+    {
+        switch ($this->getContentType()) {
+            case 'json':
+                $data = json_decode($this->getContent(), true);
+                break;
+            case 'form':
+                if (in_array($this->method, array('PUT', 'DELETE', 'PATCH'))){
+                    parse_str($this->getContent(), $data);
+                }
+                break;
+        }
+        $data && $this->request->add($data);
+    }
+    /**
      * Convert the given array
      *
      * @param  array  $files
@@ -968,29 +986,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     protected function getInputSource()
     {
         return $this->method('GET') ? $this->query : $this->request;
-    }
-
-    /**
-     * Get Request Source With From Content Type
-     * 
-     * @return ParameterBag|void 
-     * @throws \LogicException 
-     */
-    protected function getRequestSource()
-    {
-        /**
-         * application/json
-         */
-        if($this->getContentType() == 'json'){  
-            return $this->request = new HttpFoundation\ParameterBag((array) json_decode($this->getContent(), true));
-
-        /**
-         * application/x-www-form-urlencoded
-         */
-        }else if ($this->getContentType() == 'form' && in_array(strtoupper($this->server->get('REQUEST_METHOD', 'GET')), array('PUT', 'DELETE', 'PATCH'))) {
-            parse_str($this->getContent(), $data);
-            return $this->request = new HttpFoundation\ParameterBag($data);
-        }
     }
 
     /**
