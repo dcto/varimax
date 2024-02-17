@@ -111,7 +111,7 @@ class Log extends AbstractLogger
     {
         $this->options = array_merge($this->options, $options);
         $this->logLevelThreshold = $logLevelThreshold;
-        $this->root = rtrim($root ?: runtime($this->root), _DS_);
+        $this->root =  $root ?? runtime($this->root);
     }
 
     /**
@@ -213,9 +213,9 @@ class Log extends AbstractLogger
      * @param $stdOutPath
      * @return $this
      */
-    protected function setLogToStdOut($stdOutPath)
+    protected function setLogToStdOut($message)
     {
-        $this->logFile = $stdOutPath;
+        echo $message;
         return $this;
     }
 
@@ -227,7 +227,6 @@ class Log extends AbstractLogger
     {
         $logDir = dirname($this->logFile());
         if (strpos($logDir, 'php://') === 0) {
-            $this->setLogToStdOut($logDir);
             $this->setFileHandle('w+');
         } else {
             if (!is_dir($logDir)) {
@@ -295,7 +294,7 @@ class Log extends AbstractLogger
             return $this;
         }
         $message = $this->formatMessage($level, $message, $context);
-
+        $this->setLogToStdOut($message);
         $this->write($message);
 
         $this->close();
