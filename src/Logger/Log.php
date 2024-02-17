@@ -221,7 +221,7 @@ class Log extends AbstractLogger
      */
     protected function setLogToStdOut($stdOutPath)
     {
-        $this->LogFile = $stdOutPath;
+        $this->logFile = $stdOutPath;
         return $this;
     }
 
