@@ -89,7 +89,7 @@ class Router
         if (in_array($method = strtoupper($method), array_merge($this->methods, ['ANY']))) {
             return $this->register($method, array_shift($args), array_shift($args));
         }else{
-            throw new \InvalidArgumentException('Invalid Call Router::'.$method);
+            throw new \InvalidArgumentException('Bad Reqeust', 400);
         }
     }
 
@@ -317,7 +317,7 @@ class Router
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
         //Disable Request when xss or sql inject
-        if($path !== $request->path()) throw new \InvalidArgumentException('403 Bad Request');
+        if($path !== $request->path()) throw new \InvalidArgumentException('Forbidden', 403);
 
         // Get Route in the Routes stack
         $this->router = $this->routerTo($path);
@@ -326,7 +326,7 @@ class Router
         if(!$this->router) throw new NotFoundException('Unknown route ['.$path.']');
 
         // Check request method
-        if(!in_array($method = $request->method(), $this->router->methods())) throw new NotFoundException('Invalid Request Method');
+        if(!in_array($method = $request->method(), $this->router->methods())) throw new \InvalidArgumentException('Bad Request', 400);
 
         // Set Route method;
         $this->router->method($method);
@@ -339,7 +339,6 @@ class Router
      * @param $path
      * @param $method
      * @return Route
-     * @throws NotFoundException
      */
     protected function routerTo($path)
     {
