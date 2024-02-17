@@ -320,7 +320,7 @@ class Router
         if($path !== $request->path()) throw new \InvalidArgumentException('403 Bad Request');
 
         // Get Route in the Routes stack
-        $this->router = $this->callRouter($path);
+        $this->router = $this->routerTo($path);
 
         // Found a valid Route; process it.
         if(!$this->router) throw new NotFoundException('Unknown route ['.$path.']');
@@ -341,7 +341,7 @@ class Router
      * @return Route
      * @throws NotFoundException
      */
-    protected function callRouter($path)
+    protected function routerTo($path)
     {
         if(isset($this->routes[$path])) {
             return $this->routes[$path];
