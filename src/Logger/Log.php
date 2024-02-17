@@ -12,14 +12,8 @@
 
 namespace VM\Logger;
 
-
-use DateTime;
-use RuntimeException;
 use Psr\Log\LogLevel;
 use Psr\Log\AbstractLogger;
-use Illuminate\Contracts\Support\Arrayable;
-use Illuminate\Contracts\Support\Jsonable;
-
 
 class Log extends AbstractLogger
 {
@@ -241,12 +235,12 @@ class Log extends AbstractLogger
             }
             $this->setFileHandle('a');
             if (file_exists($this->logFile()) && !is_writable($this->logFile())) {
-                throw new RuntimeException('The file could not be written to.['.$this->logFile().']');
+                throw new \RuntimeException('The file could not be written to.['.$this->logFile().']');
             }
         }
 
         if (!$this->fileHandle) {
-            throw new RuntimeException('Check permissions of file. ['.$this->logFile().']');
+            throw new \RuntimeException('Check permissions of file. ['.$this->logFile().']');
         }
 
         return $this;
@@ -319,7 +313,7 @@ class Log extends AbstractLogger
     {
         $this->setLogHandle();
         if (fwrite($this->fileHandle, $message) === false) {
-            throw new RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
+            throw new \RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
         } else {
             $this->lastLine = trim($message);
             $this->logLineCount++;
@@ -362,9 +356,9 @@ class Log extends AbstractLogger
     {
         if (is_array($message)) {
             $message = var_export($message, true);
-        } elseif ($message instanceof Jsonable) {
-            $message = $message->toJson();
-        } elseif ($message instanceof Arrayable) {
+        } elseif ($message instanceof \JsonSerializable) {
+            $message = $message->jsonSerialize();
+        } elseif ($message instanceof \ArrayAccess) {
             $message = var_export($message->toArray(), true);
         } else {
             $message = (string) $message;
@@ -404,10 +398,7 @@ class Log extends AbstractLogger
      */
     private function getTimestamp()
     {
-        // $originalTime = microtime(true);
-        // $micro = sprintf("%06d", ($originalTime - floor($originalTime)) * 1000000);
-        // $date = new DateTime(date('Y-m-d H:i:s.' . $micro, $originalTime));
-        return (new DateTime())->format($this->options['dateFormat']);
+        return (new \DateTime())->format($this->options['dateFormat']);
     }
 
     /**
