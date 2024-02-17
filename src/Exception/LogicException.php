@@ -13,7 +13,7 @@ namespace VM\Exception;
 
 class LogicException extends \LogicException
 {
-    protected $status = 500;
+    protected $code = 500;
 
     protected $message = 'Logic Exception!';
 }

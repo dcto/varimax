@@ -18,7 +18,7 @@ namespace VM\Exception;
  */
 class FatalError extends \RuntimeException
 {
-    protected $status = 500;
+    protected $code = 500;
 
     protected $message = 'Fatal Error!';
 }

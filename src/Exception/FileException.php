@@ -16,9 +16,9 @@ namespace VM\Exception;
  *
  * @package VM\Exception
  */
-class FileException extends Error
+class FileException extends \Error
 {
-    protected $status = 403;
+    protected $code = 403;
 
     protected $message = 'File Error!';
 }

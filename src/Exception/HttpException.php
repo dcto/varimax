@@ -19,7 +19,7 @@ namespace VM\Exception;
  */
 class HttpException extends \RuntimeException
 {
-    protected $status = 500;
+    protected $code = 500;
 
     protected $message = 'HTTP Error!';
 }

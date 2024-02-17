@@ -11,9 +11,9 @@
 
 namespace VM\Exception;
 
-class SystemException extends Error
+class SystemException extends \Error
 {
-    protected $status = 500;
+    protected $code = 500;
 
     protected $message = 'The Varimax System Error';
 }

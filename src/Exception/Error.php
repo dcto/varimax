@@ -13,7 +13,7 @@ class Error extends \Exception
      *
      * @var int
      */
-    protected $status = 500;
+    protected $code = 500;
 
     /**
      * HTTP Exception Message

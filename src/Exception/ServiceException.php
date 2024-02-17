@@ -11,9 +11,9 @@
 
 namespace VM\Exception;
 
-class ServiceException extends Error
+class ServiceException extends \Error
 {
-    protected $status = 501;
+    protected $code = 501;
 
     protected $message = 'The service was error';
 }
