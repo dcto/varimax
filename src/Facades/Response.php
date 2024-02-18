@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \VM\Http\Response withHeader(string $name, string $value)
  * @method static \VM\Http\Response withHeaders(...$headers)
  * @method static \VM\Http\Response cookie(string $name, string $Value)
+ * @method static array getCookies() 
  * @method static \VM\Http\Response withCookie(string $name, string $value)
  */
 class Response extends Facade
