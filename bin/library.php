@@ -271,6 +271,37 @@ if(!function_exists('DB')) {
     }
 }
 
+if (! function_exists('co')) {
+    /**
+     * @return bool|int
+     */
+    function co(callable $callable)
+    {
+        $id = \Swoole\Coroutine::create($callable);
+        return $id > 0 ? $id : false;
+    }
+}
+
+if (! function_exists('go')) {
+    /**
+     * @return bool|int
+     */
+    function go(callable $callable)
+    {
+        return co($callable);
+    }
+}
+
+if (! function_exists('defer')) {
+    /**
+     * @return void
+     */
+    function defer(callable $callable): void
+    {
+        \Swoole\Coroutine::defer($callable);
+    }
+}
+
 if(!function_exists('javascript')) {
     /**
      * javascript output
