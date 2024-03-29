@@ -302,6 +302,25 @@ if (! function_exists('defer')) {
     }
 }
 
+if (! function_exists('WaitGroup')) {
+    /**
+     * @return \Swoole\Coroutine\WaitGroup
+     */
+    function WaitGroup($delta = 0)
+    {
+        new \Swoole\Coroutine\WaitGroup($delta);
+    }
+}
+
+if (! function_exists('wg')) {
+    /**
+     * @return \Swoole\Coroutine\WaitGroup
+     */
+    function wg($delta = 0) {
+        return WaitGroup($delta);
+    }   
+}
+
 if(!function_exists('javascript')) {
     /**
      * javascript output
