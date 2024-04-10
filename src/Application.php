@@ -168,7 +168,9 @@ class Application extends \Illuminate\Container\Container
      */
     protected function cli()
     {
-        _APP_ == 'varimax' && $this->registerConsoleCommand();
+        if (basename($_SERVER['SCRIPT_FILENAME']) == 'varimax.php'){
+            $this->registerConsoleCommand();
+        }
     }
 
     /**
