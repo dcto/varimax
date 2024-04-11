@@ -11,8 +11,7 @@ defined('_DS_') || define('_DS_', DIRECTORY_SEPARATOR);
 defined('_DOC_') || define('_DOC_', PHP_SAPI == 'cli' ? getcwd() : dirname($_SERVER['DOCUMENT_ROOT']));
 
 //define _APP_ constants of app name
-defined('_APP_') || define('_APP_', 'app');
-// defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? 'app' : $app);
+defined('_APP_') || define('_APP_', ($app = basename($_SERVER['SCRIPT_FILENAME'],'.php')) == 'index' ? 'app' : $app);
 
 //define _DIR_ constants of app root path
 defined('_DIR_') || define('_DIR_', _DOC_._DS_._APP_);
