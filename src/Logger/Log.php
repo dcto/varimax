@@ -9,7 +9,6 @@
  * SITE: https://www.varimax.cn/
  */
 
-
 namespace VM\Logger;
 
 use Psr\Log\LogLevel;
@@ -17,6 +16,11 @@ use Psr\Log\AbstractLogger;
 
 class Log extends AbstractLogger
 {
+
+    /**
+     * @var \VM\Application
+     */
+    private $app;
 
     /**
      * logs root dir
@@ -35,7 +39,6 @@ class Log extends AbstractLogger
      * @var string
      */
     private $logFile;
-
 
     /**
      * options
@@ -107,11 +110,11 @@ class Log extends AbstractLogger
      * @internal param string $logFilePrefix The prefix for the log file name
      * @internal param string $logFileExt The extension for the log file
      */
-    public function __construct($root = null, $logLevelThreshold = LogLevel::DEBUG, array $options = array())
+    public function __construct($root = null, $logLevelThreshold = LogLevel::DEBUG)
     {
-        $this->options = array_merge($this->options, $options);
+        $this->app = \VM\Application::getInstance();
+        $this->root = $root ?? runtime($this->root);
         $this->logLevelThreshold = $logLevelThreshold;
-        $this->root =  $root ?? runtime($this->root);
     }
 
     /**
@@ -213,9 +216,9 @@ class Log extends AbstractLogger
      * @param $stdOutPath
      * @return $this
      */
-    protected function setLogToStdOut($message)
+    protected function stdout($message)
     {
-        echo $message;
+        printf(PHP_EOL.'%s'.PHP_EOL, $message);
         return $this;
     }
 
@@ -294,7 +297,11 @@ class Log extends AbstractLogger
             return $this;
         }
         $message = $this->formatMessage($level, $message, $context);
-        $this->setLogToStdOut($message);
+        
+        if (PHP_SAPI == 'cli' && getenv('DEBUG')) {
+            $this->stdout($message);
+        }
+        
         $this->write($message);
 
         $this->close();
