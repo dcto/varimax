@@ -16,12 +16,6 @@ use Psr\Log\AbstractLogger;
 
 class Log extends AbstractLogger
 {
-
-    /**
-     * @var \VM\Application
-     */
-    private $app;
-
     /**
      * logs root dir
      */
@@ -112,7 +106,6 @@ class Log extends AbstractLogger
      */
     public function __construct($root = null, $logLevelThreshold = LogLevel::DEBUG)
     {
-        $this->app = \VM\Application::getInstance();
         $this->root = $root ?? runtime($this->root);
         $this->logLevelThreshold = $logLevelThreshold;
     }
