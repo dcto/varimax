@@ -52,6 +52,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         $this->setContent();
     }
 
+
     /**
      * 构建URL参数
      * 符号说明: / 构建path路径
@@ -62,20 +63,31 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @example url('/abc', 'a','b', ['c','d'], ...$args);
      * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
      * @example url('@index');  url('@index', ...$args); url('@', 'index', ...$args) ;
+     * @example url('@items.list', 333, '/type/cat', '?user=admin', ['page'=>1], ...$args);
      * @return string
      */
     public function url(...$args)
     {
-        $tags = array_shift($args);
-        if(!$tags) return rtrim($this->getBaseUrl().$this->getPathInfo(), '/');
-        
-        switch ($tags[0]) {
-            case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_scalar($v) ? $v : join('/',$v)), $tags);break;
-            case '?': $args = array_reduce($args, fn($arg, $v) => str_replace('?&', '?', $arg.'&').(is_scalar($v) ? $v : http_build_query($v)), $tags);break;
-            case '@': $args = app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@'))->url(...$args);break;
-            default: $args = join('',array_flat($args));
+        if (!$args) return rtrim($this->getBaseUrl().$this->getPathInfo(), '/');
+        $items = $tag = null;
+        foreach ($args as $arg) {
+            if (is_string($arg))  {
+                if(strstr('@/?',$t = substr($arg, 0, 1))){
+                    $tag = $t;
+                    $arg = ltrim($arg, $t);
+                }
+            }
+            $items[$tag][] = $arg;
         }
-        return $this->getBaseUrl().$args;
+        
+        return $this->getBaseUrl().array_reduce(array_keys($items), function($url, $k) use($items){
+            if ($k == '@') {
+                $url.= app('router')->route(array_shift($items[$k]))->url(...$items[$k]);
+            }else{
+                $url.= Uri::make($k, ...$items[$k]);
+            }
+            return $url;
+        });
     }
 
     /**
@@ -103,7 +115,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 case '~': $args = [array_intersect_key($this->query->all(), array_fill_keys(array_merge([ltrim($tags,'~')], array_flat($args)), 1) )];break;
                 default: $args = [];
             }
-        return $this->url('?', ...$args);
+        return $this->getBaseUrl(). Uri::make('?', ...$args);
     }
 
     /**
@@ -913,6 +925,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
         }
         $data && $this->request->add($data);
     }
+
+
+    protected function withUrl()
+    {
+
+    }
+
     /**
      * Convert the given array
      *

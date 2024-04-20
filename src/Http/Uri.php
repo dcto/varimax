@@ -429,6 +429,29 @@ class Uri implements UriInterface
         return $clone;
     }
 
+
+    /**
+     * 构建URL参数
+     * 符号说明: / 构建path路径
+     * 符号说明: ？添加query参数
+     * 符号说明: @ 获取指定路由url
+     * @param mixed ...$args 
+     * @example url() baseUrl
+     * @example url('/abc', 'a','b', ['c','d'], ...$args);
+     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
+     * @return string
+     */
+    public static function make(...$args)
+    {
+        $tags = array_shift($args);    
+        switch (substr($tags, 0, 1)) {
+            case '/': $args = array_reduce($args, fn($arg, $v) => str_replace('//', '/',$arg.'/').(is_scalar($v) ? $v : join('/',$v)), $tags);break;
+            case '?': $args = array_reduce($args, fn($arg, $v) => str_replace('?&', '?', $arg.'&').(is_scalar($v) ? $v : http_build_query($v)), $tags);break;
+            default: $args = join('',array_flat($args));
+        }
+        return $args;
+    }
+
     /**
      * Creates a new URI with a specific query string value.
      * Any existing query string values that exactly match the provided key are
