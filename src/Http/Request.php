@@ -59,25 +59,23 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 符号说明: @ 获取指定路由url
      * @param mixed ...$args 
      * @example url() baseUrl
-     * @example url('/abc', 'a','b');
-     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e');
+     * @example url('/abc', 'a','b', ['c','d'], ...$args);
+     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
      * @example url('@index');  url('@index', ...$args); url('@', 'index', ...$args) ;
      * @return string
      */
     public function url(...$args)
     {
         $tags = array_shift($args);
-        if($tags) {
-            $args = array_flat($args);
-            switch ($tags[0]) {
-                case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_array($v) ? join('/',$v) : $v), $tags);break;
-                case '?': $args = array_reduce($args, fn($arg, $v)=> $arg.'&'.(is_array($v) ? http_build_query($v) : $v), $tags);break;
-                case '@': $args = app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@'))->url(...$args);break;
-                default: $args = join('', $args);
-            }
-            return $this->baseUrl().$args;
+        if(!$tags) return rtrim($this->getBaseUrl().$this->getPathInfo(), '/');
+        
+        switch ($tags[0]) {
+            case '/': $args = array_reduce($args, fn($arg, $v)=> $arg.'/'.(is_scalar($v) ? $v : join('/',$v)), $tags);break;
+            case '?': $args = array_reduce($args, fn($arg, $v) => str_replace('?&', '?', $arg.'&').(is_scalar($v) ? $v : http_build_query($v)), $tags);break;
+            case '@': $args = app('router')->route($tags == '@' ? array_shift($args) : ltrim($tags,'@'))->url(...$args);break;
+            default: $args = join('',array_flat($args));
         }
-        return rtrim($this->baseUrl().$this->getPathInfo(), '/');
+        return $this->getBaseUrl().$args;
     }
 
     /**
@@ -97,33 +95,15 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function uri(...$args)
     {
         $tags = array_shift($args);
-        if($tags) {
-            $args = array_flat($args);
+        if(!$tags) return str_replace($this->root(), '', $this->getUri());
             switch ($tags[0]) {
-                case '&': $args = array_replace($this->query->all(), array_reduce($args, function($q, $arg) {
-                    return is_array($arg) ? $q+=$arg : (parse_str($arg, $v) ?? $q+=$v);
-                }, parse_str(trim($tags,'?&'), $tag) ?? $tag) );
-                break;
-
-                case '?': $args = array_reduce($args, function($q, $arg) {
-                    return is_array($arg)? $q+=$arg : (parse_str($arg, $v)?? $q+=$v);
-                }, parse_str(trim($tags,'?&'), $tag)?? $tag);
-                break;
-
-                case '!':
-                    $args = array_diff_key($this->query->all(), array_flip(array_merge($args, [ltrim($tags, '!')])));
-                break;
-
-                case '~': 
-                    $args = array_intersect_key($this->query->all(), array_flip( array_merge($args, [ltrim($tags, '~')]) ));
-                break;
-
-                default:
-                    $args = [];
+                case '?': array_unshift($args, ltrim($tags,'?')); break;
+                case '&': array_unshift($args, $this->query->all(), ltrim($tags,'&')); break;
+                case '!': $args = [array_diff_key($this->query->all(), array_fill_keys(array_merge([ltrim($tags,'!')], array_flat($args)), 1) )]; break;
+                case '~': $args = [array_intersect_key($this->query->all(), array_fill_keys(array_merge([ltrim($tags,'~')], array_flat($args)), 1) )];break;
+                default: $args = [];
             }
-            return $this->url().'?'.http_build_query($args);
-        }
-        return $this->getUri();
+        return $this->url('?', ...$args);
     }
 
     /**
