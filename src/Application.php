@@ -95,7 +95,7 @@ class Application extends \Illuminate\Container\Container
         array_map(function($abstract){
             $this->alias(__NAMESPACE__.'\\'.$abstract, strtolower(class_basename($abstract)));
         },['Config\Config','Cache\Cache','Crypt\Crypt','Routing\Router',
-            'Http\Request','Http\Response','Http\Session','Http\Cookie','Http\Curl\Curl',
+            'Http\Request','Http\Response','Http\Session','Http\Cookie','Http\Curl\Curl','Http\Uri',
             'I18n\Lang','Logger\Log','FileSystem\File']);
     }
 
