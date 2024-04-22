@@ -235,31 +235,8 @@ if(!function_exists('cookie')) {
     }
 }
 
-if(!function_exists('domain')){
-/**
- * Get domain with subdomain or null
- * @param mixed $host 
- * @return array|string|int|null|false 
- */
-function domain($host = null, $subDomain = true){
-    $host = $host ? trim($host, ' /') : $_SERVER['SERVER_NAME'];
-    $host = filter_var($host, FILTER_VALIDATE_URL) ? parse_url($host, PHP_URL_HOST) : $host;
 
-    if($subDomain || substr_count($host, '.') < 2 || filter_var($host, FILTER_VALIDATE_IP)){
-        return $host;
-    }else{
-        $ltd = strlen(pathinfo($host, PATHINFO_EXTENSION));
-        $host = explode('.', $host);
-        $domain = array();
-        array_unshift($domain, array_pop($host));
-        $ltd == 2 && array_unshift($domain, array_pop($host));
-        array_unshift($domain, array_pop($host));
-        return implode('.', $domain);
-    }
-}
-}
-
-if(!function_exists('DB')) {
+if(!function_exists('Db')) {
     /**
      * \DB::table function
      * @param $table
@@ -267,7 +244,7 @@ if(!function_exists('DB')) {
      */
     function DB($table)
     {
-        return \DB::table($table);
+        return \Db::table($table);
     }
 }
 
