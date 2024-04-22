@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\Facade;
 * @method static string getPath()
 * @method static string getQuery()
 * @method static string getFragment
-* @method static \VM\Http\Uri setUrl(mixed ...$args) 
+* @method static \VM\Http\Uri uri(string $uri = '') parse uri method
+* @method static \VM\Http\Uri set(mixed ...$args) ['/'=...$paths, '?'=...$params, '&'=...add $params, '!'=...del $params, '~'=...keep $params,  '#'=>...$fragment]
 * @method static \VM\Http\Uri withScheme(string $scheme)
 * @method static \VM\Http\Uri withUserInfo(string $user, string $password = null)
 * @method static \VM\Http\Uri withHost(string $host)

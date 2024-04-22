@@ -77,15 +77,22 @@ class Uri implements UriInterface
      */
     public function __construct($uri = '')
     {
-        // weak type check to also accept null until we can add scalar type hints
+        $this->uri($uri);
+    }
+
+    /**
+     * parse url and apply parts to object
+     */
+    public function uri($uri = '')
+    {
         if ($uri != '') {
             $parts = parse_url($uri);
             if ($parts === false) {
                 throw new \InvalidArgumentException("Unable to parse URI: {$uri}");
             }
-
             $this->applyParts($parts);
         }
+        return $this;
     }
 
     /**
@@ -286,7 +293,7 @@ class Uri implements UriInterface
     }
 
     /**
-     * setUrl for rebuild specified url paths and query parameters.
+     * set for rebuild specified url paths and query parameters.
      * symbol [/] replace url paths
      * symbol [?] repalce url query parameters
      * symbol [&] append query parameters
@@ -298,7 +305,7 @@ class Uri implements UriInterface
      * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
      * @return string
      */
-    public function setUrl(...$args)
+    public function set(...$args)
     {
         $tags = array_shift($args);    
         switch (substr($tags, 0, 1)) {
