@@ -4,6 +4,8 @@ namespace VM\Http;
 
 use Psr\Http\Message\UriInterface;
 
+use function Co\run;
+
 class Uri implements UriInterface
 {
     /**
@@ -286,24 +288,30 @@ class Uri implements UriInterface
     }
 
     /**
-     * Build specified url paths and query parameters.
-     * symbol [/] build url paths
-     * symbol [?] build url query parameters
+     * setUrl for rebuild specified url paths and query parameters.
+     * symbol [/] rebuild url paths
+     * symbol [?] rebuild url query parameters
      * @param mixed ...$args 
      * @example url() baseUrl
      * @example url('/abc', 'a','b', ['c','d'], ...$args);
      * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
      * @return string
      */
-    public static function make(...$args)
+    public function setUrl(...$args)
     {
         $tags = array_shift($args);    
         switch (substr($tags, 0, 1)) {
-            case '/': $args = array_reduce($args, fn($arg, $v) => str_replace('//', '/',$arg.'/').(is_scalar($v) ? $v : join('/',$v)), $tags);break;
-            case '?': $args = array_reduce($args, fn($arg, $v) => str_replace('?&', '?', $arg.'&').(is_scalar($v) ? $v : http_build_query($v)), $tags);break;
-            default: $args = join('',array_flat($args));
+            case '/': 
+               $paths = array_reduce($args, fn($arg, $v) => array_merge($arg, (array) $v), [trim($tags,'/')]); 
+               return $this->withPath(join('/', $paths));
+            break;
+            case '?': 
+                $query = array_reduce($args, fn($arg, $v) => $arg .'&'. (is_scalar($v) ? $v : http_build_query($v)), ltrim($tags,'?')); 
+                return $this->withQuery(trim($query, '&'));
+            break;
+
         }
-        return $args;
+        return $this;
     }
 
     /**
