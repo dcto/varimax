@@ -51,7 +51,6 @@ if(!function_exists('url')) {
     function url(...$args)
     {
         return app('request')->url(...$args);
-        //return call_user_func_array(array(app('request'), 'url'), func_get_args());
     }
 }
 
@@ -63,7 +62,6 @@ if(!function_exists('uri')) {
     function uri(...$args)
     {
         return app('request')->uri(...$args);
-        //return call_user_func_array(array(app('request'), 'uri'), func_get_args());
     }
 }
 
@@ -115,9 +113,7 @@ if(!function_exists('root')) {
      */
     function root(...$paths)
     {
-        return $paths ? _DOC_._DS_.join(_DS_, array_map(function($arg){
-            return trim($arg, _DS_);
-        }, $paths)) : _DOC_;
+        return _DOC_.array_reduce(array_flat($paths), fn($v, $p)=>$v.=_DS_.$p);
     }
 }
 
