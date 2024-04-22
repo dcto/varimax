@@ -289,8 +289,11 @@ class Uri implements UriInterface
 
     /**
      * setUrl for rebuild specified url paths and query parameters.
-     * symbol [/] rebuild url paths
-     * symbol [?] rebuild url query parameters
+     * symbol [/] replace url paths
+     * symbol [?] repalce url query parameters
+     * symbol [&] append query parameters
+     * symbol [!] remove query parameters
+     * symbol [~] keep query parameters
      * @param mixed ...$args 
      * @example url() baseUrl
      * @example url('/abc', 'a','b', ['c','d'], ...$args);
@@ -302,12 +305,25 @@ class Uri implements UriInterface
         $tags = array_shift($args);    
         switch (substr($tags, 0, 1)) {
             case '/': 
-               $paths = array_reduce($args, fn($arg, $v) => array_merge($arg, (array) $v), [trim($tags,'/')]); 
-               return $this->withPath(join('/', $paths));
+                $paths = array_reduce($args, fn($arg, $v) => array_merge($arg, (array) $v), [trim($tags,'/')]); 
+                return $this->withPath(join('/', $paths));
             break;
+
             case '?': 
                 $query = array_reduce($args, fn($arg, $v) => $arg .'&'. (is_scalar($v) ? $v : http_build_query($v)), ltrim($tags,'?')); 
                 return $this->withQuery(trim($query, '&'));
+            break;
+            
+            case '&': 
+                $query = array_reduce($args, fn($arg, $v)=>$arg .'&'. (is_scalar($v) ? $v : http_build_query($v)), trim($tags,'&'));
+                return $this->withQuery(trim($this->query.'&'.$query, '&'));
+            break;
+
+            case '!': 
+                $query = [];
+                parse_str($this->query, $query);
+                array_unshift($args, trim($tags, '!'));
+                return $this->withQuery(http_build_query(array_filter($query, fn($k) => !in_array($k, $args), ARRAY_FILTER_USE_KEY)));
             break;
 
         }
