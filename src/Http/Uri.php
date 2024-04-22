@@ -137,6 +137,16 @@ class Uri implements UriInterface
     }
 
     /**
+    * Parse domain without ltd from host
+    * @param  void 
+    * @return string
+    */
+    public function getDomain() {
+
+        return trim(substr($this->host, strpos($this->host, '.')), '.');
+    }
+
+    /**
      * Retrieve the authority component of the URI.
      * If no authority information is present, this method MUST return an empty
      * string.
@@ -273,6 +283,27 @@ class Uri implements UriInterface
     public function getFragment()
     {
         return $this->fragment;
+    }
+
+    /**
+     * Build specified url paths and query parameters.
+     * symbol [/] build url paths
+     * symbol [?] build url query parameters
+     * @param mixed ...$args 
+     * @example url() baseUrl
+     * @example url('/abc', 'a','b', ['c','d'], ...$args);
+     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
+     * @return string
+     */
+    public static function make(...$args)
+    {
+        $tags = array_shift($args);    
+        switch (substr($tags, 0, 1)) {
+            case '/': $args = array_reduce($args, fn($arg, $v) => str_replace('//', '/',$arg.'/').(is_scalar($v) ? $v : join('/',$v)), $tags);break;
+            case '?': $args = array_reduce($args, fn($arg, $v) => str_replace('?&', '?', $arg.'&').(is_scalar($v) ? $v : http_build_query($v)), $tags);break;
+            default: $args = join('',array_flat($args));
+        }
+        return $args;
     }
 
     /**
@@ -427,29 +458,6 @@ class Uri implements UriInterface
         $clone = clone $this;
         $clone->query = $query;
         return $clone;
-    }
-
-
-    /**
-     * 构建URL参数
-     * 符号说明: / 构建path路径
-     * 符号说明: ？添加query参数
-     * 符号说明: @ 获取指定路由url
-     * @param mixed ...$args 
-     * @example url() baseUrl
-     * @example url('/abc', 'a','b', ['c','d'], ...$args);
-     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
-     * @return string
-     */
-    public static function make(...$args)
-    {
-        $tags = array_shift($args);    
-        switch (substr($tags, 0, 1)) {
-            case '/': $args = array_reduce($args, fn($arg, $v) => str_replace('//', '/',$arg.'/').(is_scalar($v) ? $v : join('/',$v)), $tags);break;
-            case '?': $args = array_reduce($args, fn($arg, $v) => str_replace('?&', '?', $arg.'&').(is_scalar($v) ? $v : http_build_query($v)), $tags);break;
-            default: $args = join('',array_flat($args));
-        }
-        return $args;
     }
 
     /**
