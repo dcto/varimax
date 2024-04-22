@@ -4,8 +4,6 @@ namespace VM\Http;
 
 use Psr\Http\Message\UriInterface;
 
-use function Co\run;
-
 class Uri implements UriInterface
 {
     /**
