@@ -299,6 +299,7 @@ class Uri implements UriInterface
      * symbol [&] append query parameters
      * symbol [~] keep query parameters
      * symbol [!] remove query parameters
+     * symbol [#] replace fragment 
      * @param mixed ...$args 
      * @example url() baseUrl
      * @example url('/abc', 'a','b', ['c','d'], ...$args);
@@ -336,6 +337,11 @@ class Uri implements UriInterface
                 parse_str($this->query, $query);
                 array_unshift($args, trim($tags, '!'));
                 return $this->withQuery(http_build_query(array_filter($query, fn($k) => !in_array($k, $args), ARRAY_FILTER_USE_KEY)));
+            break;
+
+            case '#': 
+                $fragment = array_reduce($args, fn($arg, $v) => array_merge($arg, (array) $v), [trim($tags,'#')]); 
+                return $this->withFragment(join('', $fragment));
             break;
 
         }
