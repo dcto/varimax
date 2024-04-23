@@ -311,8 +311,8 @@ class Uri implements UriInterface
         $tags = array_shift($args);    
         switch (substr($tags, 0, 1)) {
             case '/': 
-                $paths = array_reduce($args, fn($arg, $v) => array_merge($arg, (array) $v), [trim($tags,'/')]); 
-                return $this->withPath(join('/', $paths));
+                $paths = array_reduce($args, fn($arg, $v) => array_merge($arg, (array) $v), [ltrim($tags, '/')]); 
+                return $this->withPath(rtrim($this->path,'/').'/'.join('/', $paths));
             break;
 
             case '?': 

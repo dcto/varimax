@@ -14,7 +14,6 @@ namespace VM\Http;
 use VM\Http\Request\Upload;
 use Symfony\Component\HttpFoundation;
 use Illuminate\Contracts\Support\Arrayable;
-use Symfony\Component\HttpFoundation\ParameterBag;
 
 class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 {
@@ -56,66 +55,40 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     /**
      * 构建URL参数
      * 符号说明: / 构建path路径
-     * 符号说明: ？添加query参数
+     * 符号说明: ? 重构URL参数
+     * 符号说明: & 附加URL参数
+     * 符号说明: ! 去除指定URL参数
+     * 符号说明: ~ 保留指定URL参数
      * 符号说明: @ 获取指定路由url
+     * 符号说明: # 设置URL锚点
      * @param mixed ...$args 
      * @example url() baseUrl
      * @example url('/abc', 'a','b', ['c','d'], ...$args);
-     * @example url('?test=demo', array('a'=>'b','c'=>'d'), 'd=e', ...$args);
+     * @example uri('?id=1', ['page'=>1], 'pageSize=2', ...$args)
+     * @example uri('&id=1', ['page'=>1], 'pageSize=2' ...$args)
+     * @example uri('!id', 'page', ['pageSize'], ...$args)
+     * @example uri('~id', 'page', ['pageSize'], ...$args)
      * @example url('@index');  url('@index', ...$args); url('@', 'index', ...$args) ;
      * @example url('@items.list', 333, '/type/cat', '?user=admin', ['page'=>1], ...$args);
      * @return string
      */
     public function url(...$args)
     {
-        if (!$args) return rtrim($this->getBaseUrl().$this->getPathInfo(), '/');
-        $items = $tag = null;
-        foreach ($args as $arg) {
-            if (is_string($arg))  {
-                if(strstr('@/?',$t = substr($arg, 0, 1))){
-                    $tag = $t;
-                    $arg = ltrim($arg, $t);
-                }
+        $tag = null;
+        foreach ($args as $i => $arg) {
+            if(is_string($arg)) {
+                str_contains('/?&!~@#', $arg[0]) && $tag = $arg[0];
             }
-            $items[$tag][] = $arg;
+            unset($args[$i]);
+            $args[$tag][] = $arg;
         }
-        
-        return $this->getBaseUrl().array_reduce(array_keys($items), function($url, $k) use($items){
-            if ($k == '@') {
-                $url.= app('router')->route(array_shift($items[$k]))->url(...$items[$k]);
-            }else{
-                $url.= Uri::make($k, ...$items[$k]);
-            }
-            return $url;
-        });
-    }
-
-    /**
-     * [构建URI参数]
-     * 
-     * 符号说明: ? 重构URL参数
-     * 符号说明: & 附加URL参数
-     * 符号说明: ! 去除指定URL参数
-     * 符号说明: ~ 保留指定URL参数
-     * @param mixed ...$args
-     * @example uri('?id=1', ['page'=>1], 'pageSize=2')
-     * @example uri('&id=1', ['page'=>1], 'pageSize=2')
-     * @example uri('!id', 'page', ['pageSize'])
-     * @example uri('~id', 'page', ['pageSize'])
-     * @return string
-     */
-    public function uri(...$args)
-    {
-        $tags = array_shift($args);
-        if(!$tags) return str_replace($this->root(), '', $this->getUri());
-            switch ($tags[0]) {
-                case '?': array_unshift($args, ltrim($tags,'?')); break;
-                case '&': array_unshift($args, $this->query->all(), ltrim($tags,'&')); break;
-                case '!': $args = [array_diff_key($this->query->all(), array_fill_keys(array_merge([ltrim($tags,'!')], array_flat($args)), 1) )]; break;
-                case '~': $args = [array_intersect_key($this->query->all(), array_fill_keys(array_merge([ltrim($tags,'~')], array_flat($args)), 1) )];break;
-                default: $args = [];
-            }
-        return $this->getBaseUrl(). Uri::make('?', ...$args);
+        if (isset($args['@'])) {
+            $url = \Uri::uri(app('router')->route(trim(array_shift($args['@']), '@'))->url(...$args['@']));
+            unset($args['@']);
+        }else{
+            $url = \Uri::uri($this->root());
+        }
+        return array_reduce($args, fn($url, $arg)=>$url->set(...$arg), $url);
     }
 
     /**
@@ -411,7 +384,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * 获取主机加端口
      * @return string
      */
-    public function hostPort()
+    public function port()
     {
         return $this->getHttpHost();
     }
@@ -422,8 +395,10 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function httpHost()
     {
-        return $this->getScheme() . '://' . $this->hostPort();
+        return $this->getScheme() . '://' . $this->port();
     }
+
+
     /**
      * alias getOS()
      * @return mixed|string
@@ -781,9 +756,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function path()
     {
-        $pattern = $this->getPathInfo();
-
-        return $pattern == '' ? '/' : $pattern;
+        return $this->getPathInfo();
     }
 
     /**
@@ -794,7 +767,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function root()
     {
-        return rtrim($this->getSchemeAndHttpHost() . $this->getBasePath(), '/');
+        return $this->getBaseUrl() ?: '/';
     }
 
     /**
@@ -822,7 +795,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function baseUrl()
     {
-        return $this->httpHost() . $this->getBaseUrl();
+        return rtrim($this->getSchemeAndHttpHost(). $this->root(), '/');
     }
 
     /**
@@ -847,14 +820,12 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
 
     /**
      * 获取当前域名
-     *
-     * @param bool $subDomain 是否带二级域名
-     * 
-     * @return mixed|string
+     * @param bool|int $subDomain 是否带二级域名
+     * @return string
      */
     public function domain($subDomain = true)
     {
-        return domain($this->getHost(), $subDomain);
+        return $subDomain ? $this->host() : trim(substr($this->host(), strpos($this->host(), '.')), '.');
     }
 
     /**
@@ -924,12 +895,6 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
                 break;
         }
         $data && $this->request->add($data);
-    }
-
-
-    protected function withUrl()
-    {
-
     }
 
     /**
