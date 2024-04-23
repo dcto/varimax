@@ -437,8 +437,6 @@ class Log extends AbstractLogger
     public function close()
     {
         $this->logDir = $this->logFile = null;
-        if ($this->fileHandle) {
-            fclose($this->fileHandle);
-        }
+        is_resource($this->fileHandle) && fclose($this->fileHandle);
     }
 }
