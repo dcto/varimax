@@ -57,11 +57,12 @@ if(!function_exists('url')) {
 if(!function_exists('uri')) {
     /**
      * request uri
-     * @return string
+     * @return string|\VM\Http\Uri
      */
-    function uri(...$args)
-    {
-        return app('request')->uri(...$args);
+    function uri($uri = null)
+    {  
+        $uri = $uri ?? app('request')->baseUrl();
+        return app('uri')->uri($uri);
     }
 }
 
