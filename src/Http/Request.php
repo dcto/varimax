@@ -93,6 +93,16 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     }
 
     /**
+     * Get uri string
+     * @param mixed ...$args
+     * @return string
+     */
+    public function uri(...$args)
+    {
+        return $args ? \Uri::uri($this->getUri())->set(...$args) : $this->getUri() ;
+    }
+
+    /**
      * check the input exists by the one of key
      * @param string|array $key 
      * @param int $number
