@@ -82,12 +82,13 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
             unset($args[$i]);
             $args[$tag][] = $arg;
         }
+
+        $url = \Uri::uri($this->root());
         if (isset($args['@'])) {
-            $url = \Uri::uri(app('router')->route(trim(array_shift($args['@']), '@'))->url(...$args['@']));
+            $url = $url->set(app('router')->route(trim(array_shift($args['@']), '@'))->url(...$args['@']));
             unset($args['@']);
-        }else{
-            $url = \Uri::uri($this->root());
         }
+
         return array_reduce($args, fn($url, $arg)=>$url->set(...$arg), $url);
     }
 
