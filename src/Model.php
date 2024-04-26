@@ -343,9 +343,7 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
      * [bootstrap]
      */
     protected static function boot()
-    {   
-        app('db');
-
+    {
         //加载Traits
         static::bootTraits();
 
