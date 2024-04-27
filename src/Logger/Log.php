@@ -113,13 +113,12 @@ class Log extends AbstractLogger
     /**
      * Log a message to file
      *
-     * @param $path
-     * @param string $level
+     * @param $paths
      * @return $this
      */
-    public function dir()
+    public function dir(...$paths)
     {
-        $this->logDir = join(_DS_, func_get_args());
+        $this->logDir = join(_DS_, $paths);
         if (pathinfo($this->logDir, PATHINFO_EXTENSION)) {
             $this->file(pathinfo($this->logDir, PATHINFO_BASENAME));
             $this->logDir = pathinfo($this->logDir, PATHINFO_DIRNAME);
@@ -209,9 +208,9 @@ class Log extends AbstractLogger
      * @param $stdOutPath
      * @return $this
      */
-    protected function stdout($message)
+    protected function stdout($message, $level = LogLevel::INFO)
     {
-        printf(PHP_EOL.'%s'.PHP_EOL, $message);
+        error_log($message, 4);
         return $this;
     }
 
@@ -237,7 +236,6 @@ class Log extends AbstractLogger
         if (!$this->fileHandle) {
             throw new \RuntimeException('Check permissions of file. ['.$this->logFile().']');
         }
-
         return $this;
     }
 
@@ -249,6 +247,7 @@ class Log extends AbstractLogger
     protected function setFileHandle($writeMode)
     {
         $this->fileHandle = fopen($this->logFile(), $writeMode);
+        stream_set_blocking($this->fileHandle, 0);
         return $this;
     }
 
@@ -291,11 +290,11 @@ class Log extends AbstractLogger
         }
         $message = $this->formatMessage($level, $message, $context);
         
-        if (PHP_SAPI == 'cli' && getenv('DEBUG')) {
+        if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' && getenv('DEBUG')) {
             $this->stdout($message);
         }
         
-        $this->write($message);
+        $this->setLogHandle()->write($message);
 
         $this->close();
 
@@ -310,7 +309,6 @@ class Log extends AbstractLogger
      */
     protected function write($message)
     {
-        $this->setLogHandle();
         if (fwrite($this->fileHandle, $message) === false) {
             throw new \RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
         } else {
