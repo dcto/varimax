@@ -35,6 +35,18 @@ class Log extends AbstractLogger
     private $logFile;
 
     /**
+     * This holds the file handle for this instance's log file
+     * @var resource
+     */
+    private $fileHandle;
+
+    /**
+     * Octal notation for default permissions of the log file
+     * @var integer
+     */
+    private $permissions = 0777;
+    
+    /**
      * options
      *
      * @var array
@@ -49,37 +61,10 @@ class Log extends AbstractLogger
     );
 
     /**
-     * Current minimum logging threshold
-     * @var integer
-     */
-    protected $logLevelThreshold = LogLevel::DEBUG;
-
-    /**
      * The number of lines logged in this instance's lifetime
      * @var int
      */
-    private $logLineCount = 0;
-
-    /**
-     * Log Levels
-     * @var array
-     */
-    protected $logLevels = array(
-        LogLevel::EMERGENCY => 0,
-        LogLevel::ALERT     => 1,
-        LogLevel::CRITICAL  => 2,
-        LogLevel::ERROR     => 3,
-        LogLevel::WARNING   => 4,
-        LogLevel::NOTICE    => 5,
-        LogLevel::INFO      => 6,
-        LogLevel::DEBUG     => 7
-    );
-
-    /**
-     * This holds the file handle for this instance's log file
-     * @var resource
-     */
-    private $fileHandle;
+    private $lineCount = 0;
 
     /**
      * This holds the last line logged to the logger
@@ -89,10 +74,25 @@ class Log extends AbstractLogger
     private $lastLine = '';
 
     /**
-     * Octal notation for default permissions of the log file
+     * Current minimum logging threshold
      * @var integer
      */
-    private $permissions = 0777;
+    private $logLevelThreshold = LogLevel::DEBUG;
+
+    /**
+     * Log Levels
+     * @var array
+     */
+    private $logLevels = array(
+        LogLevel::EMERGENCY => 0,
+        LogLevel::ALERT     => 1,
+        LogLevel::CRITICAL  => 2,
+        LogLevel::ERROR     => 3,
+        LogLevel::WARNING   => 4,
+        LogLevel::NOTICE    => 5,
+        LogLevel::INFO      => 6,
+        LogLevel::DEBUG     => 7
+    );
 
     /**
      * Class constructor
@@ -192,19 +192,6 @@ class Log extends AbstractLogger
     }
 
     /**
-     * Indents the given string with the given indent.
-     *
-     * @param  string $string The string to indent
-     * @param  string $indent What to use as the indent.
-     * @return string
-     */
-    public function indent($string, $indent = '    ')
-    {
-        return $indent . str_replace("\n", "\n" . $indent, $string);
-    }
-
-
-    /**
      * @param $stdOutPath
      * @return $this
      */
@@ -288,15 +275,14 @@ class Log extends AbstractLogger
         if ($this->logLevels[$this->logLevelThreshold] < $this->logLevels[$level]) {
             return $this;
         }
-        $message = $this->formatMessage($level, $message, $context);
+        $context = $this->formatMessage($level, $message, $context);
         
-        if (PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server' && getenv('DEBUG')) {
-            $this->stdout($message);
+        if ((PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server') && getenv('DEBUG')) {
+            $this->stdout($context);
+        }else{
+            $this->setLogHandle()->write($context);
+            $this->close();
         }
-        
-        $this->setLogHandle()->write($message);
-
-        $this->close();
 
         return $this;
     }
@@ -309,13 +295,12 @@ class Log extends AbstractLogger
      */
     protected function write($message)
     {
-        if (fwrite($this->fileHandle, $message) === false) {
+        if (fwrite($this->fileHandle, $message.PHP_EOL) === false) {
             throw new \RuntimeException('The file could not be written to. Check that appropriate permissions have been set.');
         } else {
             $this->lastLine = trim($message);
-            $this->logLineCount++;
-
-            if ($this->options['flushFrequency'] && $this->logLineCount % $this->options['flushFrequency'] === 0) {
+            $this->lineCount++;
+            if ($this->options['flushFrequency'] && $this->lineCount % $this->options['flushFrequency'] === 0) {
                 fflush($this->fileHandle);
             }
         }
@@ -346,21 +331,11 @@ class Log extends AbstractLogger
      *
      * @param  string $level   The Log Level of the message
      * @param  string $message The message to log
-     * @param  array  $context The context
+     * @param  mixed  $context The context
      * @return string
      */
-    protected function formatMessage($level, $message, $context)
+    protected function formatMessage($level, $message, array $context)
     {
-        if (is_array($message)) {
-            $message = var_export($message, true);
-        } elseif ($message instanceof \JsonSerializable) {
-            $message = $message->jsonSerialize();
-        } elseif ($message instanceof \ArrayAccess) {
-            $message = var_export($message->toArray(), true);
-        } else {
-            $message = (string) $message;
-        }
-
         if ($this->options['logFormat']) {
             $parts = array(
                 'date'          => $this->getTimestamp(),
@@ -368,21 +343,18 @@ class Log extends AbstractLogger
                 'level-padding' => str_repeat(' ', 9 - strlen($level)),
                 'priority'      => $this->logLevels[$level],
                 'message'       => $message,
-                'context'       => json_encode($context),
+                'context'       => $this->formatToString($context)
             );
             $message = $this->options['logFormat'];
             foreach ($parts as $part => $value) {
                 $message = str_replace('{' . $part . '}', $value, $message);
             }
         } else {
-            $message = "[{$this->getTimestamp()}] [{$level}] {$message}";
+            $message = sprintf("[%s] [%s] %s %s", 
+            $this->getTimestamp(), strtolower($level), $this->formatToString($message), $context ? $this->formatToString($context) : '');
         }
 
-        if ($this->options['appendContext'] && !empty($context)) {
-            $message .= PHP_EOL . $this->indent($this->contextToString($context));
-        }
-
-        return $message . PHP_EOL;
+        return $message;
     }
 
     /**
@@ -404,29 +376,9 @@ class Log extends AbstractLogger
      * @param  array $context The Context
      * @return string
      */
-    protected function contextToString($context)
+    protected function formatToString($context)
     {
-        $context = is_object($context) ? json_decode(json_encode($context), true) : $context;
-
-        $export = '';
-        if (is_array($context)) {
-            foreach ($context as $key => $value) {
-                $export .= "{$key}: ";
-                $export .= preg_replace(array(
-                    '/=>\s+([a-zA-Z])/im',
-                    '/array\(\s+\)/im',
-                    '/^  |\G  /m'
-                ), array(
-                    '=> $1',
-                    'array()',
-                    '    '
-                ), str_replace('array (', 'array(', var_export($value, true)));
-                $export .= PHP_EOL;
-            }
-        } else {
-            $export = $context;
-        }
-        return str_replace(array('\\\\', '\\\''), array('\\', '\''), rtrim($export));
+       return is_scalar($context) ? (string) $context : json_encode($context, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
     }
 
     /**
