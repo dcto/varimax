@@ -295,6 +295,15 @@ if (! function_exists('wg')) {
     }   
 }
 
+if (! function_exists('coid')) {
+    /**
+     * @return int
+     */
+    function coid(): int {
+        return \Swoole\Coroutine::getCid();
+    }
+}
+
 if(!function_exists('javascript')) {
     /**
      * javascript output
