@@ -75,6 +75,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
     public function url(...$args)
     {
         $tag = null;
+        $args = array_filter($args);
         foreach ($args as $i => $arg) {
             if(is_string($arg)) {
                 str_contains('/?&!~@#', $arg[0]) && $tag = $arg[0];
