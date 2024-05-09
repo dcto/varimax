@@ -12,14 +12,14 @@ namespace VM\Services;
  */
 
 use Illuminate\Database\Query\Builder;
-use \Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\DatabaseManager;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Contracts\Queue\EntityResolver;
-
 use Illuminate\Database\Eloquent\QueueEntityResolver;
 use Illuminate\Database\Connectors\ConnectionFactory;
 use Illuminate\Database\DatabaseTransactionsManager;
+
 
 class DatabaseServiceProvider extends ServiceProvider
 {
@@ -32,9 +32,9 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         $this->registerQueryEvents();
 
-        $this->registerNestCollect();
+        $this->registerQueryExecuted();
 
-        $this->registerQueryLogs();
+        $this->registerNestCollect();
         
         $this->registerQueueableEntityResolver();
 
@@ -52,6 +52,15 @@ class DatabaseServiceProvider extends ServiceProvider
         $this->registerConnectionServices();
         $this->registerQueueableEntityResolver();
     }
+
+    /**
+     * Connection Poool
+     */
+    protected function registerConnectionPool(){
+
+
+    }
+
 
     /**
      * Register the connection service to application
@@ -142,23 +151,22 @@ class DatabaseServiceProvider extends ServiceProvider
         $this->app['db']->beforeExecuting(function($query){
             // $this->app['log']->debug('beforeExecuting: '. $query);
         });
-
-
     }
 
     /**
      * Register Query Logs
      */
-    protected function registerQueryLogs()
+    protected function registerQueryExecuted()
     {
         $this->app['db']->listen(function($query) {
-            $log = "[$query->time] ".vsprintf(str_replace("?", "'%s'", $query->sql), $query->bindings);                
+            $log = "($query->time ms) ".vsprintf(str_replace("?", "'%s'", $query->sql), $query->bindings);                
             if($query->time > 200){
                 $this->app->log->dir('db.'. $query->connectionName, 'slow')->warning($log);
             }
             if($this->app->config->get('app.log') > 1){
                 $this->app->log->dir('db.'. $query->connectionName, _APP_)->debug($log);
             }
+            $query->connection->disconnect();
         });
     }
 
