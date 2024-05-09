@@ -29,7 +29,7 @@
     "preferred-install": "dist"
   },
   "require": {
-    "php": "^7.3|^8.0",
+    "php": "^8.0",
     "ext-xml":"*",
     "ext-json":"*",
     "ext-curl":"*",
@@ -39,15 +39,15 @@
     "psr/log": "1.*",
     "psr/http-message": "1.*",
     "vlucas/phpdotenv":"5.*",
-    "illuminate/contracts": "8.*",
-    "illuminate/container": "8.*",
-    "illuminate/database": "8.*",
-    "illuminate/events": "8.*",
-    "illuminate/filesystem": "8.*",
-    "illuminate/http": "8.*",
-    "illuminate/support": "8.*",  
-    "illuminate/pipeline": "8.*",          
-    "illuminate/pagination": "8.*"
+    "illuminate/contracts": "9.*",
+    "illuminate/container": "9.*",
+    "illuminate/database": "9.*",
+    "illuminate/events": "9.*",
+    "illuminate/filesystem": "9.*",
+    "illuminate/http": "9.*",
+    "illuminate/support": "9.*",  
+    "illuminate/pipeline": "9.*",          
+    "illuminate/pagination": "9.*"
   },
   "suggest": {
     "guzzlehttp/guzzle": "Suggest Http client of 6.*",
