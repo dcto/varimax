@@ -121,7 +121,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      * @param null $default
      * @return mixed
      */
-    public function get($key, $default = null)
+    public function get($key, $default = null): mixed
     {
         return $default instanceof \Closure ? $default(parent::get($key)) : parent::get($key, $default);
     }
@@ -969,7 +969,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      *
      * @return array
      */
-    public function toArray()
+    public function toArray() : array
     {
         return $this->all();
     }
