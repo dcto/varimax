@@ -239,20 +239,26 @@ if(!function_exists('Db')) {
      * @param $table
      * @return \Illuminate\Database\Query\Builder
      */
-    function DB($table)
+    function Db($table)
     {
-        return \Db::table($table);
+        return \DB::table($table);
+    }
+}
+
+
+if (! function_exists('run')) {
+    function run(callable $callable, ...$args) {
+     return \Swoole\Coroutine\run($callable, ...$args);
     }
 }
 
 if (! function_exists('co')) {
     /**
-     * @return bool|int
+     * @return false|int
      */
-    function co(callable $callable)
+    function co(callable $callable, ...$args)
     {
-        $id = \Swoole\Coroutine::create($callable);
-        return $id > 0 ? $id : false;
+        return \Swoole\Coroutine::create($callable, ...$args);
     }
 }
 
@@ -260,9 +266,9 @@ if (! function_exists('go')) {
     /**
      * @return bool|int
      */
-    function go(callable $callable)
+    function go(callable $callable, ...$args)
     {
-        return co($callable);
+        return co($callable, ...$args);
     }
 }
 
