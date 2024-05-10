@@ -11,6 +11,7 @@ namespace VM\Services;
  * SITE: https://www.varimax.cn/
  */
 
+ use VM\Context;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\DatabaseManager;
@@ -19,7 +20,6 @@ use Illuminate\Contracts\Queue\EntityResolver;
 use Illuminate\Database\Eloquent\QueueEntityResolver;
 use Illuminate\Database\Connectors\ConnectionFactory;
 use Illuminate\Database\DatabaseTransactionsManager;
-
 
 class DatabaseServiceProvider extends ServiceProvider
 {
@@ -34,7 +34,7 @@ class DatabaseServiceProvider extends ServiceProvider
 
         $this->registerQueryExecuted();
 
-        $this->registerNestCollect();
+        $this->registerCollectMacros();
         
         $this->registerQueueableEntityResolver();
 
@@ -48,17 +48,24 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $this->registerConnectionEvent();
+
+        $this->registerConnectionService();
+
         $this->registerDatabasesResolver();
-        $this->registerConnectionServices();
+       
         $this->registerQueueableEntityResolver();
     }
 
     /**
-     * Connection Poool
+     * Connection Event
      */
-    protected function registerConnectionPool(){
-
-
+    protected function registerConnectionEvent(){
+        // $this->app['events']->listen(ConnectionEstablished::class, function ($connection) {
+        //     echo "booting connection..." .PHP_EOL;
+        //     $this->app->log->debug("booting connection...");
+            
+        // });
     }
 
 
@@ -98,7 +105,7 @@ class DatabaseServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    protected function registerConnectionServices()
+    protected function registerConnectionService()
     {
         $this->app->bind('db.connection', function ($app) {
             return $app['db']->connection();
@@ -107,6 +114,9 @@ class DatabaseServiceProvider extends ServiceProvider
         $this->app->singleton('db.transactions', function () {
             return new DatabaseTransactionsManager;
         });
+
+       
+
     }
 
     /**
@@ -147,9 +157,17 @@ class DatabaseServiceProvider extends ServiceProvider
      * @todo addition listen to query event
      */
     protected function registerQueryEvents()
-    {
-        $this->app['db']->beforeExecuting(function($query){
-            // $this->app['log']->debug('beforeExecuting: '. $query);
+    {       
+        $this->app['db']->beforeExecuting(function($query, $bindings, &$connection){
+            if (coid() > 0) {
+                if (!$pdo = Context::get('pdo')) {
+                    $connection->reconnect();
+                    Context::put('pdo', $pdo = $connection->getPdo());
+                }
+                $connection->setPdo($pdo);
+
+                defer(fn()=>Context::delete('pdo'));
+            }
         });
     }
 
@@ -157,16 +175,15 @@ class DatabaseServiceProvider extends ServiceProvider
      * Register Query Logs
      */
     protected function registerQueryExecuted()
-    {
+    {	
         $this->app['db']->listen(function($query) {
-            $log = "($query->time ms) ".vsprintf(str_replace("?", "'%s'", $query->sql), $query->bindings);                
+            $log = "($query->time ms) ".vsprintf(str_replace("?", "'%s'", $query->sql), $query->connection->prepareBindings($query->bindings));                
             if($query->time > 200){
                 $this->app->log->dir('db.'. $query->connectionName, 'slow')->warning($log);
             }
             if($this->app->config->get('app.log') > 1){
                 $this->app->log->dir('db.'. $query->connectionName, _APP_)->debug($log);
             }
-            $query->connection->disconnect();
         });
     }
 
@@ -181,7 +198,7 @@ class DatabaseServiceProvider extends ServiceProvider
      * @return array
      * @version 20230320
      */
-    protected function registerNestCollect(){
+    protected function registerCollectMacros(){
         
         Collection::macro('top', function($id, $col = 'id'){ 
             /** @var Collection $this */
