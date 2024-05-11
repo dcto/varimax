@@ -276,7 +276,7 @@ class Log extends AbstractLogger
             return $this;
         }
         $context = $this->formatMessage($level, $message, $context);
-        
+
         if ((PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server') && getenv('DEBUG')) {
             $this->stdout($context);
         }else{
@@ -378,7 +378,14 @@ class Log extends AbstractLogger
      */
     protected function formatToString($context)
     {
-       return is_scalar($context) ? (string) $context : json_encode($context, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        if (is_scalar($context)){
+            return (string) $context;
+        }else {
+            if (is_object($context) && $context instanceof \Stringable) {
+                return (string) $context;
+            }
+            return json_encode($context, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
+        }
     }
 
     /**
