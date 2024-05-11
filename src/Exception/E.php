@@ -162,28 +162,38 @@ class E {
 
 
     /**
-     * display exception
-     *
+     * 
      * @param $e \Exception
+     * @return string
      */
+    final static function HtmlException($e)
+    {
+        if(is_array ($debugBacktrace = static::debugBacktrace($e))){
+            $c = count($debugBacktrace) - 5;
+            $debugBacktrace = '<tr bgcolor="#eee"><td>No.</td><td>File</td><td>Line</td><td>Code</td></tr>'. join('', array_map(function($v) use(&$c){
+                if($c>0) return vsprintf('<tr bgcolor="#ffc"><td>'.$c--.'</td><td>%s</td><td>%d</td><td>%s</td></tr>', $v);}, $debugBacktrace));
+        }else{
+            $debugBacktrace = "<tr><td><ul>{$debugBacktrace}</ul></td></tr>";
+        }
+        
+        return str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Error::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
+        
+    }
+
+    /**
+    * display exception
+    * @param $e \Exception
+    * @version 20240511
+    */
     final static function display($e)
     {
-        if (PHP_SAPI == 'cli') {
-            echo $e->getFile() . "\t[LINE]:" . $e->getLine() . "\t" . '[ERROR]:' . $e->getMessage() . PHP_EOL . PHP_EOL;
-        }else{
-            ob_get_contents() && ob_end_clean();
-            http_response_code($e instanceof Error ? $e->getStatus() : 500);
-            static::$debug == 1 && die($e->getMessage());
-            if(static::$debug == 2) {
-                if(is_array ($debugBacktrace = static::debugBacktrace($e))){
-                    $c = count($debugBacktrace) - 5;
-                    $debugBacktrace = '<tr bgcolor="#eee"><td>No.</td><td>File</td><td>Line</td><td>Code</td></tr>'. join('', array_map(function($v) use(&$c){
-                        if($c>0) return vsprintf('<tr bgcolor="#ffc"><td>'.$c--.'</td><td>%s</td><td>%d</td><td>%s</td></tr>', $v);}, $debugBacktrace));
-                }else{
-                    $debugBacktrace = "<tr><td><ul>{$debugBacktrace}</ul></td></tr>";
-                }
-                echo str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Error::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
-            }
+        error_log(sprintf("[FILE]: %s [LINE]: %s [ERROR]: %s", $e->getFile(), $e->getLine(), $e->getMessage()), 4);
+        ob_get_contents() && ob_end_clean();
+        http_response_code($e instanceof Error ? $e->getStatus() : 500);
+        switch(static::$debug){
+            case 1: echo $e->getMessage(); die;
+            case 2: echo static::HtmlException($e); break;
         }
+        
     }
 }
