@@ -187,12 +187,13 @@ trait ResponseTraits {
      *
      * @return StreamInterface returns the body as a stream
      */
-    public function getBody(): StreamInterface
+    public function getBody()
     {
-        return $this->getResponse()->getBody();
+        $body = $this->getResponse()->getContent();
+        return $body instanceof StreamInterface ? $body : new Stream($body);
     }
 
-    /**
+    /**s
      * Return an instance with the specified message body.
      * The body MUST be a StreamInterface object.
      * This method MUST be implemented in such a way as to retain the
