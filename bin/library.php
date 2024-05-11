@@ -325,6 +325,26 @@ if (! function_exists('wg')) {
     }   
 }
 
+if (! function_exists('channel')) {
+    /**
+     * @param int $size
+     * @return \Swoole\Coroutine\Channel
+     */
+    function channel($size = 0) {
+        return new \Swoole\Coroutine\Channel($size);
+    }
+}
+
+if (! function_exists('chan')) {
+    /**
+     * @param int $size
+     * @return \Swoole\Coroutine\Channel
+     */
+    function chan($size = 0) {
+        return channel($size);
+    }
+}
+
 if (! function_exists('coid')) {
     /**
      * @return int
