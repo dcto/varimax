@@ -115,9 +115,6 @@ class DatabaseServiceProvider extends ServiceProvider
         $this->app->singleton('db.transactions', function () {
             return new DatabaseTransactionsManager;
         });
-
-       
-
     }
 
     /**
