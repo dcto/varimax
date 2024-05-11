@@ -134,11 +134,6 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     protected function registerQueryExtends()
     {
-        Builder::macro('getSql', function () {
-            /** @var Builder $this */
-            return sprintf(str_replace('?', "'%s'", $this->toSql()), ...$this->getBindings());
-        });
-
         Model::macro('atDate', function($column, $date, $symbol = '~'){
             $date = strstr($date, $symbol) ? array_map('trim', explode($symbol, $date)): array($date, $date);
             $atDate[0] = \Carbon\Carbon::parse($date[0])->startOfDay()->toDateTimeString();
@@ -175,7 +170,7 @@ class DatabaseServiceProvider extends ServiceProvider
     protected function registerQueryExecuted()
     {	
         $this->app['db']->listen(function($query) {
-            $log = "($query->time ms) ".vsprintf(str_replace("?", "'%s'", $query->sql), $query->connection->prepareBindings($query->bindings));                
+            $log = "($query->time ms) ".$this->formatQueryString($query->sql, $query->connection->prepareBindings($query->bindings) );                
             if($query->time > 200){
                 $this->app->log->dir('db.'. $query->connectionName, 'slow')->warning($log);
             }
@@ -183,6 +178,18 @@ class DatabaseServiceProvider extends ServiceProvider
                 $this->app->log->dir('db.'. $query->connectionName, _APP_)->debug($log);
             }
         });
+    }
+
+
+    /**
+     * format sql query string
+     * @param string $query
+     * @param array $bindings
+     * @return string
+     */
+    protected function formatQueryString(string $query, array $bindings) {
+
+        return vsprintf(str_replace("?", "%s", $query), array_map(fn($b)=>is_string($b) ? str_pad($b, 6, "'", STR_PAD_BOTH) : $b, $bindings));
     }
 
 
