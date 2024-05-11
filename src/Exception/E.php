@@ -187,7 +187,7 @@ class E {
     */
     final static function display($e)
     {
-        error_log(sprintf("[FILE]: %s [LINE]: %s [ERROR]: %s", $e->getFile(), $e->getLine(), $e->getMessage()), 4);
+        error_log(sprintf("[error] %s %s(%s)",  $e->getMessage(), $e->getFile(), $e->getLine()), 4);
         ob_get_contents() && ob_end_clean();
         http_response_code($e instanceof Error ? $e->getStatus() : 500);
         switch(static::$debug){
