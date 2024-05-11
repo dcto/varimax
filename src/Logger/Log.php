@@ -277,7 +277,7 @@ class Log extends AbstractLogger
         }
         $context = $this->formatMessage($level, $message, $context);
 
-        if ((PHP_SAPI == 'cli' || PHP_SAPI == 'cli-server') && getenv('DEBUG')) {
+        if (strpos(PHP_SAPI, 'cli') == 0 && getenv('DEBUG')) {
             $this->stdout($context);
         }else{
             $this->setLogHandle()->write($context);
