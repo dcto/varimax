@@ -11,7 +11,7 @@ namespace VM\Services;
  * SITE: https://www.varimax.cn/
  */
 
- use VM\Context;
+use VM\Context;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\DatabaseManager;
@@ -20,6 +20,7 @@ use Illuminate\Contracts\Queue\EntityResolver;
 use Illuminate\Database\Eloquent\QueueEntityResolver;
 use Illuminate\Database\Connectors\ConnectionFactory;
 use Illuminate\Database\DatabaseTransactionsManager;
+use Illuminate\Database\Events\ConnectionEstablished;
 
 class DatabaseServiceProvider extends ServiceProvider
 {
@@ -61,10 +62,10 @@ class DatabaseServiceProvider extends ServiceProvider
      * Connection Event
      */
     protected function registerConnectionEvent(){
-        // $this->app['events']->listen(ConnectionEstablished::class, function ($connection) {
-        //     echo "booting connection..." .PHP_EOL;
-        //     $this->app->log->debug("booting connection...");
-            
+        // $this->app['events']->listen(ConnectionEstablished::class, function ($db) {
+        //     if (defined("SWOOLE_VERSION")) {
+        //         $this->app->log->debug("booting [%s] connections...");
+        //     }
         // });
     }
 
