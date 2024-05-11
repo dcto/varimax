@@ -312,7 +312,7 @@ if (! function_exists('WaitGroup')) {
      */
     function WaitGroup($delta = 0)
     {
-        new \Swoole\Coroutine\WaitGroup($delta);
+       return new \Swoole\Coroutine\WaitGroup($delta);
     }
 }
 
