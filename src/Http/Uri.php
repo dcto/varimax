@@ -332,7 +332,8 @@ class Uri implements UriInterface, JsonSerializable
             
             case '&': 
                 $query = array_reduce($args, fn($arg, $v)=>$arg .'&'. (is_scalar($v) ? $v : http_build_query($v)), trim($tags,'&'));
-                return $this->withQuery(trim($this->query.'&'.$query, '&'));
+                parse_str($this->query.'&'.$query, $q);
+                return $this->withQuery(html_entity_decode(http_build_query($q)));
             break;
 
             case '~':
