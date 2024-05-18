@@ -100,7 +100,7 @@ class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
      */
     public function uri(...$args)
     {
-        return $args ? \Uri::uri($this->getUri())->set(...$args) : $this->getUri() ;
+        return $args ? \Uri::uri($this->getRequestUri())->set(...$args) : $this->getRequestUri() ;
     }
 
     /**

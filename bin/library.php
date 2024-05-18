@@ -61,8 +61,7 @@ if(!function_exists('uri')) {
      */
     function uri($uri = null)
     {  
-        $uri = $uri ?? app('request')->baseUrl();
-        return app('uri')->uri($uri);
+        return app('uri')->uri($uri ?? app('request')->uri());
     }
 }
 
