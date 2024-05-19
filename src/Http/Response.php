@@ -134,8 +134,6 @@ class Response extends BaseResponse implements ResponseInterface
     {
         $file = new StreamFile($file);
 
-        if (!$file->isReadable()) throw new \RuntimeException("The file {$file} Unreadable.");
-
         $this->setEtag(md5_file($file->getRealPath()));
 
         $this->setLastModified(\DateTime::createFromFormat('U', $file->getMTime()));
