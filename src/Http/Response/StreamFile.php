@@ -3,58 +3,18 @@
 namespace VM\Http\Response;
 
 use Psr\Http\Message\StreamInterface;
+use Symfony\Component\HttpFoundation\File\File;
 
 /**
 * @package Response
 */
-class StreamFile implements StreamInterface
+class StreamFile extends File implements StreamInterface
 {
-    /**
-     * @var int
-     */
-    protected $size;
 
-    /**
-     * @var \SplFileInfo
-     */
-    protected $file;
-
-    /**
-     * SwooleFileStream constructor.
-     *
-     * @param \SplFileInfo|string $file
-     */
-    public function __construct($file)
-    {
-        if (! $file instanceof \SplFileInfo) {
-            $file = new \SplFileInfo($file);
-        }
-        if (! $file->isReadable()) {
-            throw new \RuntimeException('File must be readable.');
-        }
-        $this->file = $file;
-        $this->size = $file->getSize();
-    }
-
-    /**
-     * Reads all data from the stream into a string, from the beginning to end.
-     * This method MUST attempt to seek to the beginning of the stream before
-     * reading data and read the stream until the end is reached.
-     * Warning: This could attempt to load a large amount of data into memory.
-     * This method MUST NOT raise an exception in order to conform with PHP's
-     * string casting operations.
-     *
-     * @see http://php.net/manual/en/language.oop5.magic.php#object.tostring
-     * @return string
-     */
-    public function __toString()
-    {
-        try {
-            return $this->getContents();
-        } catch (\Throwable $e) {
-            return '';
-        }
-    }
+    protected $offset = 0;
+    protected $maxlen = -1;
+    protected $chunkSize = 8 * 1024;
+    protected $deleteAfterSend = false;
 
     /**
      * Closes the stream and any underlying resources.
@@ -76,16 +36,17 @@ class StreamFile implements StreamInterface
     }
 
     /**
-     * Get the size of the stream if known.
+     * Seek to the beginning of the stream.
+     * If the stream is not seekable, this method will raise an exception;
+     * otherwise, it will perform a seek(0).
      *
-     * @return null|int returns the size in bytes if known, or null if unknown
+     * @throws \RuntimeException on failure
+     * @see http://www.php.net/manual/en/function.fseek.php
+     * @see seek()
      */
-    public function getSize()
+    public function rewind()
     {
-        if (! $this->size) {
-            $this->size = filesize($this->getContents());
-        }
-        return $this->size;
+        throw new \BadMethodCallException('Not implemented');
     }
 
     /**
@@ -137,27 +98,12 @@ class StreamFile implements StreamInterface
     }
 
     /**
-     * Seek to the beginning of the stream.
-     * If the stream is not seekable, this method will raise an exception;
-     * otherwise, it will perform a seek(0).
-     *
-     * @throws \RuntimeException on failure
-     * @see http://www.php.net/manual/en/function.fseek.php
-     * @see seek()
-     */
-    public function rewind()
-    {
-        throw new \BadMethodCallException('Not implemented');
-    }
-
-    /**
      * Returns whether or not the stream is writable.
-     *
      * @return bool
      */
-    public function isWritable()
+    public function isWritable() : bool
     {
-        return false;
+        return parent::isWritable();
     }
 
     /**
@@ -177,9 +123,9 @@ class StreamFile implements StreamInterface
      *
      * @return bool
      */
-    public function isReadable()
+    public function isReadable() : bool
     {
-        return true;
+        return parent::isReadable();
     }
 
     /**
@@ -196,7 +142,7 @@ class StreamFile implements StreamInterface
     {
         throw new \BadMethodCallException('Not implemented');
     }
-
+    
     /**
      * Returns the remaining contents in a string.
      *
@@ -204,9 +150,45 @@ class StreamFile implements StreamInterface
      *                           reading
      * @return string
      */
-    public function getContents()
+    public function getContents($deleteAfterSend = false)
     {
-        return $this->getFilename();
+        try {
+            $this->deleteAfterSend = $deleteAfterSend;
+
+            if (0 === $this->maxlen) {
+                return $this;
+            }
+
+            $out = fopen('php://output', 'w');
+            $file = fopen($this->getRealPath(), 'r');
+
+            ignore_user_abort(true);
+
+            if (0 !== $this->offset) {
+                fseek($file, $this->offset);
+            }
+
+            $length = $this->maxlen;
+            while ($length && !feof($file)) {
+                $read = ($length > $this->chunkSize) ? $this->chunkSize : $length;
+                $length -= $read;
+
+                stream_copy_to_stream($file, $out, $read);
+
+                if (connection_aborted()) {
+                    break;
+                }
+            }
+
+            fclose($out);
+            fclose($file);
+        } finally {
+            if ($this->deleteAfterSend && is_file($this->getRealPath())) {
+                unlink($this->getRealPath());
+            }
+        }
+
+        return $this;
     }
 
     /**
@@ -223,10 +205,5 @@ class StreamFile implements StreamInterface
     public function getMetadata($key = null)
     {
         throw new \BadMethodCallException('Not implemented');
-    }
-
-    public function getFilename(): string
-    {
-        return $this->file->getPathname();
     }
 }
