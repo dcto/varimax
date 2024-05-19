@@ -29,7 +29,7 @@ class Response extends BaseResponse implements ResponseInterface
      */
     public function make($context = '', int $status = 200, array $headers = [])
     {
-        return $this->withStatus($status)->withHeaders($headers)->setContent(new Stream((string) $context));
+        return $this->withStatus($status)->withHeaders($headers)->withBody(new Stream((string) $context));
     }
 
     /**
@@ -45,7 +45,7 @@ class Response extends BaseResponse implements ResponseInterface
         return $this->withStatus($status)
             ->withHeader('content-type', 'application/xml; charset=utf-8')
             ->withHeaders($headers)
-            ->setContent(new Stream(Encode::toXml($context, null, $root)));
+            ->withBody(new Stream(Encode::toXml($context, null, $root)));
     }
 
     /**
@@ -60,7 +60,7 @@ class Response extends BaseResponse implements ResponseInterface
         return $this->withStatus($status)
             ->withHeader('content-type', 'text/plain; charset=utf-8')
             ->withHeaders($headers)
-            ->setContent(new Stream(Encode::toRaw($context)));
+            ->withBody(new Stream(Encode::toRaw($context)));
     }
 
     /**
@@ -78,7 +78,7 @@ class Response extends BaseResponse implements ResponseInterface
         return $this->withStatus($status)
             ->withHeader('content-type', 'application/json; charset=utf-8')
             ->withHeaders($headers)
-            ->setContent(new Stream(Encode::toJson($context, $callback, $options)));
+            ->withBody(new Stream(Encode::toJson($context, $callback, $options)));
     }
 
 
@@ -94,7 +94,7 @@ class Response extends BaseResponse implements ResponseInterface
         return $this->withStatus($status)
             ->withHeader('content-type', 'text/html; charset=utf-8')
             ->withHeaders($headers)
-            ->setContent(new Stream($context));
+            ->withBody(new Stream($context));
     }
 
 
@@ -142,8 +142,7 @@ class Response extends BaseResponse implements ResponseInterface
             ->withHeader('Content-Length', $file->getSize())
             ->withHeader('Content-Type', $file->getMimeType() ?: 'application/octet-stream')
             ->withHeader('Content-Disposition', $this->headers->makeDisposition($disposition, $name ?? $file->getFilename()))
-            ->setContent($file->getContents($deleteFile));
-
+            ->withBody($file);
         return $this;
     }
 

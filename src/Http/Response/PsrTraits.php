@@ -189,8 +189,7 @@ trait PsrTraits {
      */
     public function getBody()
     {
-        $body = $this->getContent();
-        return $body instanceof StreamInterface ? $body : new Stream($body);
+        return $this->getContent();
     }
 
     /**s

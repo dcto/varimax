@@ -11,11 +11,6 @@ use Psr\Http\Message\StreamInterface;
 class Stream implements StreamInterface
 {
     /**
-     * @var string
-     */
-    protected $contents;
-
-    /**
      * @var int
      */
     protected $size;
@@ -24,6 +19,11 @@ class Stream implements StreamInterface
      * @var bool
      */
     protected $writable;
+
+     /**
+     * @var string
+     */
+    protected $contents;
 
     /**
      * SwooleStream constructor.
