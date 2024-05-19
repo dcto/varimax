@@ -219,7 +219,7 @@ trait PsrTraits {
      */
     public function getStatusCode(): int
     {
-        return $this->getStatusCode();
+        return parent::getStatusCode();
     }
 
     /**
