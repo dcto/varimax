@@ -137,7 +137,7 @@ if(!function_exists('root')) {
      */
     function root(...$paths)
     {
-        return _DOC_.array_reduce(array_flat($paths), fn($v, $p)=>$v.=_DS_.$p);
+        return _DOC_._DS_.join(_DS_, array_map(fn($p)=>trim($p, _DS_), array_flat($paths) ));
     }
 }
 
@@ -401,7 +401,7 @@ if(!function_exists('www')) {
      */
     function www(...$paths)
     {
-        return substr($paths[0],0, 1) == '/' ? ltrim(join('/', $paths),'/') : '/'. _APP_.'/'.join('/', $paths);
+        return root('www', ...$paths);
     }
 }
 
