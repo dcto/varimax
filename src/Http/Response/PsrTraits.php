@@ -5,6 +5,12 @@ namespace VM\Http\Response;
 use Psr\Http\Message\StreamInterface;
 
 trait PsrTraits {
+
+    /**
+     * @var StreamInterface
+     */
+    protected $body;
+
     /**
      * Retrieves the HTTP protocol version as a string.
      * The string MUST contain only the HTTP version number (e.g., "1.1", "1.0").
@@ -189,7 +195,7 @@ trait PsrTraits {
      */
     public function getBody()
     {
-        return $this->getContent();
+        return $this->body;
     }
 
     /**s
@@ -205,7 +211,8 @@ trait PsrTraits {
      */
     public function withBody(StreamInterface $body)
     {
-        $this->setContent($body);
+        $this->body = $body;
+        $this->setContent($body->getContents());
         return $this;
     }
 
@@ -259,6 +266,6 @@ trait PsrTraits {
      */
     public function getReasonPhrase(): string
     {
-        return parent::$statusTexts[$this->getStatusCode()];
+        return parent::$statusTexts[$this->getStatusCode()]  ??  'unknown status' ;
     }
 }

@@ -3,7 +3,7 @@
 
 namespace VM\Http\Response;
 
-use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
 
 /**
  * Code Taken from Nyholm/psr7.
@@ -12,7 +12,7 @@ use Psr\Http\Message\StreamInterface;
  * Author: Martijn van der Ven <martijn@vanderven.se>.
  * @license https://github.com/Nyholm/psr7/blob/master/LICENSE
  */
-final class StreamUpload implements StreamInterface
+final class StreamUpload implements UploadedFileInterface
 {
     /** @var array Hash of readable and writable stream types */
     private const READ_WRITE_HASH = [
@@ -48,8 +48,26 @@ final class StreamUpload implements StreamInterface
     /** @var null|int */
     private $size;
 
-    private function __construct()
+    private function __construct($stream = null)
     {
+        if ($stream instanceof UploadedFileInterface) {
+            $this->stream = $stream;
+        }
+
+        if (\is_string($stream)) {
+            $resource = \fopen('php://temp', 'rw+');
+            \fwrite($resource, $stream);
+            $this->stream = $resource;
+        }else if (\is_resource($stream)) {
+            $new = new self;
+            $new->stream = $stream;
+            $meta = \stream_get_meta_data($new->stream);
+            $new->seekable = $meta['seekable'] && \fseek($new->stream, 0, \SEEK_CUR) === 0;
+            $new->readable = isset(self::READ_WRITE_HASH['read'][$meta['mode']]);
+            $new->writable = isset(self::READ_WRITE_HASH['write'][$meta['mode']]);
+            $new->uri = $new->getMetadata('uri');
+            $this->stream = $new;
+        }
     }
 
     /**
@@ -73,39 +91,6 @@ final class StreamUpload implements StreamInterface
         }
     }
 
-    /**
-     * Creates a new PSR-7 stream.
-     *
-     * @param resource|StreamInterface|string $body
-     *
-     * @throws \InvalidArgumentException
-     */
-    public static function make($body = ''): StreamInterface
-    {
-        if ($body instanceof StreamInterface) {
-            return $body;
-        }
-
-        if (\is_string($body)) {
-            $resource = \fopen('php://temp', 'rw+');
-            \fwrite($resource, $body);
-            $body = $resource;
-        }
-
-        if (\is_resource($body)) {
-            $new = new self();
-            $new->stream = $body;
-            $meta = \stream_get_meta_data($new->stream);
-            $new->seekable = $meta['seekable'] && \fseek($new->stream, 0, \SEEK_CUR) === 0;
-            $new->readable = isset(self::READ_WRITE_HASH['read'][$meta['mode']]);
-            $new->writable = isset(self::READ_WRITE_HASH['write'][$meta['mode']]);
-            $new->uri = $new->getMetadata('uri');
-
-            return $new;
-        }
-
-        throw new \InvalidArgumentException('First argument to Stream::create() must be a string, resource or StreamInterface.');
-    }
 
     public function close(): void
     {
@@ -154,6 +139,62 @@ final class StreamUpload implements StreamInterface
         }
 
         return null;
+    }
+
+
+    public function getError(): int
+    {
+        return \UPLOAD_ERR_OK;
+    }
+
+    public function getClientFilename(): ?string
+    {
+        return null;
+    }
+
+    public function getClientMediaType(): ?string
+    {
+        return null;
+    }
+
+
+
+    public function moveTo($targetPath): bool
+    {
+        if (! $this->stream) {
+            throw new \RuntimeException('Unable to move non-temporary stream');
+        }
+
+        if (! \is_string($targetPath)) {
+            throw new \InvalidArgumentException('Target path is not a string');
+        }
+
+        if (! $this->isReadable()) {
+            throw new \RuntimeException('Stream is not readable');
+        }
+
+        if (! $this->isWritable()) {
+            throw new \RuntimeException('Stream is not writable');
+        }
+
+        $result = \rename($this->getMetadata('uri'), $targetPath);
+
+        if ($result) {
+            $this->detach();
+        }
+
+        return $result;
+    }
+
+
+
+    public function getStream()
+    {
+        if (! isset($this->stream)) {
+            throw new \RuntimeException('No stream available');
+        }
+
+        return $this->stream;    
     }
 
     public function tell(): int

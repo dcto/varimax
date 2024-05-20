@@ -140,7 +140,35 @@ class StreamFile extends File implements StreamInterface
      */
     public function read($length)
     {
-        throw new \BadMethodCallException('Not implemented');
+        if (0 === $this->maxlen) {
+            return $this;
+        }
+
+        $out = fopen('php://output', 'w');
+        $file = fopen($this->getRealPath(), 'r');
+
+        ignore_user_abort(true);
+
+        if (0 !== $this->offset) {
+            fseek($file, $this->offset);
+        }
+
+        $length = $this->maxlen;
+        while ($length && !feof($file)) {
+            $read = ($length > $this->chunkSize) ? $this->chunkSize : $length;
+            $length -= $read;
+
+            stream_copy_to_stream($file, $out, $read);
+
+            if (connection_aborted()) {
+                break;
+            }
+        }
+
+        fclose($out);
+        fclose($file);
+
+        return $this;
     }
     
     /**
@@ -154,34 +182,7 @@ class StreamFile extends File implements StreamInterface
     {
         try {
             $this->deleteAfterSend = $deleteAfterSend;
-
-            if (0 === $this->maxlen) {
-                return $this;
-            }
-
-            $out = fopen('php://output', 'w');
-            $file = fopen($this->getRealPath(), 'r');
-
-            ignore_user_abort(true);
-
-            if (0 !== $this->offset) {
-                fseek($file, $this->offset);
-            }
-
-            $length = $this->maxlen;
-            while ($length && !feof($file)) {
-                $read = ($length > $this->chunkSize) ? $this->chunkSize : $length;
-                $length -= $read;
-
-                stream_copy_to_stream($file, $out, $read);
-
-                if (connection_aborted()) {
-                    break;
-                }
-            }
-
-            fclose($out);
-            fclose($file);
+            return $this->read($this->maxlen);
         } finally {
             if ($this->deleteAfterSend && is_file($this->getRealPath())) {
                 unlink($this->getRealPath());

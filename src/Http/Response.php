@@ -130,7 +130,7 @@ class Response extends BaseResponse implements ResponseInterface
      * @param bool $deleteFile delete the file after download, default is false
      * @return ResponseInterface
      */
-    public function download(string $file, string $name = null, $disposition = 'attachment',  $deleteFile = false)
+    public function download(string $file, string $name = null, $disposition = 'attachment')
     {
         $file = new StreamFile($file);
 
