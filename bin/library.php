@@ -349,7 +349,7 @@ if (! function_exists('coid')) {
      * @return int
      */
     function coid(): int {
-        return \Swoole\Coroutine::getCid();
+        return defined('SWOOLE_VERSION') ? \Swoole\Coroutine::getCid() : -1;
     }
 }
 
