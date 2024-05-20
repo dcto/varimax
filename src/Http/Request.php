@@ -12,11 +12,14 @@
 namespace VM\Http;
 
 use VM\Http\Request\Upload;
+use VM\Http\Request\PsrRequest;
 use Symfony\Component\HttpFoundation;
-use Illuminate\Contracts\Support\Arrayable;
+use Psr\Http\Message\RequestInterface;
 
-class Request extends HttpFoundation\Request implements Arrayable, \ArrayAccess
+
+class Request extends HttpFoundation\Request implements RequestInterface, \ArrayAccess
 {
+    use PsrRequest;
 
     /**
      * @param array|null                $query      The GET parameters
