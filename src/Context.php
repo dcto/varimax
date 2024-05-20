@@ -9,44 +9,40 @@
  */
 namespace VM;
 
-use Swoole\Coroutine;
-
 class Context
 {
+    /**
+     * The pool of variables in the current coroutine context.
+     */
     protected static $pool = [];
 
+    /**
+     * Get the value of a variable in the current coroutine context.
+     */
     static function get($key)
     {
-        $cid = Coroutine::getuid();
-        if ($cid < 0)
-        {
-            return null;
-        }
-        if(isset(self::$pool[$cid][$key])){
-            return self::$pool[$cid][$key];
-        }
-        return null;
+        if($cid = coid() < 0) return null;
+        return self::$pool[$cid][$key] ?? null;
     }
 
-    static function put($key, $item)
+    /**
+     * Set the value of a variable in the current coroutine context.
+     */
+    static function put($key, $value)
     {
-        $cid = Coroutine::getuid();
-        if ($cid > 0)
-        {
-            self::$pool[$cid][$key] = $item;
-        }
-
+        if($cid = coid() > 0) self::$pool[$cid][$key] = $value;
     }
     
+    /**
+     * Delete a variable in the current coroutine context.
+     */
     static function delete($key = null)
     {
-        $cid = Coroutine::getuid();
-        if ($cid > 0)
-        {
-            if($key){
-                unset(self::$pool[$cid][$key]);
-            }else{
+        if($cid = coid() > 0){
+            if(is_null($key)) {
                 unset(self::$pool[$cid]);
+            }else{
+                unset(self::$pool[$cid][$key]);
             }
         }
     }
