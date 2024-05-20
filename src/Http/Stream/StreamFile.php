@@ -144,29 +144,24 @@ class StreamFile extends File implements StreamInterface
             return $this;
         }
 
-        $out = fopen('php://output', 'w');
-        $file = fopen($this->getRealPath(), 'r');
-
-        ignore_user_abort(true);
-
-        if (0 !== $this->offset) {
-            fseek($file, $this->offset);
-        }
-
-        $length = $this->maxlen;
-        while ($length && !feof($file)) {
-            $read = ($length > $this->chunkSize) ? $this->chunkSize : $length;
-            $length -= $read;
-
-            stream_copy_to_stream($file, $out, $read);
-
-            if (connection_aborted()) {
-                break;
+        if($this->getSize() > $this->chunkSize)
+        {
+            $srcStream = fopen($this->getRealPath(), 'rb');
+            $dstStream = fopen('php://output', 'wb');
+    
+            while(!feof($srcStream)) {
+                $this->offset += stream_copy_to_stream($srcStream, $dstStream, $this->chunkSize, $this->offset);
             }
+    
+            fclose($dstStream);
+            fclose($srcStream);   
+        }else {
+            // stream_copy_to_stream behaves() strange when filesize > chunksize.
+            // Seems to never hit the EOF.
+            // On the other handside file_get_contents() is not scalable. 
+            // Therefore we only use file_get_contents() on small files.
+            return file_get_contents($this->getRealPath());
         }
-
-        fclose($out);
-        fclose($file);
 
         return $this;
     }
