@@ -2,18 +2,19 @@
 
 namespace VM\Http;
 
+use Http;
 use VM\Http\Response\Encode;
 use VM\Http\Stream\Stream;
 use VM\Http\Stream\StreamFile;
-use Psr\Http\Message\ResponseInterface;
-use Symfony\Component\HttpFoundation\Response as BaseResponse;
 use VM\Http\Response\PsrResponse;
+use Symfony\Component\HttpFoundation;
+use Psr\Http\Message\ResponseInterface;
 
 /**
  * Class Response
  * @package VM\Http
  */
-class Response extends BaseResponse implements ResponseInterface 
+class Response extends HttpFoundation\Response implements ResponseInterface 
 {
     /**
      * Psr Response Trait
