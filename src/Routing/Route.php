@@ -163,7 +163,7 @@ class Route implements \ArrayAccess, \JsonSerializable
         if (!$args) return $this->url;
 
         if ($this->regex) {
-            return preg_replace_array('/\(.*?\)/', $args, $this->url);
+            return \preg_replace_array('/\(.*?\)/', $args, $this->url);
         }
         return \Uri::uri($this->url)->set(...$args);
     }
