@@ -2,7 +2,6 @@
 
 namespace VM\Http;
 
-use Http;
 use VM\Http\Response\Encode;
 use VM\Http\Stream\Stream;
 use VM\Http\Stream\StreamFile;
