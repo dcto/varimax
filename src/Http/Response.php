@@ -3,11 +3,11 @@
 namespace VM\Http;
 
 use VM\Http\Response\Encode;
-use VM\Http\Response\Stream;
-use VM\Http\Response\StreamFile;
-use VM\Http\Response\PsrTraits;
+use VM\Http\Stream\Stream;
+use VM\Http\Stream\StreamFile;
 use Psr\Http\Message\ResponseInterface;
 use Symfony\Component\HttpFoundation\Response as BaseResponse;
+use VM\Http\Response\PsrResponse;
 
 /**
  * Class Response
@@ -18,7 +18,7 @@ class Response extends BaseResponse implements ResponseInterface
     /**
      * Psr Response Trait
      */
-    use PsrTraits;
+    use PsrResponse;
     
     /**
      * Make an Response instance
