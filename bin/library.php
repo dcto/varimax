@@ -401,7 +401,7 @@ if(!function_exists('www')) {
      */
     function www(...$paths)
     {
-        return _DS_.join(_DS_, array_map(fn($p)=>trim($p, _DS_), array_flat($paths) ));
+        return _DS_.($paths[0][0] == '/' ? null : _APP_._DS_).join(_DS_, array_map(fn($p)=>trim($p, _DS_), array_flat($paths) ));
     }
 }
 
