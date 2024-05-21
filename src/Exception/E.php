@@ -68,8 +68,8 @@ class E {
      */
     static public function onException($e)
     {
-        static::logException($e);
-        static::display($e);
+        error_log($e, 4);
+        static::$debug || static::logException($e);
     }
 
     /**
@@ -185,15 +185,9 @@ class E {
     * @param $e \Exception
     * @version 20240511
     */
-    final static function display($e)
+    final static function html($e)
     {
-        error_log(sprintf("[error] %s %s(%s)",  $e->getMessage(), $e->getFile(), $e->getLine()), 4);
         ob_get_contents() && ob_end_clean();
-        http_response_code($e instanceof Error ? $e->getStatus() : 500);
-        switch(static::$debug){
-            case 1: echo $e->getMessage(); die;
-            case 2: echo static::HtmlException($e); break;
-        }
-        
+        return static::HtmlException($e);
     }
 }
