@@ -19,7 +19,6 @@ namespace VM\Cache\Driver;
  */
 class RedisDriver extends Driver implements DriverInterface
 {
-
     /**
      * connection pool
      * @var \Swoole\ConnectionPool
@@ -34,11 +33,12 @@ class RedisDriver extends Driver implements DriverInterface
 
     public function __construct($server = 'default')
     {
-        if(coid() > 0){
+        if(coid()>-1){
             $this->pool = new \Swoole\ConnectionPool(fn()=>$this->connection($server));
         }else{
             $this->client = $this->connection($server);
         }
+        
     }
 
     /**
@@ -47,27 +47,24 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function connection($server)
     {
-        if($this->client instanceof \Redis) return $this->client;
-
         if(!$config = config('cache.driver.redis.'. $server)) throw new \ErrorException('Unable load ['.$server.'] redis server configure.');
         
-        $this->client = new \Redis();
-    
-        // var_dump($this->client->ping('test'));
+        $client = new \Redis();
+
         if($config['persistent'] ?? false){
-            $this->client->pconnect($config['host'], $config['port'] ?? 6379, $config['timeout'] ?? 0.5);
+            $client->pconnect($config['host'], $config['port'] ?? 6379, $config['timeout'] ?? 0.5);
         }else {
-            $this->client->connect($config['host'], $config['port'] ?? 6379, $config['timeout'] ?? 0.5);
+            $client->connect($config['host'], $config['port'] ?? 6379, $config['timeout'] ?? 0.5);
         }
         if ($config['auth'] ?? false){
-            $this->client->auth($config['auth']);
+            $client->auth($config['auth']);
         }
         
         foreach ($config['options'] ?? [] as $name => $value) {
-            $this->client->setOption($name, $value);
+            $client->setOption($name, $value);
         }
 
-        return $this->client;
+        return $client;
     }
 
 
@@ -77,7 +74,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function client()
     {
-        return coid() > 0 ? $this->pool->get() : $this->client;
+        return coid() > -1 ? $this->pool->get() : $this->client;
     }
 
     /**
