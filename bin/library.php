@@ -115,7 +115,7 @@ if(!function_exists('route')) {
 if(!function_exists('config')) {
     /**
      * get config
-     * @return string|\VM\Config\Config
+     * @return mixed|\VM\Config\Config
      */
     function config($key = null, $default = null)
     {
