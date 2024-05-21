@@ -87,7 +87,7 @@ class Encode
             $data = $data->toArray();
         }
 
-        $data = json_encode($data, $flags | JSON_THROW_ON_ERROR, $depth);
+        $data = json_encode($data, $flags | JSON_THROW_ON_ERROR | JSON_PARTIAL_OUTPUT_ON_ERROR, $depth);
 
         if ($callback) {
             // partially taken from https://geekality.net/2011/08/03/valid-javascript-identifier/
