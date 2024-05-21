@@ -33,7 +33,7 @@ class RedisDriver extends Driver implements DriverInterface
 
     public function __construct($server = 'default')
     {
-        if(coid()>-1){
+        if(pcid()){
             $this->pool = new \Swoole\ConnectionPool(fn()=>$this->connection($server));
         }else{
             $this->client = $this->connection($server);
@@ -74,7 +74,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function client()
     {
-        return coid() > -1 ? $this->pool->get() : $this->client;
+        return pcid() ? $this->pool->get() : $this->client;
     }
 
     /**
