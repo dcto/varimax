@@ -344,8 +344,23 @@ if (! function_exists('chan')) {
     }
 }
 
+if (! function_exists('pcid')) {
+    /**
+     * 获取当前协程的父 ID
+     * 非嵌套协程调用 pcid 将返回 -1 (从非协程空间创建的)
+     * 在非协程内调用 pcid 将返回 false (没有父协程)
+     * 0 作为保留 id, 不会出现在返回值中
+     * @return int|false
+     */
+    function pcid() {
+        return defined('SWOOLE_VERSION') ? \Swoole\Coroutine::getPcid() : false;
+    }
+}
+
 if (! function_exists('coid')) {
     /**
+     * 成功时返回当前协程 ID
+     * 如果当前不在协程环境中，则返回 -1
      * @return int
      */
     function coid(): int {
