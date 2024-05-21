@@ -137,7 +137,7 @@ if(!function_exists('root')) {
      */
     function root(...$paths)
     {
-        return _DOC_._DS_.join(_DS_, array_map(fn($p)=>trim($p, _DS_), array_flat($paths) ));
+        return _DOC_._DS_. join(_DS_, array_filter(array_flat($paths), fn($p)=>trim($p, _DS_)));
     }
 }
 
