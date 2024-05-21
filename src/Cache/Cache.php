@@ -26,19 +26,17 @@ class Cache
      * 驱动器
      * @var array
      */
-    private $driver = array(
-            'null'  => null,
-            'apc'   => null,
-            'files' => null,
-            'redis' => null
+    private $drivers = array(
+        'null'  => false,
+        'apc'   => false,
+        'files' => false,
+        'redis' => false
     );
 
 
-    public function __construct($driver = null)
+    public function __construct($driver = 'null')
     {
-        if($driver){
-            $this->setDefaultDriver($driver);
-        }
+        $this->setDefaultDriver($driver);
     }
 
     /**
@@ -95,12 +93,11 @@ class Cache
      */
     public function driver($driver = null)
     {
-        $driver = $driver ? $this->setDefaultDriver($driver) : $this->getDefaultDriver();
-        $driver = $driver ?: 'null';
-        if(!$this->driver[$driver] instanceof Driver){
-           $this->driver[$driver] = $this->$driver();
+        $driver ??= $this->getDefaultDriver();
+        if(!$this->drivers[$driver] instanceof Driver){
+           $this->drivers[$driver] = $this->$driver();
         }
-        return $this->driver[$driver];
+        return $this->drivers[$driver];
     }
 
     /**
@@ -121,10 +118,9 @@ class Cache
      */
     public function setDefaultDriver($driver)
     {
-       if(!isset($this->driver[$driver])){
+       if(!isset($this->drivers[$driver])){
             throw new \InvalidArgumentException('Invalid '.$driver.' cache driver.');
         }
-
        return config('cache.default', $driver);
     }
 
@@ -135,7 +131,6 @@ class Cache
      * @param       $method
      * @param array $parameters
      * @return $this->driver()
-     * @author 11.
      */
     public function __call($method, array $parameters = [])
     {

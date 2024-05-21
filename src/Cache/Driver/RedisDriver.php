@@ -20,63 +20,64 @@ namespace VM\Cache\Driver;
 class RedisDriver extends Driver implements DriverInterface
 {
 
+    /**
+     * connection pool
+     * @var \Swoole\ConnectionPool
+     */
+    private $pool;
 
     /**
      * @var \Redis
      */
-    private $redis;
-
-    /**
-     * redis servers config
-     *
-     * @var array
-     */
-    private $config = array();
-
+    private $client;
 
 
     public function __construct($server = 'default')
     {
-        $this->config = config('cache.driver.redis.'. $server);
-        if(!$this->config){
-            throw new \ErrorException('Unable load ['.$server.'] redis server configure.');
+        if(coid() > 0){
+            $this->pool = new \Swoole\ConnectionPool(fn()=>$this->connection($server));
+        }else{
+            $this->client = $this->connection($server);
         }
-        $this->server();
-    }
-
-
-    /**
-     * @return array
-     */
-    public function config($key = null, $defalut = null)
-    {
-        if($key){
-            return isset($this->config[$key]) ? $this->config[$key] : $defalut;
-        }
-        return $this->config;
     }
 
     /**
      * @param string $server
      * @return mixed|\Redis
      */
-    public function server()
+    public function connection($server)
     {
-        if(!$this->redis instanceof \Redis){
-            $this->redis = new \Redis();
-            if($this->config('persistent')){
-                $this->redis->pconnect($this->config('host'), $this->config('port'), $this->config('timeout'));
-            }else {
-                $this->redis->connect($this->config('host'), $this->config('port'), $this->config('timeout'));
-            }
-            if($this->config('password'))  $this->redis->auth($this->config('password'));
-            $this->redis->select($this->config('database', 0));
+        if($this->client instanceof \Redis) return $this->client;
 
-            foreach((array) \Arr::get($this->config, 'options') as $key => $val) {
-                $this->redis->setOption($key, $val);
-            }
+        if(!$config = config('cache.driver.redis.'. $server)) throw new \ErrorException('Unable load ['.$server.'] redis server configure.');
+        
+        $this->client = new \Redis();
+    
+        // var_dump($this->client->ping('test'));
+        if($config['persistent'] ?? false){
+            $this->client->pconnect($config['host'], $config['port'] ?? 6379, $config['timeout'] ?? 0.5);
+        }else {
+            $this->client->connect($config['host'], $config['port'] ?? 6379, $config['timeout'] ?? 0.5);
         }
-        return $this->redis;
+        if ($config['auth'] ?? false){
+            $this->client->auth($config['auth']);
+        }
+        
+        foreach ($config['options'] ?? [] as $name => $value) {
+            $this->client->setOption($name, $value);
+        }
+
+        return $this->client;
+    }
+
+
+    /**
+     * get redis client
+     * @return \Redis
+     */
+    public function client()
+    {
+        return coid() > 0 ? $this->pool->get() : $this->client;
     }
 
     /**
@@ -87,7 +88,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function has($key)
     {
-        return $this->redis->exists($key);
+        return $this->client()->exists($key);
     }
 
     /**
@@ -98,7 +99,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function get($key)
     {
-        return $this->redis->get($key);
+        return $this->client()->get($key);
         /*
         if (! is_null($value = $this->server()->get($key))) {
             return is_numeric($value) ? $value : unserialize($value);
@@ -117,7 +118,7 @@ class RedisDriver extends Driver implements DriverInterface
     public function set($key, $value, $time = 0)
     {
         //$value = is_numeric($value) ? $value : serialize($value);
-        return $time ? $this->redis->set($key, $value, $time) : $this->redis->set($key, $value);
+        return $time ? $this->client()->set($key, $value, $time) : $this->client()->set($key, $value);
     }
 
     /**
@@ -132,7 +133,7 @@ class RedisDriver extends Driver implements DriverInterface
     {
         $return = array();
 
-        $values = $this->redis->mget($keys);
+        $values = $this->client()->mget($keys);
 
         foreach ($values as $index => $value) {
             $return[$keys[$index]] = $value;//is_numeric($value) ? $value : unserialize($value);
@@ -154,7 +155,7 @@ class RedisDriver extends Driver implements DriverInterface
             $this->set($key, $value, $time);
         }
 
-       return $this->redis->exec();
+       return $this->client()->exec();
     }
 
 
@@ -167,7 +168,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function increment($key, $value = 1)
     {
-        return $this->redis->incrBy($key, $value);
+        return $this->client()->incrBy($key, $value);
     }
 
     /**
@@ -179,7 +180,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function decrement($key, $value = 1)
     {
-        return $this->redis->decrBy($key, $value);
+        return $this->client()->decrBy($key, $value);
     }
 
     /**
@@ -192,7 +193,7 @@ class RedisDriver extends Driver implements DriverInterface
     public function save($key, $value)
     {
        //$value = is_numeric($value) ? $value : serialize($value);
-        $this->redis->set($key, $value);
+        $this->client()->set($key, $value);
     }
 
     /**
@@ -203,7 +204,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function del($key)
     {
-        return (bool) $this->redis->del($key);
+        return (bool) $this->client()->del($key);
     }
 
     /**
@@ -213,7 +214,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function flush()
     {
-        return $this->redis->flushDB();
+        return $this->client()->flushDB();
     }
 
     /**
@@ -223,7 +224,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function prefix($prefix = false)
     {
-        return $this->redis->_prefix($prefix);
+        return $this->client()->_prefix($prefix);
     }
 
 
@@ -236,7 +237,7 @@ class RedisDriver extends Driver implements DriverInterface
      */
     public function command($method, array $parameters = [])
     {
-        return call_user_func_array([$this->redis, $method], $parameters);
+        return call_user_func_array([$this->client(), $method], $parameters);
 
     }
 
