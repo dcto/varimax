@@ -152,7 +152,7 @@ class DatabaseServiceProvider extends ServiceProvider
     protected function registerQueryEvents()
     {       
         $this->app['db']->beforeExecuting(function($query, $bindings, &$connection){
-            if (coid() > 0) {
+            if (pcid()) {
                 if (!$pdo = Context::get('pdo')) {
                     $connection->reconnect();
                     Context::put('pdo', $pdo = $connection->getPdo());
