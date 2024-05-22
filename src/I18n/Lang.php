@@ -2,10 +2,8 @@
 /**
  * Varimax The Slim PHP Frameworks.
  * varimax.cn
- * FILE: 2020
- * USER: 陶之11. <sdoz@live.com>
- * Time: 2020-08-19 16:50
- * SITE: https://www.varimax.cn/
+ * *
+ * Github: https://github.com/dcto/varimax
  */
 
 namespace VM\I18n;

@@ -1,11 +1,10 @@
 <?php
 /**
  * Varimax The Slim PHP Frameworks.
- * varimax
- * FILE: 2024
- * USER: 陶之11. <sdoz@live.com>
+ *
+
  * Time: 2024-05-10 15:30:00
- * SITE: https://www.varimax.cn/
+ * Github: https://github.com/dcto/varimax
  */
 namespace VM;
 

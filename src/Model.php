@@ -1,10 +1,7 @@
 <?php
 /**
  * Varimax The Slim PHP Frameworks.
- * varimax
- * FILE: 2020
- * USER: 陶之11. <sdoz@live.com>
- * Time: 2020-08-11-21:21
+ *
  */
 
 namespace VM;
