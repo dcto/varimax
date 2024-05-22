@@ -168,15 +168,19 @@ class E {
      */
     final static function HtmlException($e)
     {
-        if(is_array ($debugBacktrace = static::debugBacktrace($e))){
-            $c = count($debugBacktrace) - 5;
-            $debugBacktrace = '<tr bgcolor="#eee"><td>No.</td><td>File</td><td>Line</td><td>Code</td></tr>'. join('', array_map(function($v) use(&$c){
-                if($c>0) return vsprintf('<tr bgcolor="#ffc"><td>'.$c--.'</td><td>%s</td><td>%d</td><td>%s</td></tr>', $v);}, $debugBacktrace));
+        if (static::$debug > 1){
+            if(is_array ($debugBacktrace = static::debugBacktrace($e))){
+                $c = count($debugBacktrace) - 5;
+                $debugBacktrace = '<tr bgcolor="#eee"><td>No.</td><td>File</td><td>Line</td><td>Code</td></tr>'. join('', array_map(function($v) use(&$c){
+                    if($c>0) return vsprintf('<tr bgcolor="#ffc"><td>'.$c--.'</td><td>%s</td><td>%d</td><td>%s</td></tr>', $v);}, $debugBacktrace));
+            }else{
+                $debugBacktrace = "<tr><td><ul>{$debugBacktrace}</ul></td></tr>";
+            }
         }else{
-            $debugBacktrace = "<tr><td><ul>{$debugBacktrace}</ul></td></tr>";
+            $debugBacktrace = '';
         }
         
-        return str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Error::error($e->getCode()),  $e->getFile(), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$title</title></head><body style="background: #eee; padding: 1em;"><div><p><b>File</b>: $file (Line: $line)</p><p><b>$error</b>: $title</p></div><br /><div><p><b>Debug Backtrace &copy;Varimax</b></p><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
+        return str_replace(['$error', '$file', '$title', '$line', '$backtrace'], [Error::error($e->getCode()),  str_replace(_DOC_,'',$e->getFile()), $e->getMessage(), $e->getLine(), $debugBacktrace], '<html><head><title>$error</title></head><body style="background: #eee; padding: 1em;"><div><b>File:</b> $file (Line: $line)</div> <div><b>$error: </b>$title</div><div><h4>Debug Backtrace &copy;Varimax</h4><table cellpadding="8" cellspacing="1" bgcolor="#aaa" width="100%"><tbody>$backtrace</tbody></table></div></body></html>');
         
     }
 
