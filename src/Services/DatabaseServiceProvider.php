@@ -34,8 +34,12 @@ class DatabaseServiceProvider extends ServiceProvider
         $this->registerQueryExecuted();
 
         $this->registerCollectMacros();
-        
-        $this->registerQueueableEntityResolver();
+
+        //set setEventDispatcher
+        Model::setEventDispatcher($this->app['events']);
+
+        //set ConnectionResolver
+        Model::setConnectionResolver($this->app['db']);
 
         PaginationServiceProvider::paginator();
     }
@@ -47,6 +51,8 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        Model::clearBootedModels();
+        
         $this->registerConnectionEvent();
 
         $this->registerConnectionService();
@@ -91,12 +97,6 @@ class DatabaseServiceProvider extends ServiceProvider
         if ($this->app->bound('events')) {
             $this->app['db']->setEventDispatcher($this->app['events']);
         }
-
-        //set setEventDispatcher
-        Model::setEventDispatcher($this->app['events']);
-
-        //set ConnectionResolver
-        Model::setConnectionResolver($this->app['db']);
     }
 
     /**
@@ -108,6 +108,10 @@ class DatabaseServiceProvider extends ServiceProvider
     {
         $this->app->bind('db.connection', function ($app) {
             return $app['db']->connection();
+        });
+
+        $this->app->bind('db.schema', function ($app) {
+            return $app['db']->connection()->getSchemaBuilder();
         });
 
         $this->app->singleton('db.transactions', function () {
