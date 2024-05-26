@@ -411,12 +411,13 @@ if(!function_exists('cache')) {
 if(!function_exists('www')) {
     /**
      * www path
+     * 
      * @param string ...$paths
      * @return string
      */
     function www(...$paths)
     {
-        return _DS_.(($paths[0][0] ?? '') == '/' ? null : _APP_._DS_).join(_DS_,  array_filter(array_flat($paths), fn($p)=>trim($p, _DS_)));
+        return _DS_.($paths[0][0] == '/' ? null : _APP_._DS_).trim(join(_DS_, array_filter(array_flat($paths), fn($p)=>trim($p, _DS_)) ), _DS_);
     }
 }
 
