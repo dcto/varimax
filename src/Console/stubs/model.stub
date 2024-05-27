@@ -16,11 +16,12 @@ class %CLASS% extends Model
     {
         $table->id('id')->comment('ID');
         $table->unsignedInteger('pid')->default(0)->comment('PID');
-        $table->string('title', 96)->nullable()->comment('标题');
+        $table->string('name', 96)->nullable()->comment('名称');
         $table->boolean('state')->default(0)->comment('状态:0=禁用,1=启用');
         $table->timestamps();
         $table->softDeletes();
 
+        $table->index('pid');
         $table->index('state');
     }
 }
