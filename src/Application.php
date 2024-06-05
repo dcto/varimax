@@ -149,14 +149,19 @@ class Application extends \Illuminate\Container\Container
 
     /**
      * Dispatch Request To Response 
+     * @param mixed $context when WebSocket then ['fd', 'data', 'opcode', 'flags' 'finish'] into context 
      * @return \VM\Http\Response
      */
-    public function dispatch()
+    public function dispatch(...$context)
     {
-        return $this->router->through(app_dir('routes'),  function($route){
+        return $this->router->through(app_dir('routes'), function($route) use($context){
+            /** @var \VM\Routing\Route $route */
+
             return (new \VM\Pipeline($this))->send($this->request)
+            
             ->through(array_replace((array) $this['config']['pipeline'], $route->pipeline))
-            ->then(fn()=>$this->call($route->callable(), $route->args()));
+
+            ->then(fn()=>$this->call($route->callable(), $route->args() + $context));
         });
     }
 
