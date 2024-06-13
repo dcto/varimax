@@ -33,7 +33,6 @@
     "ext-xml":"*",
     "ext-json":"*",
     "ext-curl":"*",
-    "ext-bcmath": "*",
     "ext-openssl": "*",
     "ext-mbstring": "*",
     "psr/log": "1.*",
