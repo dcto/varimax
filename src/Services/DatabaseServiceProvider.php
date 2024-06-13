@@ -29,6 +29,10 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        if(!$this->app->config['database.connections']){
+            return;
+        }
+        
         $this->registerQueryEvents();
 
         $this->registerQueryExecuted();
@@ -51,6 +55,10 @@ class DatabaseServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        if(!$this->app->config['database.connections']){
+            return;
+        }
+
         Model::clearBootedModels();
         
         $this->registerConnectionEvent();
