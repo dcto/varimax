@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static string os()
  * @method static string url()
  * @method static string uri()
- * @method static mixed get(mixed ...$key)
+ * @method static mixed get($key, $default = null)
  * @method static \VM\Http\Request set(string $key, string $val)
  * @method static array all()
  * @method static array toArray()

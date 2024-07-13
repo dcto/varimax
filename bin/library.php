@@ -260,11 +260,11 @@ if(!function_exists('Db')) {
     /**
      * \DB::table function
      * @param $table
-     * @return \Illuminate\Database\Query\Builder
+     * @return \Illuminate\Database\Query\Builder|\DB
      */
-    function Db($table)
+    function Db($table = null)
     {
-        return \DB::table($table);
+        return $table ? \DB::table($table) : app('db');
     }
 }
 
