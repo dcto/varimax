@@ -152,12 +152,6 @@ abstract class Model extends \Illuminate\Database\Eloquent\Model
     protected $pid = 'pid';
 
     /**
-     * Hash Id
-     * @var array
-     */
-    protected $hashId;
-
-    /**
      * 表前缀
      * @var
      */
