@@ -8,6 +8,7 @@ namespace App\Model;
  */
 class %CLASS% extends Model
 {
+    
     /**
      * @param \Blueprint $table
      * @return void
@@ -15,13 +16,11 @@ class %CLASS% extends Model
     public function schema(\Blueprint $table)
     {
         $table->id('id')->comment('ID');
-        $table->unsignedInteger('pid')->default(0)->comment('PID');
+        $table->foreignId('pid')->default(0)->index()->comment('PID');
         $table->string('name', 96)->nullable()->comment('名称');
-        $table->boolean('state')->default(0)->comment('状态:0=禁用,1=启用');
+
+        $table->boolean('state')->default(0)->index()->comment('状态:0=禁用, 1=启用');
         $table->timestamps();
         $table->softDeletes();
-
-        $table->index('pid');
-        $table->index('state');
     }
 }
