@@ -198,8 +198,7 @@ class DatabaseServiceProvider extends ServiceProvider
      * @return string
      */
     protected function formatQueryString(string $query, array $bindings) {
-
-        return vsprintf(str_replace("?", "%s", $query), array_map(fn($b)=>is_string($b) ? str_pad($b, 6, "'", STR_PAD_BOTH) : $b, $bindings));
+        return $bindings ? vsprintf(str_replace("?", "'%s'", $query),  $bindings) : $query;
     }
 
 
