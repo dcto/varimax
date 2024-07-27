@@ -277,6 +277,7 @@ class Route implements \ArrayAccess, \JsonSerializable
         unset($this->$property);
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->toArray();
