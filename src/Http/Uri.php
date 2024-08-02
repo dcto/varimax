@@ -128,10 +128,8 @@ class Uri implements UriInterface, JsonSerializable
         );
     }
 
-    /**
-     * Apply parts to object
-     * @return string;
-     */
+
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return (string) $this;
