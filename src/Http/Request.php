@@ -896,7 +896,7 @@ class Request extends HttpFoundation\Request implements RequestInterface, \Array
      */
     public function setContent($data = [])
     {
-        switch ($this->getContentTypeFormat()) {
+        switch ($this->getFormat($this->headers->get('CONTENT_TYPE', ''))) {
             case 'json':
                 $data = json_decode($this->getContent(), true);
                 break;
