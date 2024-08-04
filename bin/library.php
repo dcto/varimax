@@ -353,7 +353,7 @@ if (! function_exists('pcid')) {
      * @return int|false
      */
     function pcid() {
-        return defined('SWOOLE_VERSION') ? \Swoole\Coroutine::getPcid() : false;
+        return PHP_SAPI == 'cli' ? \Swoole\Coroutine::getPcid() : false;
     }
 }
 
@@ -364,7 +364,17 @@ if (! function_exists('coid')) {
      * @return int
      */
     function coid(): int {
-        return defined('SWOOLE_VERSION') ? \Swoole\Coroutine::getCid() : -1;
+        return PHP_SAPI == 'cli' ? \Swoole\Coroutine::getCid() : -1;
+    }
+}
+
+
+if (! function_exists('cli')) {
+    /**
+     * 判断是否在 CLI 模式
+     */
+    function cli($server = null) {
+        return PHP_SAPI == 'cli';
     }
 }
 
