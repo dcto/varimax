@@ -304,9 +304,7 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
         return \PHP_SESSION_ACTIVE === session_status();
     }
 
-    /**
-     * @return string
-     */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return json_encode($this->all(), JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE);
