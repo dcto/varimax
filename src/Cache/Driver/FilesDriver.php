@@ -90,7 +90,7 @@ class FilesDriver extends Driver implements DriverInterface
         if($this->has($key)){
             $value = make('file')->get($this->file($key));
         }
-        return take(json_decode($value), $default);
+        return take(json_decode($value ?? '', true), $default);
     }
 
     /**
