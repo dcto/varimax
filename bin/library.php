@@ -76,6 +76,18 @@ if(!function_exists('lang')) {
     }
 }
 
+if(! function_exists('callback')){
+
+    function take($value, $default = null)
+    {
+        if(is_callable($default)){
+            return $default($value);
+        }
+        return !$value ? $default : $value;
+    }
+}
+
+
 if (! function_exists('call')) {
     /**
      * Call a callback with the arguments.

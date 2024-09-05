@@ -7,6 +7,7 @@
 
 namespace VM\Cache\Driver;
 
+
 /**
  * Class RedisDriver
  *
@@ -89,16 +90,12 @@ class RedisDriver extends Driver implements DriverInterface
      * Retrieve an item from the cache by key.
      *
      * @param  string  $key
+     * @param  mixed   $default
      * @return mixed
      */
-    public function get($key)
+    public function get($key, $default = null)
     {
-        return $this->client()->get($key);
-        /*
-        if (! is_null($value = $this->server()->get($key))) {
-            return is_numeric($value) ? $value : unserialize($value);
-        }
-        */
+        return take($this->client()->get($key),  $default);
     }
 
     /**

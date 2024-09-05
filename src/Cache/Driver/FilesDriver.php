@@ -8,9 +8,6 @@
 
 namespace VM\Cache\Driver;
 
-use VM\Exception\SystemException;
-
-
 class FilesDriver extends Driver implements DriverInterface
 {
     use RetrievesMultipleKeys;
@@ -92,9 +89,8 @@ class FilesDriver extends Driver implements DriverInterface
     {
         if($this->has($key)){
             $value = make('file')->get($this->file($key));
-            return $value ? @unserialize($value) : $default;
         }
-        return $default;
+        return take(json_decode($value), $default);
     }
 
     /**
@@ -107,7 +103,7 @@ class FilesDriver extends Driver implements DriverInterface
      */
     public function set($key, $value, $time = 0)
     {
-        make('file')->put($this->file($key), serialize($value), true);
+        make('file')->put($this->file($key), json_encode($value), true);
         make('file')->touch($this->file($key), $this->time($time));
         return $this;
     }

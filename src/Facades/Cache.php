@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Facade;
  * Class Cache
  *
  * @method static bool has(string $key)
- * @method static mixed get(string $key)
+ * @method static mixed get(string $key, $default = null)
  * @method static \VM\Cache\Driver set(string $key, mixed $value, int $time = 86400)
  * @method static array gets(array $key)
  * @method static bool sets(array $values, $time = 86400)
