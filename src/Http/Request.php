@@ -270,11 +270,9 @@ class Request extends HttpFoundation\Request implements RequestInterface, \Array
      */
     public function input($key = null, $default = null)
     {
-        $value = is_array($key) ? $this->only($key) : $this->get($key);
-        if($default instanceof \Closure){
-            return $default($value);
-        }
-         return is_scalar($value) && strlen($value) ? $value : $default;
+        if(is_null($key)) return $this->all();
+
+        return take(is_array($key) ? $this->only($key) : data_get($this->all(), $key), $default);
     }
 
     /**

@@ -76,7 +76,7 @@ if(!function_exists('lang')) {
     }
 }
 
-if(! function_exists('callback')){
+if(! function_exists('take')){
 
     function take($value, $default = null)
     {
