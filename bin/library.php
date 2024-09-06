@@ -83,7 +83,7 @@ if(! function_exists('take')){
         if(is_callable($default)){
             return $default($value);
         }
-        return !$value ? $default : $value;
+        return strlen(trim($value)) == 0 && is_null($value) ? $default : $value;
     }
 }
 
