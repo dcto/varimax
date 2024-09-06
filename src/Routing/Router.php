@@ -314,7 +314,7 @@ class Router
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
         //Disable Request when xss or sql inject
-        if($path !== $request->path()) throw new \InvalidArgumentException('Forbidden', 403);
+        if($path !== rawurldecode($request->path())) throw new \InvalidArgumentException('Forbidden', 403);
 
         // Get Route in the Routes stack
         $this->router = $this->routerTo($path);
