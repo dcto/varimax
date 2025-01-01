@@ -83,7 +83,12 @@ if(! function_exists('take')){
         if(is_callable($default)){
             return $default($value);
         }
-        return strlen(trim($value)) == 0 && is_null($value) ? $default : $value;
+
+        if(is_scalar($value)){
+            return strlen((string) $value) == 0 ? $default : $value;
+        }
+
+        return  $value ?? $default;
     }
 }
 
