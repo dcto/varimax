@@ -106,7 +106,7 @@ class Application extends \Illuminate\Container\Container
         array_map([$this, 'register'], array_merge([
             \Illuminate\Events\EventServiceProvider::class,
             \VM\Services\DatabaseServiceProvider::class,
-        ], (array) $this->config['service']));
+        ], $this->config->get('provider', []),  $this->config->get('service', [])));
     }
 
     /**
@@ -131,7 +131,7 @@ class Application extends \Illuminate\Container\Container
      * [registerSystemEnvironment]
      */
     private function registerConfigEnvironment()
-    {   
+    { 
         /**
          * setting timezone
          */
