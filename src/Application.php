@@ -158,8 +158,8 @@ class Application extends \Illuminate\Container\Container
             /** @var \VM\Routing\Route $route */
 
             return (new \VM\Pipeline($this))->send($this->request)
-            
-            ->through(array_replace((array) $this['config']['pipeline'], $route->pipeline))
+
+            ->through(array_unique(array_merge($this->config->get('pipeline', []), $route->pipeline)))
 
             ->then(fn()=>$this->call($route->callable(), $route->args() + $context));
         });
