@@ -165,11 +165,11 @@ class DatabaseServiceProvider extends ServiceProvider
             if (pcid()) {
                 if (!$pdo = Context::get('pdo')) {
                     $connection->reconnect();
-                    Context::put('pdo', $pdo = $connection->getPdo());
+                    Context::set('pdo', $pdo = $connection->getPdo());
                 }
                 $connection->setPdo($pdo);
 
-                defer(fn()=>Context::delete('pdo'));
+                defer(fn()=>Context::del('pdo'));
             }
         });
     }
