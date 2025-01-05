@@ -559,11 +559,14 @@ class Request extends HttpFoundation\Request implements RequestInterface, \Array
     /**
      * Get Request bearer Token
      * @param \VM\Http\Type|null $var 
-     * @return void 
+     * @return string 
      */
     public function bearer()
     {
-        return str_replace('Bearer ', '', $this->token());
+        if (stripos($token = $this->token(), 'bearer ') === 0) {
+            return substr($token, 7);
+        }
+        return $token;
     }
 
     /**
