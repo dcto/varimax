@@ -30,7 +30,9 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
         /**
          * @var \VM\Model
          */
-        $model = sprintf("App\\Model\\%s", \Str::studly($input->getArgument('name')))::getModel();
+        $name = \Str::studly($input->getArgument('name'));
+        $name = strstr($name, '/') ?   str_replace('/', '\\', $name) : 'App\\Model\\'.$name;
+        $model = sprintf("App\\Model\\%s", $name)::getModel();
         $table = $model->getConnection()->getTablePrefix().$model->table();
         $helper = $this->getHelper('question');
         $question = new ConfirmationQuestion('Continue it\'s?, do you wanna backup the ['.$model->table().'] table dataset?(Y/n) ', true);
