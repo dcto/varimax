@@ -31,7 +31,7 @@ class CommandModel extends \Symfony\Component\Console\Command\Command
          * @var \VM\Model
          */
         $name = \Str::studly($input->getArgument('name'));
-        $name = strstr($name, '/') ?   str_replace('/', '\\', $name) : 'App\\Model\\'.$name;
+        $name = strstr($name, '/') ?   str_replace('/', '\\', $name) : $name;
         $model = sprintf("App\\Model\\%s", $name)::getModel();
         $table = $model->getConnection()->getTablePrefix().$model->table();
         $helper = $this->getHelper('question');
