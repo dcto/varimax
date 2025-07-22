@@ -117,9 +117,9 @@ class Router
     ------------------------------------------------
     GET        |  /test               |  index    |
     GET        |  /test/(:id)         |  select   |
-    POST       |  /test/create        |  create   |
-    PUT/PATCH  |  /test/update/(:id)  |  update   |
-    DELETE     |  /test/delete/(:id)  |  delete   |
+    POST       |  /test               |  create   |
+    PUT/PATCH  |  /test/(:id)         |  update   |
+    DELETE     |  /test/(:id)         |  delete   |
     */
 
     /**
@@ -130,11 +130,11 @@ class Router
      */
     public function resource($basePath, $controller)
     {
-        $this->register('GET',                 $basePath,                         ['call' =>$controller .'@index']);
-        $this->register('GET',                 $basePath.'/(id:str)',             ['call' =>$controller .'@select']);
-        $this->register('POST',                $basePath.'/create',               ['call' =>$controller .'@create']);
-        $this->register(array('PUT', 'PATCH'), $basePath.'/update/(id:str)',      ['call' =>$controller .'@update']);
-        $this->register('DELETE',              $basePath.'/delete/(id:str)',      ['call' =>$controller .'@delete']);
+        $this->register('GET',                 $basePath,               ['call' =>$controller .'@index']);
+        $this->register('GET',                 $basePath.'/(id:str)',   ['call' =>$controller .'@select']);
+        $this->register('POST',                $basePath,               ['call' =>$controller .'@create']);
+        $this->register(array('PUT', 'PATCH'), $basePath.'/(id:str)',   ['call' =>$controller .'@update']);
+        $this->register('DELETE',              $basePath.'/(id:str)',   ['call' =>$controller .'@delete']);
     }
 
     /**
