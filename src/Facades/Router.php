@@ -19,13 +19,14 @@ use Illuminate\Support\Facades\Facade;
  *
  * @method static \VM\Routing\Router resource(string $url, string $controller)
  * @method static \VM\Routing\Router restful(string $url, string $controller)
- *    Method     |  Path                |  Action   |
+ *   Method     |  Path                |  Action  |
  *    ------------------------------------------------
- *    GET        |  /test               |  index    |
- *    GET        |  /test/(:id)         |  select   |
- *    POST       |  /test               |  create   |
- *    PUT/PATCH  |  /test/(:id)         |  update   |
- *    DELETE     |  /test/(:id)         |  delete   |
+ *    GET        |  /test               |  get     |
+ *    GET        |  /test/(:id)         |  get     |
+ *    POST       |  /test               |  post    |
+ *    PUT        |  /test/(:id)         |  put     |
+ *    PATCH      |  /test/(:id)         |  patch   |
+ *    DELETE     |  /test/(:id)         |  delete  |
  * @method static \VM\Routing\Router regex(string $key, string $regex)
  * @method static \VM\Routing\Router alias(string $key, string $route = null)
  * @method static \VM\Routing\Route  router(string $id = null) Current Route

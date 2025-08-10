@@ -39,11 +39,6 @@ class Route implements \ArrayAccess, \JsonSerializable
     protected $url;
 
     /**
-     * @var string  hash
-     */
-    protected $hash;
-
-    /**
      * @var string
      */
     protected $name;
@@ -74,11 +69,6 @@ class Route implements \ArrayAccess, \JsonSerializable
     protected $icon;
 
     /**
-     * @var string Matching regular expression
-     */
-    protected $regex;
-
-    /**
      * @var string group name
      */
     protected $group;
@@ -87,11 +77,6 @@ class Route implements \ArrayAccess, \JsonSerializable
      * @var string The matched HTTP method
      */
     protected $method;
-
-    /**
-     * @var array Supported HTTP methods
-     */
-    protected $methods = [];
 
     /**
      * @var array
@@ -119,24 +104,18 @@ class Route implements \ArrayAccess, \JsonSerializable
      * @param string $path URL pattern
      * @param array $args options
      */
-    public function __construct($methods, $path, array $args = [])
+    public function __construct($method, $path, array $args = [])
     {
-        $this->id  = $args['id'] ?? $path == '/' ? '.' : join('.',array_map(function($p){
-            return ($i = strpos($p, ':')) ? ltrim(substr($p, 0 ,$i), '(') : $p;
-        }, explode('/', trim($path, '/'))));
-
-        $this->url       = $path;
-        $this->name      = $args['name'] ?? null;
-        $this->hash      = crc32($this->id);
+        $this->id        = $args['id'] ?? crc32($path.$method.serialize($args)) ;
+        $this->url       = $path ?: '/';
+        $this->name      = $args['name'] ?? preg_replace('/\/|\(.*?\)/', '$1', trim($path, '/')).'.'.$method;
         $this->call      = $args['call'] ?? null;
         $this->lang      = $args['lang'] ?? $args['group']['lang'] ?? null;
         $this->menu      = $args['menu'] ?? $args['group']['menu'] ?? null;
-        $this->regex     = $args['regex'] ?? null;
         $this->group     = $args['group']['id'] ?? null;
-        $this->methods   = $methods;
+        $this->method    = $method;
         $this->namespace = $args['namespace'] ?? $args['group']['namespace'] ?? null;
-
-        array_push($this->pipeline, ... (array) $args['pipeline'] ??= null, ... (array) $args['group']['pipeline'] ??= null);
+        array_push($this->pipeline, ... (array) $args['pipeline'] ??= [], ... (array) $args['group']['pipeline'] ??= null);
     }
 
     /**
@@ -205,6 +184,16 @@ class Route implements \ArrayAccess, \JsonSerializable
     }
 
     /**
+     * Return methods
+     * @param string $method
+     * @return bool|array
+     */
+    public function methods($method = null)
+    {
+        return $method ? isset($this->methods[$method]) : $this->methods[$method];
+    }
+
+    /**
      * @return string
      */
     public function callable()
@@ -227,7 +216,7 @@ class Route implements \ArrayAccess, \JsonSerializable
         if(!$arguments){
             return $this->$item;
         }else if(sizeof($arguments) == 1){
-            if (property_exists($this, $item)) {
+        if (property_exists($this, $item)) {
                 $this->$item = current($arguments);
                 return $this;
             }
@@ -251,6 +240,7 @@ class Route implements \ArrayAccess, \JsonSerializable
     {
         return $this->url;
     }
+    
     
     public function toArray()
     {
@@ -283,6 +273,21 @@ class Route implements \ArrayAccess, \JsonSerializable
         return $this->toArray();
     }
     
+
+    /**
+     * Parse the route id from the given string.
+     * @param string $string
+     * @return string
+     */
+    private function getId($args) {
+        $id = [];
+        if (isset($args['group']['id'])) {
+            $id[] = $args['group']['id'];
+        }
+
+        return join('.', $id);
+    }
+
     public function __destruct()
     {
         make('router')->addPushToRoutes($this);

@@ -46,7 +46,7 @@ class Router
      * An array of HTTP request Methods.
      * @var array $methods
      */
-    private $methods = ['GET', 'POST', 'PUT', 'HEAD', 'PATCH', 'DELETE', 'OPTIONS'];
+    private $methods = ['get', 'post', 'put', 'patch', 'delete'];
 
     /**
      * @var array
@@ -83,43 +83,23 @@ class Router
      */
     public function __call($method, $args)
     {
-        if (in_array($method = strtoupper($method), array_merge($this->methods, ['ANY']))) {
+        if (in_array($method = strtolower($method), $this->methods)) {
             return $this->register($method, array_shift($args), array_shift($args));
         }else{
-            throw new \InvalidArgumentException('Bad Reqeust', 400);
-        }
-    }
-
-    /**
-     * Register many request URIs to a single Callback.
-     *
-     * <code>
-     *      // Register a group of URIs for a Callback
-     *      Router::share(array(array('GET', '/'), array('POST', '/home')), 'App\Controllers\Home@index');
-     * </code>
-     *
-     * @param  array  $routes
-     * @param  mixed  $callback
-     * @return void
-     */
-    public function share($routes, $callback)
-    {
-        foreach($routes as $route) {
-            $method = array_shift($route);
-            $path  = array_shift($route);
-            $this->register($method, $path, $callback);
+            throw new \InvalidArgumentException('Invalid Http Method ['. $method .']', 400);
         }
     }
 
     /* The Resourceful Routes in the Laravel Style.
 
-    Method     |  Path                |  Action   |
+    Method     |  Path                |  Action  |
     ------------------------------------------------
-    GET        |  /test               |  index    |
-    GET        |  /test/(:id)         |  select   |
-    POST       |  /test               |  create   |
-    PUT/PATCH  |  /test/(:id)         |  update   |
-    DELETE     |  /test/(:id)         |  delete   |
+    GET        |  /test               |  get     |
+    GET        |  /test/(:id)         |  get     |
+    POST       |  /test               |  post    |
+    PUT        |  /test/(:id)         |  put     |
+    PATCH      |  /test/(:id)         |  patch   |
+    DELETE     |  /test/(:id)         |  delete  |
     */
 
     /**
@@ -130,11 +110,12 @@ class Router
      */
     public function resource($basePath, $controller)
     {
-        $this->register('GET',                 $basePath,               ['call' =>$controller .'@index']);
-        $this->register('GET',                 $basePath.'/(id:str)',   ['call' =>$controller .'@select']);
-        $this->register('POST',                $basePath,               ['call' =>$controller .'@create']);
-        $this->register(array('PUT', 'PATCH'), $basePath.'/(id:str)',   ['call' =>$controller .'@update']);
-        $this->register('DELETE',              $basePath.'/(id:str)',   ['call' =>$controller .'@delete']);
+        $this->register('get',                 $basePath,              ['call' =>$controller.'@get']);
+        $this->register('get',                 $basePath.'(id:num)',   ['call' =>$controller.'@get']);
+        $this->register('post',                $basePath,              ['call' =>$controller.'@post']);
+        $this->register('put',                 $basePath.'(id:num)',   ['call' =>$controller.'@put']);
+        $this->register('patch',               $basePath.'(id:num)',   ['call' =>$controller.'@patch']);
+        $this->register('delete',              $basePath.'(id:num)',   ['call' =>$controller.'@delete']);
     }
 
     /**
@@ -144,7 +125,7 @@ class Router
      */
     public function restful($bassPath, $controller)
     {
-        $this->resource($bassPath, $controller);
+        return $this->resource($bassPath, $controller);
     }
 
     /**
@@ -216,6 +197,27 @@ class Router
     }
 
     /**
+     * Register many request URIs to a single Callback.
+     *
+     * <code>
+     *      // Register a group of URIs for a Callback
+     *      Router::share(array(array('GET', '/'), array('POST', '/home')), 'App\Controllers\Home@index');
+     * </code>
+     *
+     * @param  array  $routes
+     * @param  mixed  $callback
+     * @return void
+     */
+    public function share($routes, $callback)
+    {
+        foreach($routes as $route) {
+            $method = array_shift($route);
+            $path  = array_shift($route);
+            $this->register($method, $path, $callback);
+        }
+    }
+
+    /**
      * return routes array access current params route name
      * @param array ...$ids
      * @return array
@@ -238,8 +240,11 @@ class Router
             $k && in_array($g['group'], $nodes) && $nodes = array_merge($nodes, [$k]);
             return in_array($k, $nodes);
         }, ARRAY_FILTER_USE_BOTH) : $this->groups;
-
-        $routes && array_walk($groups, fn(&$g)=>$g[$routes] = array_values(array_filter($this->routes, fn($r)=>$r['group'] == $g['id'])));
+        if ($routes) {
+            $items = array_merge(...array_values($this->routes));
+            array_walk($groups, fn(&$g)=>$g[$routes] = array_values(array_filter($items, fn($r)=>$r['group'] == $g['id'])));
+        }
+    
         return $groups;
     }
 
@@ -286,8 +291,6 @@ class Router
      */
     protected function register($method, $path, $properties)
     {
-        $methods = $method == 'ANY' ? $this->methods : array_intersect(array_map('strtoupper', (array) $method), $this->methods);
-        
         // Pre-process the Action information.
         $properties = $this->parseAction($properties);
 
@@ -295,13 +298,11 @@ class Router
 
         $path = $this->parsePath($path, $properties);
 
-        $path = $path == '' ? '/' : $path;
-
         if(strpos($path, ':') !== false){
-            $properties['regex'] = str_replace(array_keys($this->regex), array_values($this->regex), $path);
-            $properties['regex'] = str_replace(['(', ':'], ['(?P<', '>'], $properties['regex']);
+            $regex = str_replace(array_keys($this->regex), array_values($this->regex), $path);
+            $path = str_replace(['(', ':'], ['(?P<', '>'], $regex);
         }
-        return new Route($methods, $path, $properties);
+        return new Route($method, $path, $properties);
     }
 
     /**
@@ -314,19 +315,10 @@ class Router
         $path = is_safe($request->path(),  'trim', 'urldecode', 'addslashes', 'strip_tags');
 
         //Disable Request when xss or sql inject
-        if($path !== rawurldecode($request->path())) throw new \InvalidArgumentException('Forbidden', 403);
+        if($path !== rawurldecode($request->path())) throw new \VM\Exception\NotFoundException();
 
         // Get Route in the Routes stack
-        $this->router = $this->routerTo($path);
-
-        // Found a valid Route; process it.
-        if(!$this->router) throw new NotFoundException('Unknown route ['.$path.']');
-
-        // Check request method
-        if(!in_array($method = $request->method(), $this->router->methods())) throw new \InvalidArgumentException('Bad Request', 400);
-
-        // Set Route method;
-        $this->router->method($method);
+        $this->router = $this->routerTo($request->method(), $path);
         
         return $this->router;
     }
@@ -337,17 +329,20 @@ class Router
      * @param $method
      * @return Route
      */
-    protected function routerTo($path)
+    protected function routerTo($method, $path)
     {
-        if(isset($this->routes[$path])) {
-            return $this->routes[$path];
-        }else{
-            foreach ($this->routes as $key => $route) {
-                if(strpos($key, '/(') === false) continue;
-                if($this->matchRouter($path, $route)) return $route;
+        $routes = isset($this->routes[$path]) ? $this->routes[$path] : $this->matchRouter($path);
+
+        $routes || throw new NotFoundException('Invalid Request Route ['.$path.']');
+        
+        foreach ($routes as $route) {
+            if ($route->method == strtolower($method)){
+                return $route;
             }
         }
-    }
+
+        throw new \VM\Exception\HttpException('Not Allowed Request Method ['.strtoupper($method).']', 405);
+    }   
 
     /**
      * @param $path
@@ -355,12 +350,14 @@ class Router
      * @param $method
      * @return bool
      */
-    protected function matchRouter($path, &$route)
+    protected function matchRouter($path)
     {
-        if (preg_match('#^'.$route->regex().'$#', $path, $matches)) {
-            $route->url = array_shift($matches);
-            $route->args += array_filter($matches, "is_string", ARRAY_FILTER_USE_KEY);
-            return true;
+        foreach ($this->routes as $p => $routes) {
+            if (preg_match('#^'.$p.'$#', $path, $matches)) {
+                array_walk($routes, fn($r)=>$r->args += array_filter($matches, "is_string", ARRAY_FILTER_USE_KEY));
+                return $routes;
+                // print_r($matches);
+            }
         }
         return false;
     }
@@ -372,16 +369,7 @@ class Router
      */
     public function addPushToRoutes(Route $route)
     {
-        if($url = $route->url){
-            if(isset($this->routes[$url])){
-                $this->routes[$url]->methods = array_unique(array_merge($this->routes[$url]->methods , $route->methods));
-            }else{
-                $this->alias($route->id, $route->url);
-                $this->routes[$url] = $route;
-            }
-        }else{
-            $this->routes[$route->id] = $route;
-        }
+        $this->routes[$route->url][] = $route;
         return $this;
     }
 
@@ -406,7 +394,7 @@ class Router
         if(isset($property['group']['prefix'])){
             return $property['group']['prefix'].rtrim($route, '/');
         }
-        return rtrim($route, '/');
+        return rtrim($route, '/') ?: '/';
     }
 
     /**
@@ -474,7 +462,8 @@ class Router
      */
     private function updateGroupStack(array $attributes)
     {
-        $attributes['id'] ??= crc32(serialize($attributes));
+        $attributes['id'] ??= str_replace('/', '.',  $attributes['prefix'] ??= crc32(serialize($attributes)));
+
         $attributes['name'] ??= $attributes['id'];
         $attributes = $this->mergeGroup($attributes,  $this->getLastGroup());
         $this->groupStack[] = $this->groups[$attributes['id']] =  $attributes;
