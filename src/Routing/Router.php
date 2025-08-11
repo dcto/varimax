@@ -111,11 +111,11 @@ class Router
     public function resource($basePath, $controller)
     {
         $this->register('get',                 $basePath,              ['call' =>$controller.'@get']);
-        $this->register('get',                 $basePath.'(id:num)',   ['call' =>$controller.'@get']);
+        $this->register('get',                 $basePath.'(id:str)',   ['call' =>$controller.'@get']);
         $this->register('post',                $basePath,              ['call' =>$controller.'@post']);
-        $this->register('put',                 $basePath.'(id:num)',   ['call' =>$controller.'@put']);
-        $this->register('patch',               $basePath.'(id:num)',   ['call' =>$controller.'@patch']);
-        $this->register('delete',              $basePath.'(id:num)',   ['call' =>$controller.'@delete']);
+        $this->register('put',                 $basePath.'(id:str)',   ['call' =>$controller.'@put']);
+        $this->register('patch',               $basePath.'(id:str)',   ['call' =>$controller.'@patch']);
+        $this->register('delete',              $basePath.'(id:str)',   ['call' =>$controller.'@delete']);
     }
 
     /**
