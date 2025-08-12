@@ -34,10 +34,14 @@
 * @method \Illuminate\Database\Schema\ColumnDefinition mediumInteger(string $column)  创建一个 MEDIUMINT 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition mediumText(string $column) 创建一个 MEDIUMTEXT 类型的列
 * @method void morphs(string $name, string $indexName = null)    创建多态关联所需的 id 和 type 列
+* @method void uuidMorphs(string $name, string $indexName = null)    创建使用 UUID 的多态关联所需的 id 和 type 列
+* @method void ulidMorphs(string $name, string $indexName = null)    创建使用 ULID 的多态关联所需的 id 和 type 列
 * @method \Illuminate\Database\Schema\ColumnDefinition multiLineString(string $column)    创建一个 MULTILINESTRING 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition multiPoint(string $column)    创建一个 MULTIPOINT 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition multiPolygon(string $column)    创建一个 MULTIPOLYGON 类型的列
 * @method void nullableMorphs(string $name, string $indexName = null)    创建可为空的多态关联所需的 id 和 type 列
+* @method void nullableUuidMorphs(string $name, string $indexName = null)    创建可为空的使用 UUID 的多态关联所需的 id 和 type 列
+* @method void nullableUlidMorphs(string $name, string $indexName = null)    创建可为空的使用 ULID 的多态关联所需的 id 和 type 列
 * @method void nullableTimestamps(int $precision = 0)  创建可为空的 created_at 和 updated_at 列
 * @method \Illuminate\Database\Schema\ColumnDefinition point(string $column)    创建一个 POINT 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition polygon(string $column)    创建一个 POLYGON 类型的列
@@ -64,6 +68,9 @@
 * @method \Illuminate\Database\Schema\ColumnDefinition unsignedSmallInteger(string $column) 创建一个无符号的 SMALLINT 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition unsignedTinyInteger(string $column)  创建一个无符号的 TINYINT 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition uuid(string $column = 'uuid')    创建一个 UUID 类型的列
+* @method \Illuminate\Database\Schema\ColumnDefinition foreignUuid(string $column)    创建一个外键 UUID 类型的列
+* @method \Illuminate\Database\Schema\ColumnDefinition ulid(string $column = 'ulid')    创建一个 ULID 类型的列
+* @method \Illuminate\Database\Schema\ColumnDefinition foreignUlid(string $column)    创建一个外键 ULID 类型的列
 * @method \Illuminate\Database\Schema\ColumnDefinition year(string $column)    创建一个 YEAR 类型的列
 *
 * === 索引和约束方法 ===
@@ -99,6 +106,8 @@
 * @method \Illuminate\Support\Fluent dropSoftDeletesTz(string $column = 'deleted_at')    删除带时区的软删除列
 * @method \Illuminate\Support\Fluent dropRememberToken()    删除 remember_token 列
 * @method \Illuminate\Support\Fluent dropMorphs(string $name, string $indexName = null)    删除多态关联列
+* @method \Illuminate\Support\Fluent dropUuidMorphs(string $name, string $indexName = null)    删除 UUID 多态关联列
+* @method \Illuminate\Support\Fluent dropUlidMorphs(string $name, string $indexName = null)    删除 ULID 多态关联列
 *
 * === 重命名操作方法 ===
 * @method \Illuminate\Support\Fluent renameColumn(string $from, string $to)    重命名列
