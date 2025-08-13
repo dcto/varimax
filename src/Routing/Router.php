@@ -320,6 +320,8 @@ class Router
         // Get Route in the Routes stack
         $this->router = $this->routerTo($request->method(), $path);
         
+        $this->router->args && $request->set($this->router->args);
+
         return $this->router;
     }
 
