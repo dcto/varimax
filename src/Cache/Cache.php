@@ -13,6 +13,7 @@ use VM\Cache\Driver\ApcDriver;
 use VM\Cache\Driver\NullDriver;
 use VM\Cache\Driver\RedisDriver;
 use VM\Cache\Driver\FilesDriver;
+use VM\Cache\Driver\MemoryDriver;
 use VM\Cache\Driver\RetrievesMultipleKeys;
 
 class Cache
@@ -55,6 +56,17 @@ class Cache
     public function apc($prefix = 'vm:')
     {
         return new ApcDriver($prefix);
+    }
+
+    /**
+     * [apc APC缓存]
+     *
+     * @param string $prefix
+     * @return ApcDriver
+     */
+    public function memory($prefix = 'vm:', $size = 1024)
+    {
+        return new MemoryDriver($prefix, $size);
     }
 
     /**
