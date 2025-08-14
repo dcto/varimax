@@ -25,10 +25,11 @@ class Cache
      * @var array
      */
     private $drivers = array(
-        'null'  => false,
-        'apc'   => false,
-        'files' => false,
-        'redis' => false
+        'null'  => null,
+        'apc'   => null,
+        'files' => null,
+        'redis' => null,
+        'memory' => null,
     );
 
 
@@ -116,7 +117,7 @@ class Cache
      */
     public function getDefaultDriver()
     {
-        return config('cache.default', 'files');
+        return config('cache.default', 'memory');
     }
 
 
