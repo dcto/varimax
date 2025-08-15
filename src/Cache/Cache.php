@@ -25,11 +25,11 @@ class Cache
      * @var array
      */
     private $drivers = array(
-        'null'  => null,
-        'apc'   => null,
-        'files' => null,
-        'redis' => null,
-        'memory' => null,
+        'null'  => true,
+        'apc'   => true,
+        'files' => true,
+        'redis' => true,
+        'memory' => true,
     );
 
 
