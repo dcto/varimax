@@ -338,7 +338,7 @@ class Router
         $routes || throw new NotFoundException('Invalid Request Route ['.$path.']');
         
         foreach ($routes as $route) {
-            if ($route->method == strtolower($method)){
+            if (in_array(strtolower($method), ['options', $route->method])){
                 return $route;
             }
         }
