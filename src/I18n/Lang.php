@@ -198,6 +198,7 @@ class Lang implements \ArrayAccess
     public function load($lang, $reload = false)
     {
         $cache = runtime('lang',_APP_, $lang.'.php');
+ 
         if (!$reload && !config('app.debug', getenv('DEBUG')) && is_file($cache)) {
             $this->item = require($cache);
         } else {
@@ -206,8 +207,23 @@ class Lang implements \ArrayAccess
                     throw new \ErrorException('Can not create i18n directory ' . $cache_dir);
                 }
             }
-            is_file($file = root('i18n', $lang.'.ini')) && $this->set(parse_ini_file($file, true));
-            is_file($file = app_dir('I18n', $lang.'.ini')) && $this->set(parse_ini_file($file, true));
+
+            if (is_file($file = root('i18n', $lang . '.ini'))) {
+                if($data = parse_ini_file($file, true)) {
+                    $this->set($data);
+                }else{
+                    throw new \ErrorException('Invalid i18n file ' . $file.' Syntax error: {}|&~!()^ Or null, yes, no, true, false, on, off, none  ');
+                }
+            }
+            
+            if(is_file($file = app_dir('I18n', $lang.'.ini'))) {
+                if($data = parse_ini_file($file, true)) {
+                    $this->set($data);
+                }else{
+                    throw new \ErrorException('Invalid i18n file ' . $file.' Syntax error: {}|&~!()^ Or null, yes, no, true, false, on, off, none  ');
+                }
+            }
+            
             file_put_contents($cache, '<?php return '. str_replace([" ", PHP_EOL], '', var_export($this->all(), TRUE)).';');
         }
         return $this;
