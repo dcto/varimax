@@ -22,10 +22,8 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
     {
         $this->options = array_replace($this->options, config('session', []));
         ini_set('session.auto_start', 0);
-        if(isset($this->options['auto_start'])){
-            if(strtolower($this->options['auto_start']) != 'off' && boolval($this->options['auto_start'])){
-                $this->start();
-            }
+        if ($this->autoStartEnabled()) {
+            $this->start();
         }
     }
 
@@ -33,20 +31,58 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
      * {@inheritdoc}
      */
     public function start(array $options = [])
-    {        
-        if ($this->status()) throw new \RuntimeException('Failed to start the session: already started.');
+    {
+        $status = session_status();
+        if ($status === PHP_SESSION_ACTIVE) {
+            return $this;
+        }
 
+        if ($status === PHP_SESSION_DISABLED) {
+            throw new \RuntimeException('Failed to start the session because sessions are disabled on this system.');
+        }
+ 
         $this->options = array_replace($this->options, $options);
-
         unset($this->options['auto_start']);
 
         if ($this->config('use_cookies') && headers_sent($file, $line)) {
             throw new \RuntimeException(sprintf('Failed to start the session because headers have already been sent by "%s" at line %d.', $file, $line));
         }
 
-        session_start($this->options);
+        // Auto-create session save_path directory for files handler.
+        if (($this->options['save_handler'] ?? ini_get('session.save_handler')) === 'files') {
+            $savePath = (string) ($this->options['save_path'] ?? ini_get('session.save_path'));
+            if ($savePath !== '') {
+                // PHP supports "N;/path" format for files handler; directory is the last segment.
+                $parts = explode(';', $savePath);
+                $dir = end($parts) ?: $savePath;
+                if (!is_dir($dir) && !@mkdir($dir, 0777, true) && !is_dir($dir)) {
+                    throw new \RuntimeException(sprintf('Failed to create session save_path directory: %s', $dir));
+                }
+            }
+        }
+
+        if (session_start($this->options) !== true) {
+            throw new \RuntimeException('Failed to start the session.');
+        }
 
         return $this;
+    }
+
+    /**
+     * Determine whether auto start is enabled.
+     */
+    private function autoStartEnabled(): bool
+    {
+        if (!array_key_exists('auto_start', $this->options)) {
+            return false;
+        }
+
+        $value = $this->options['auto_start'];
+        if (is_string($value)) {
+            return in_array(strtolower($value), ['1', 'true', 'on', 'yes'], true);
+        }
+
+        return (bool) $value;
     }
 
 
@@ -301,7 +337,7 @@ class Session implements \Countable, \JsonSerializable, \IteratorAggregate
      */
     public function status()
     {
-        return \PHP_SESSION_ACTIVE === session_status();
+        return session_status() === (defined('PHP_SESSION_ACTIVE') ? PHP_SESSION_ACTIVE : 2);
     }
 
     #[\ReturnTypeWillChange]
