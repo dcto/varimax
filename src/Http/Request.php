@@ -901,11 +901,11 @@ class Request extends HttpFoundation\Request implements RequestInterface, \Array
             case 'json':
                 $data = json_decode($this->getContent(), true);
                 break;
-            case 'form':
-                if (in_array($this->method, array('PUT', 'DELETE', 'PATCH'))){
-                    parse_str($this->getContent(), $data);
-                }
-                break;
+        case 'form':
+            if (in_array($this->getMethod(), array('PUT', 'DELETE', 'PATCH'))){
+                parse_str($this->getContent(), $data);
+            }
+            break;
         }
         $data && $this->request->add($data);
     }
